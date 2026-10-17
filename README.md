@@ -6,6 +6,18 @@ It watches a survivor's own check-ins, their wearable and their treatment calend
 - Live: https://c3-rough-patch.zay-259.workers.dev (demo page) · API under `/api/c3`. See [CONTRACT.md](CONTRACT.md). For a UI or agent, `GET /api/c3/metrics` → `headline` has the ready-made headline numbers (urgent tier first, then the diary-note safety scan, the rough-patch lift with its CI and the real-data AUC beside it), each with its one named baseline. The roster comes in `priority` order with a `tier` field and a `reviewToday` flag, precomputed as a static asset.
 - Stack: TypeScript Cloudflare Worker (no LLM step needed). The model is trained offline in Python and its outputs are baked into `src/data/*.json`.
 
+## How it works
+
+**Technical architecture:** files, endpoints, models and fallbacks, each box checked against this repo.
+
+![C3 technical architecture](docs/arch-c3.png)
+
+**Results panel:** the data, the model, how it was validated, what the user sees, the held-out results and the honest limits.
+
+![C3 Bad Week Radar](docs/c3.png)
+
+Method in full, with every choice and why: [METHODOLOGY.md](METHODOLOGY.md).
+
 ## What counts as a rough patch (and why)
 
 "Rough patch" is not a column in the data, so we define it from what the person and the clinic report, **relative to the person**:
