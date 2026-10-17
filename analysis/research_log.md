@@ -34,3 +34,37 @@
 - Chosen: base + trend14 + history (row 24).
 - One test run (750 held-out patients) vs 39bc5f8: week AUC 0.804 → 0.805, episodes caught 64% → 64%, ER/admissions caught 54% → 56%, week precision 20% → 20%. The validation gain mostly did **not** transfer: the 2 to 4 point differences on validation were within noise (val has about 100 ER events).
 - Possible next step, not adopted: a separate ER/admission head for an "urgent" status tier, so the trade-off does not touch the rough-patch alert.
+
+## Model families (validation only; thresholds on train carve-out)
+
+- {"family": "hgb", "features": "v2", "task": "rough", "val_episode_recall": 0.654, "val_er_recall": 0.54, "val_week_auc": 0.79, "val_week_precision": 0.159, "alerts_ppm": 0.83}
+- {"family": "lgbm", "features": "v2", "task": "rough", "val_episode_recall": 0.629, "val_er_recall": 0.52, "val_week_auc": 0.791, "val_week_precision": 0.154, "alerts_ppm": 0.79}
+- {"family": "xgb", "features": "v2", "task": "rough", "val_episode_recall": 0.647, "val_er_recall": 0.57, "val_week_auc": 0.796, "val_week_precision": 0.166, "alerts_ppm": 0.78}
+- {"family": "et", "features": "v2", "task": "rough", "val_episode_recall": 0.605, "val_er_recall": 0.47, "val_week_auc": 0.79, "val_week_precision": 0.154, "alerts_ppm": 0.73}
+- {"family": "rf", "features": "v2", "task": "rough", "val_episode_recall": 0.632, "val_er_recall": 0.5, "val_week_auc": 0.795, "val_week_precision": 0.167, "alerts_ppm": 0.8}
+- {"family": "lrspline", "features": "v2", "task": "rough", "val_episode_recall": 0.509, "val_er_recall": 0.51, "val_week_auc": 0.751, "val_week_precision": 0.138, "alerts_ppm": 0.62}
+- {"family": "cnn", "features": "v2", "task": "rough", "val_episode_recall": 0.429, "val_er_recall": 0.47, "val_week_auc": 0.753, "val_week_precision": 0.136, "alerts_ppm": 0.41}
+- {"family": "cnn", "features": "v2", "task": "rough", "val_episode_recall": 0.375, "val_er_recall": 0.41, "val_week_auc": 0.714, "val_week_precision": 0.12, "alerts_ppm": 0.52}
+- {"family": "ens:hgb,xgb", "features": "v2", "task": "rough", "val_episode_recall": 0.641, "val_er_recall": 0.48, "val_week_auc": 0.795, "val_week_precision": 0.166, "alerts_ppm": 0.77}
+- {"family": "ens:hgb,xgb,rf", "features": "v2", "task": "rough", "val_episode_recall": 0.643, "val_er_recall": 0.49, "val_week_auc": 0.797, "val_week_precision": 0.166, "alerts_ppm": 0.76}
+- {"family": "hgb", "features": "main", "task": "rough", "val_episode_recall": 0.609, "val_er_recall": 0.44, "val_week_auc": 0.782, "val_week_precision": 0.15, "alerts_ppm": 0.82}
+- {"family": "lgbm", "features": "main", "task": "rough", "val_episode_recall": 0.621, "val_er_recall": 0.5, "val_week_auc": 0.786, "val_week_precision": 0.153, "alerts_ppm": 0.8}
+- {"family": "xgb", "features": "main", "task": "rough", "val_episode_recall": 0.627, "val_er_recall": 0.51, "val_week_auc": 0.788, "val_week_precision": 0.159, "alerts_ppm": 0.77}
+- {"family": "rf", "features": "main", "task": "rough", "val_episode_recall": 0.618, "val_er_recall": 0.46, "val_week_auc": 0.792, "val_week_precision": 0.162, "alerts_ppm": 0.76}
+- {"family": "hgb", "features": "main", "task": "er", "val_er_auc": 0.868, "val_er_ap": 0.0668, "val_day_recall_3pct": 0.182, "val_day_precision_3pct": 0.07, "val_er_event_recall": 0.49}
+- {"family": "lgbm", "features": "main", "task": "er", "val_er_auc": 0.866, "val_er_ap": 0.0612, "val_day_recall_3pct": 0.194, "val_day_precision_3pct": 0.077, "val_er_event_recall": 0.48}
+- {"family": "xgb", "features": "main", "task": "er", "val_er_auc": 0.867, "val_er_ap": 0.0575, "val_day_recall_3pct": 0.169, "val_day_precision_3pct": 0.069, "val_er_event_recall": 0.43}
+- {"family": "rf", "features": "main", "task": "er", "val_er_auc": 0.866, "val_er_ap": 0.0609, "val_day_recall_3pct": 0.205, "val_day_precision_3pct": 0.082, "val_er_event_recall": 0.46}
+- {"family": "hgb", "features": "v2", "task": "er", "val_er_auc": 0.864, "val_er_ap": 0.068, "val_day_recall_3pct": 0.205, "val_day_precision_3pct": 0.081, "val_er_event_recall": 0.54}
+- {"family": "lgbm", "features": "v2", "task": "er", "val_er_auc": 0.867, "val_er_ap": 0.0686, "val_day_recall_3pct": 0.198, "val_day_precision_3pct": 0.081, "val_er_event_recall": 0.49}
+- {"family": "xgb", "features": "v2", "task": "er", "val_er_auc": 0.87, "val_er_ap": 0.0675, "val_day_recall_3pct": 0.207, "val_day_precision_3pct": 0.081, "val_er_event_recall": 0.48}
+- {"family": "rf", "features": "v2", "task": "er", "val_er_auc": 0.869, "val_er_ap": 0.0659, "val_day_recall_3pct": 0.198, "val_day_precision_3pct": 0.084, "val_er_event_recall": 0.47}
+- {"family": "ens:hgb,xgb", "features": "v2", "task": "er", "val_er_auc": 0.87, "val_er_ap": 0.0717, "val_day_recall_3pct": 0.214, "val_day_precision_3pct": 0.084, "val_er_event_recall": 0.48}
+- {"family": "ens:hgb,xgb,rf", "features": "v2", "task": "er", "val_er_auc": 0.876, "val_er_ap": 0.0728, "val_day_recall_3pct": 0.224, "val_day_precision_3pct": 0.089, "val_er_event_recall": 0.5}
+- {"family": "lrspline", "features": "v2", "task": "er", "val_er_auc": 0.854, "val_er_ap": 0.056, "val_day_recall_3pct": 0.188, "val_day_precision_3pct": 0.08, "val_er_event_recall": 0.4}
+
+### One test evaluation (ER task, winner vs HistGB)
+
+- hgb main: {"test_er_auc": 0.858, "test_er_ap": 0.0566, "test_day_recall_3pct": 0.177, "test_day_precision_3pct": 0.079, "test_er_event_recall_2to7d": 0.467, "test_er_events": 182}
+- hgb v2: {"test_er_auc": 0.851, "test_er_ap": 0.0585, "test_day_recall_3pct": 0.186, "test_day_precision_3pct": 0.083, "test_er_event_recall_2to7d": 0.445, "test_er_events": 182}
+- ens hgb+xgb+rf v2: {"test_er_auc": 0.863, "test_er_ap": 0.0687, "test_day_recall_3pct": 0.196, "test_day_precision_3pct": 0.091, "test_er_event_recall_2to7d": 0.434, "test_er_events": 182}

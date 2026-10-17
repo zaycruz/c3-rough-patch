@@ -4,3 +4,4 @@ analysis/out/*.parquet
 node_modules/
 .wrangler/
 analysis/out/*.pkl
+.venv-pycaret/
