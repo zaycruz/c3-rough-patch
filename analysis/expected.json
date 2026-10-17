@@ -144,5 +144,86 @@
     ["Cross-check: v2 model alerts/patient/month", "analysis/out/historical/label_crosscheck.json", "v2_onsets.score_model.alerts_per_patient_month", "0.78", "f2", "historical"],
     ["Cross-check: v1 onsets, v1-trained week AUC", "analysis/out/historical/metrics_v2_noproxy.json", "label_v2.cross_check.v1_onsets.week_auc.trained_on_v1", "0.804", "f3", "historical"],
     ["Cross-check: v1 onsets, v2-trained week AUC", "analysis/out/historical/metrics_v2_noproxy.json", "label_v2.cross_check.v1_onsets.week_auc.trained_on_v2", "0.799", "f3", "historical"]
-  ]
+  ],
+  "platform_tolerance": {
+    "_doc": "Cross-platform tolerance (decided 2026-10-17). README numbers were made on macOS arm64. On Linux x86_64 (Cloudflare fresh clone, runs/reproduce-2026-10-17T17-18-10Z.md) the urgent ER head and the proxy-label run come out slightly different; the rough-patch model reproduces exactly. Only these rows get a tolerance; every other row must match exactly. pts: within 2 percentage points, or 2 ER events in the group (events_key, file of the row), whichever is larger. abs: within the stated absolute amount.",
+    "rows": {
+      "Urgent head: ER caught": {
+        "kind": "pts",
+        "events_key": null
+      },
+      "Urgent head: flags/patient/month": {
+        "kind": "abs",
+        "amount": 0.03
+      },
+      "Urgent vs calendar-only ER model, CI low": {
+        "kind": "pts",
+        "events_key": null
+      },
+      "Urgent vs calendar-only ER model, CI high": {
+        "kind": "pts",
+        "events_key": null
+      },
+      "Note scan + urgent: ER caught": {
+        "kind": "pts",
+        "events_key": null
+      },
+      "Note scan gain, CI low": {
+        "kind": "pts",
+        "events_key": null
+      },
+      "Note scan gain, CI high": {
+        "kind": "pts",
+        "events_key": null
+      },
+      "Urgent + notes: ER within 7 d when flagged (days)": {
+        "kind": "pts",
+        "events_key": null
+      },
+      "Urgent tier alone: flag days/patient/month": {
+        "kind": "abs",
+        "amount": 0.03
+      },
+      "Urgent + notes: flag days/patient/month": {
+        "kind": "abs",
+        "amount": 0.03
+      },
+      "By language: English, urgent + notes": {
+        "kind": "pts",
+        "events_key": "by_language.English.er_events"
+      },
+      "By language: Spanish, urgent": {
+        "kind": "pts",
+        "events_key": "by_language.Spanish.er_events"
+      },
+      "By language: Spanish, urgent + notes": {
+        "kind": "pts",
+        "events_key": "by_language.Spanish.er_events"
+      },
+      "By language: Creole, urgent": {
+        "kind": "pts",
+        "events_key": "by_language.Haitian Creole.er_events"
+      },
+      "By language: Creole, urgent + notes": {
+        "kind": "pts",
+        "events_key": "by_language.Haitian Creole.er_events"
+      },
+      "Proxy label: Radar week AUC": {
+        "kind": "abs",
+        "amount": 0.005
+      },
+      "Proxy label: calendar week AUC": {
+        "kind": "abs",
+        "amount": 0.005
+      },
+      "Proxy label: patches/patient, least engaged": {
+        "kind": "abs",
+        "amount": 0.05
+      },
+      "By language: English, urgent": {
+        "kind": "pts",
+        "events_key": "by_language.English.er_events"
+      }
+    }
+  }
 }

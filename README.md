@@ -138,6 +138,8 @@ npm run e2e                                           # hits every endpoint, sav
 
 Verified by deploying to workers.dev and running the E2E check against it. No dev server was run on this Mac.
 
+The numbers here were made on macOS arm64. On Linux x86_64 the rough-patch model reproduces exactly; the urgent ER head and the numbers built on it can move by up to 2 points (urgent ER caught 49% instead of 47%). `check_numbers.py` allows that, and only for those rows; see [REPRODUCE.md](REPRODUCE.md#platform-tolerance-macos-vs-linux).
+
 ## Demo story (2 minutes)
 
 1. **The problem (15 s).** "Coaches hear about a bad week at the next call, days late. This watches the wearable and warns early."

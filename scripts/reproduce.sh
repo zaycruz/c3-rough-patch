@@ -97,6 +97,6 @@ echo '```' >> "$LOG"
 git diff --stat -- src/data analysis/out >> "$LOG" 2>&1 || true
 echo '```' >> "$LOG"
 echo >> "$LOG"
-if [ $rc = 0 ]; then echo "**PASS**: every README number matched." >> "$LOG"; else echo "**FAIL**: see MISMATCH / MISSING rows above." >> "$LOG"; fi
+if [ $rc = 0 ]; then echo "**PASS**: every README number matched (rows marked "platform tolerance" are within the documented macOS/Linux tolerance, see REPRODUCE.md)." >> "$LOG"; else echo "**FAIL**: see MISMATCH / MISSING rows above." >> "$LOG"; fi
 echo "log: $LOG (raw output: $RAW)"
 exit $rc

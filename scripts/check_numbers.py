@@ -2,6 +2,8 @@
 
 Usage: python -I scripts/check_numbers.py [repo root] [full|quick]   (quick: historical rows are reported as not run)   -> prints a markdown table, exit 1 if any row mismatches.
 A row MATCHES when the reproduced value, rounded the way the README rounds it, equals the README text.
+Rows listed under "platform_tolerance" in expected.json (urgent ER head, proxy-label run: they differ between macOS arm64,
+where the README was made, and Linux x86_64) also pass as "match (platform tolerance)" when within the stated tolerance.
 """
 import json
 from decimal import ROUND_HALF_UP, Decimal
@@ -10,7 +12,9 @@ from pathlib import Path
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent)
 MODE = sys.argv[2] if len(sys.argv) > 2 else "full"
-rows = json.loads((ROOT / "analysis" / "expected.json").read_text())["rows"]
+EXP = json.loads((ROOT / "analysis" / "expected.json").read_text())
+rows = EXP["rows"]
+TOL = EXP.get("platform_tolerance", {}).get("rows", {})
 cache = {}
 
 
@@ -84,7 +88,35 @@ def fmt(v, f):
     raise ValueError(f)
 
 
+def parse(text, f):
+    """README text back to the raw scale (inverse of fmt)."""
+    t = text.rstrip("%").lstrip("+")
+    v = float(t)
+    return v / 100 if f in ("pct0", "pct1", "pp0") else v
+
+
+def within(label, v, readme, f, doc):
+    """Cross-platform tolerance. abs: |raw - README| <= amount. pts: the printed values differ by at most 2 points,
+    or (small groups) the implied ER-event counts differ by at most 2 events."""
+    t = TOL.get(label)
+    if t is None:
+        return None
+    want = parse(readme, f)
+    if t["kind"] == "abs":
+        gap = abs(float(v) - want)
+        return gap <= t["amount"] + 1e-9, f"{gap:.3g} vs allowed {t['amount']:g}"
+    pts = abs(parse(fmt(v, f), f) - want) * 100
+    if pts <= 2 + 1e-9:
+        return True, f"{pts:g} points"
+    if t.get("events_key"):
+        n = resolve_greedy(doc, t["events_key"])
+        ev = abs(round(float(v) * n) - round(want * n))
+        return ev <= 2, f"{pts:g} points = {ev} of {n} ER events"
+    return False, f"{pts:g} points > 2"
+
+
 out, bad, missing = [], 0, 0
+tolerated = 0
 skipped = 0
 for label, f, key, readme, how, scope in rows:
     if scope == "historical" and MODE == "quick":
@@ -98,12 +130,18 @@ for label, f, key, readme, how, scope in rows:
         out.append((label, f, key, readme, f"(key not found: {e})", "MISSING")); missing += 1; continue
     got = fmt(v, how)
     ok = got == readme
+    res = "match" if ok else "MISMATCH"
+    if not ok and (w := within(label, v, readme, how, doc)) is not None:
+        ok, note = w
+        res = f"match (platform tolerance, {note})" if ok else f"MISMATCH ({note})"
+        tolerated += ok
     bad += not ok
-    out.append((label, f, key, readme, f"{got}  (raw {v})", "match" if ok else "MISMATCH"))
+    out.append((label, f, key, readme, f"{got}  (raw {v})", res))
 
 print("| README number | File | Key | README | Reproduced | Result |\n|---|---|---|---|---|---|")
 for r in out:
     print("| " + " | ".join(str(x) for x in r) + " |")
 n = len(out)
-print(f"\n**{n - bad - missing - skipped}/{n - skipped} match**, {bad} mismatch, {missing} missing" + (f", {skipped} not run (quick)." if skipped else "."))
+print(f"\n**{n - bad - missing - skipped}/{n - skipped} match**, {bad} mismatch, {missing} missing" + (f", {skipped} not run (quick)" if skipped else "")
+      + (f"; {tolerated} of the matches are within the cross-platform tolerance." if tolerated else "."))
 sys.exit(0 if bad == 0 and missing == 0 else 1)
