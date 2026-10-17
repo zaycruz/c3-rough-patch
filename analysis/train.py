@@ -120,7 +120,26 @@ def features(d):
     f["radiation"] = d.treatment_plan.str.contains("adiation").astype(int)
     f["iv_chemo"] = d.treatment_plan.str.contains("IV chemo|Chemoradiation").astype(int)
     f["day_in_program"] = d.day_in_program.clip(0, 270) / 30
+    # model v2 (picked on validation patients, see analysis/research_log.md):
+    # 14-day level and 7-day slope vs personal baseline, and a 60-day memory of past wearable crashes
+    for s in ["steps", "resting_heart_rate", "hrv_rmssd_ms", "sleep_minutes", "sleep_efficiency_pct", "minutes_watch_worn"]:
+        base = g[s].transform(lambda v: v.shift(8).rolling(28, min_periods=7).median())
+        sd = g[s].transform(lambda v: v.shift(8).rolling(28, min_periods=7).std()).clip(lower=1e-3)
+        r14 = g[s].transform(lambda v: v.rolling(14, min_periods=4).mean())
+        f[f"{s}_z14"] = ((r14 - base) / sd).clip(-6, 6)
+        f[f"{s}_slope7"] = g[s].transform(lambda v: v.rolling(7, min_periods=4).apply(_slope, raw=True)) / sd
+    f["steps_crash_days60"] = (f["steps_z3"] < -1.5).astype(int).groupby(d.patient_id).transform(
+        lambda v: v.rolling(60, min_periods=1).sum())
+    f["rhr_high_days60"] = (f["resting_heart_rate_z3"] > 1.5).astype(int).groupby(d.patient_id).transform(
+        lambda v: v.rolling(60, min_periods=1).sum())
     return f
+
+
+def _slope(v):
+    m = ~np.isnan(v)
+    if m.sum() < 4:
+        return np.nan
+    return np.polyfit(np.arange(len(v))[m], v[m], 1)[0]
 
 
 SCHEDULE = ["on_treatment", "cyclic", "days_since_dose", "nadir_window", "dose_soon", "cycle_number",

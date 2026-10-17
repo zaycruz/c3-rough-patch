@@ -22,17 +22,22 @@ SEED = 7
 
 # wearable signal groups the explanation can name; each maps to the model features it owns
 GROUPS = {
-    "steps": ["steps_z3", "steps_z7", "active_minutes_z3", "active_minutes_z7"],
-    "resting_heart_rate": ["resting_heart_rate_z3", "resting_heart_rate_z7"],
-    "hrv_rmssd_ms": ["hrv_rmssd_ms_z3", "hrv_rmssd_ms_z7"],
-    "sleep": ["sleep_minutes_z3", "sleep_minutes_z7", "sleep_efficiency_pct_z3", "sleep_efficiency_pct_z7",
-              "times_woke_up_z3", "times_woke_up_z7"],
+    "steps": ["steps_z3", "steps_z7", "steps_z14", "steps_slope7", "steps_crash_days60",
+              "active_minutes_z3", "active_minutes_z7"],
+    "resting_heart_rate": ["resting_heart_rate_z3", "resting_heart_rate_z7", "resting_heart_rate_z14",
+                           "resting_heart_rate_slope7", "rhr_high_days60"],
+    "hrv_rmssd_ms": ["hrv_rmssd_ms_z3", "hrv_rmssd_ms_z7", "hrv_rmssd_ms_z14", "hrv_rmssd_ms_slope7"],
+    "sleep": ["sleep_minutes_z3", "sleep_minutes_z7", "sleep_minutes_z14", "sleep_minutes_slope7",
+              "sleep_efficiency_pct_z3", "sleep_efficiency_pct_z7", "sleep_efficiency_pct_z14",
+              "sleep_efficiency_pct_slope7", "times_woke_up_z3", "times_woke_up_z7"],
     "skin_temp_change_c": ["skin_temp_change_c_z3", "skin_temp_change_c_z7", "skin_temp_change_c_max3"],
-    "wear": ["watch_off_days7", "watch_worn_z7", "minutes_watch_worn_z3", "low_wear_days7"],
+    "wear": ["watch_off_days7", "watch_worn_z7", "minutes_watch_worn_z3", "low_wear_days7",
+             "minutes_watch_worn_z14", "minutes_watch_worn_slope7"],
 }
 LABEL = {"steps": "Steps", "resting_heart_rate": "Resting heart rate", "hrv_rmssd_ms": "Heart rate variability",
          "sleep": "Sleep", "skin_temp_change_c": "Skin temperature", "wear": "Watch wear"}
-NEUTRAL = {"watch_off_days7": 0, "low_wear_days7": 0, "skin_temp_change_c_max3": 0.0}
+NEUTRAL = {"watch_off_days7": 0, "low_wear_days7": 0, "skin_temp_change_c_max3": 0.0,
+           "steps_crash_days60": 0, "rhr_high_days60": 0}
 
 
 def r(x, n=1):
