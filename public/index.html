@@ -110,7 +110,7 @@ async function show(id) {
     <div class="ctx">${esc(d.profile.context)} · ${esc(d.profile.cancerType)} stage ${esc(d.profile.stage)} · ${esc(d.profile.device)} · ${esc(d.profile.language)}</div>
     <p>${esc(d.summary)}</p>
     <div class="sec"><h3>Why: signals behind this forecast</h3>
-      ${d.evidence.map((e) => `<div class="ev"><div class="bar" title="share of risk"><i style="width:${Math.max(4, (100 * (e.riskShare || 0)) / maxShare)}%"></i></div><div><b>${esc(e.label)}</b> ${esc(e.text)}</div></div>`).join("")}
+      ${d.evidence.map((e) => `<div class="ev"><div class="bar" title="${e.signal === "checkins" ? "warning sign, not in the forecast" : "share of risk"}">${e.signal === "checkins" ? "" : `<i style="width:${Math.max(4, (100 * (e.riskShare || 0)) / maxShare)}%"></i>`}</div><div><b>${esc(e.label)}</b> ${esc(e.text)}</div></div>`).join("")}
     </div>
     <div class="sec"><h3>Suggested action for the coach</h3>
       ${d.recommendations.map((r) => `<div class="rec">${esc(r.action)}<small>${esc(r.urgency)} · ${esc(r.why)}</small></div>`).join("")}

@@ -147,6 +147,9 @@ def actions(status, top, skin_hot, rhr_up, urgent=False):
 
 
 def main():
+    global SKIP_RATE, NOWCAST_BASE
+    lv2 = json.loads((OUT / "metrics.json").read_text())["label_v2"]
+    SKIP_RATE, NOWCAST_BASE = lv2["rough_rate_after_skips"], lv2["missed_day_expected_rough_share"]
     art = pickle.loads((OUT / "gbm.pkl").read_bytes())
     gb, gs, feats, thr = art["model"], art["schedule_model"], art["features"], art["thresholds"]
     gu, thr_u = art["urgent_model"], art["urgent_threshold"]
@@ -177,12 +180,23 @@ def main():
                 evidence.append({"signal": g, "label": LABEL[g], "riskShare": round(float(c), 3), **line})
             if len(evidence) == 3:
                 break
+        # skipped check-ins: not in the label or the model, shown as a warning sign with a same-day wearable estimate
+        run = int(row.skips_before) + (1 if pd.isna(row.daily_feeling_1_to_5) else 0)
+        if run >= 2:
+            k = max(x for x in map(int, SKIP_RATE) if x <= run)
+            ratio = SKIP_RATE[str(k)] / SKIP_RATE["0"]
+            est = row.nowcast_p
+            evidence.append({"signal": "checkins", "label": "Check-ins", "riskShare": 0.0, "value": run, "unit": "daily check-ins skipped in a row",
+                             "text": f"Skipped the last {run} daily check-ins. Across the program, people who come back after {k}+ skips report a rough day "
+                                     f"{ratio:.1f}x as often" + (f"; today's wearable estimate: {est:.0%} chance today is rough (typical {NOWCAST_BASE:.0%})"
+                                                                if pd.notna(est) else "")})
         evidence.append({"signal": "schedule", "label": "Treatment calendar", "riskShare": round(sched, 3),
                          "text": f"{schedule_context(row)}. The calendar alone predicts {sched:.0%} risk of a rough patch this week."})
         last3 = hist.iloc[-3:]
         skin_hot = bool((last3.skin_temp_change_c > 0.5).any())
         rhr_up = bool(last3.resting_heart_rate.mean() - hist.iloc[-35:-7].resting_heart_rate.median() > 3)
-        top = evidence[0]["signal"] if evidence[0]["signal"] != "schedule" and score - sched > 0.02 else "schedule"
+        wev = [e for e in evidence if e["signal"] not in ("schedule", "checkins")]
+        top = wev[0]["signal"] if wev and score - sched > 0.02 else "schedule"
         wear_lift = score - sched
         if urgent:
             headline = f"Urgent: ER or hospital risk {urgent_risk:.0%} in the next 7 days, about {urgent_risk / ER_BASE:.0f}x usual"
@@ -197,10 +211,10 @@ def main():
         summary = ((f"Urgent: risk of an ER visit or hospital admission in the next 7 days is {urgent_risk:.0%} "
                     f"(urgent line {thr_u:.0%}, typical day {ER_BASE:.1%}). ") if urgent else "") + (f"Risk of a rough patch in the next 7 days: {score:.0%} (alert line {thr['alert']:.0%}). "
                    f"The treatment calendar alone gives {sched:.0%}; wearable signals move it {int(round(wear_lift * 100)):+d} points. "
-                   + ("Biggest wearable driver: " + evidence[0]["text"] + "." if top != "schedule"
+                   + ("Biggest wearable driver: " + wev[0]["text"] + "." if top != "schedule"
                       else "Several small wearable changes add up; no single signal is far out of line."
                       if score - sched > 0.03
-                      else "The wearable agrees: " + evidence[0]["text"] + "." if evidence[0]["signal"] != "schedule"
+                      else "The wearable agrees: " + wev[0]["text"] + "." if wev
                       else "No wearable signal is out of line; the risk comes from where they are in treatment."))
         h = hist.tail(WINDOW)
         hf = F.loc[h.index, feats]
@@ -221,7 +235,10 @@ def main():
                         "treatmentPlan": row.treatment_plan, "device": row.device, "language": row.preferred_language,
                         "livesAlone": row.lives_alone, "context": schedule_context(row)},
             "evidence": evidence,
-            "recommendations": actions(status, top, skin_hot, rhr_up, urgent),
+            "recommendations": actions(status, top, skin_hot, rhr_up, urgent) + ([{
+                "action": "Send a short, no-pressure message asking how the week is going; offer a 2-minute call instead of the form.",
+                "why": f"{run} daily check-ins skipped in a row; rough days are more common after a run of skips.",
+                "urgency": "this week"}] if run >= 3 else []),
             "charts": {
                 "dates": [t.strftime("%Y-%m-%d") for t in h.date],
                 "risk": series(risk, 3),

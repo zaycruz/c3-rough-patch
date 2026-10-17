@@ -1,7 +1,7 @@
 # C3 Bad Week Radar: API contract
 
 Base URL (deployed): `https://c3-rough-patch.zay-259.workers.dev`. All responses are JSON with `access-control-allow-origin: *`.
-The examples below are real responses, captured by `npm run e2e` on 2026-10-17T14:37:18.105Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
+The examples below are real responses, captured by `npm run e2e` on 2026-10-17T15:21:49.650Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
 
 ## `GET /api/c3/survivors`: roster tiles
 
@@ -29,7 +29,7 @@ Sorted with `urgent` first, then by `status` (alert, then watch, then ok), then 
     "survivorId": "c3-P02465",
     "displayName": "P02465 · 59M · bladder",
     "status": "alert",
-    "headline": "Rough patch risk 51% in the next 7 days, driven by sleep",
+    "headline": "Rough patch risk 33% in the next 7 days, driven by sleep",
     "updatedAt": "2025-01-31T20:00:00Z",
     "urgent": false
   }
@@ -50,14 +50,14 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
   "displayName": "P02185 · 42M · lymphoma",
   "status": "alert",
   "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
-  "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 6% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 16% (alert line 13%). The treatment calendar alone gives 10%; wearable signals move it +6 points. Biggest wearable driver: Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days).",
+  "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 6% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 16% (alert line 11%). The treatment calendar alone gives 9%; wearable signals move it +7 points. Biggest wearable driver: Sleep efficiency 87% vs usual 92%, waking 3.5x a night vs 2.0x, 6.8 h asleep vs 7.1 h.",
   "urgent": true,
   "urgentRisk": 0.06,
   "risk": 0.162,
-  "scheduleRisk": 0.102,
+  "scheduleRisk": 0.091,
   "thresholds": {
-    "alert": 0.133,
-    "watch": 0.087,
+    "alert": 0.106,
+    "watch": 0.068,
     "urgent": 0.058
   },
   "profile": {
@@ -73,19 +73,9 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
   },
   "evidence": [
     {
-      "signal": "steps",
-      "label": "Steps",
-      "riskShare": 0.067,
-      "value": 7721,
-      "baseline": 12395,
-      "unit": "steps/day",
-      "change": "-38%",
-      "text": "Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days)"
-    },
-    {
       "signal": "sleep",
       "label": "Sleep",
-      "riskShare": 0.049,
+      "riskShare": 0.079,
       "value": 87,
       "baseline": 92,
       "unit": "% efficiency",
@@ -93,9 +83,19 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
       "text": "Sleep efficiency 87% vs usual 92%, waking 3.5x a night vs 2.0x, 6.8 h asleep vs 7.1 h"
     },
     {
+      "signal": "steps",
+      "label": "Steps",
+      "riskShare": 0.075,
+      "value": 7721,
+      "baseline": 12395,
+      "unit": "steps/day",
+      "change": "-38%",
+      "text": "Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days)"
+    },
+    {
       "signal": "hrv_rmssd_ms",
       "label": "Heart rate variability",
-      "riskShare": 0.018,
+      "riskShare": 0.04,
       "value": 63,
       "baseline": 85.7,
       "unit": "ms",
@@ -103,10 +103,18 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
       "text": "Heart rate variability 26% lower than usual (recovery down)"
     },
     {
+      "signal": "checkins",
+      "label": "Check-ins",
+      "riskShare": 0,
+      "value": 3,
+      "unit": "daily check-ins skipped in a row",
+      "text": "Skipped the last 3 daily check-ins. Across the program, people who come back after 3+ skips report a rough day 1.4x as often; today's wearable estimate: 13% chance today is rough (typical 6%)"
+    },
+    {
       "signal": "schedule",
       "label": "Treatment calendar",
-      "riskShare": 0.102,
-      "text": "Day 5 of cycle 4 (IV chemo every 21 days). The calendar alone predicts 10% risk of a rough patch this week."
+      "riskShare": 0.091,
+      "text": "Day 5 of cycle 4 (IV chemo every 21 days). The calendar alone predicts 9% risk of a rough patch this week."
     }
   ],
   "recommendations": [
@@ -116,13 +124,18 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
       "urgency": "today"
     },
     {
-      "action": "Check in this week: ask about energy and what got in the way of moving. Offer a lighter activity goal.",
-      "why": "Movement has dropped well below their usual.",
+      "action": "Check in this week about sleep: nights, naps, worries. Share the sleep tips sheet.",
+      "why": "Sleep got shorter or more broken than usual.",
       "urgency": "within 2 days"
     },
     {
       "action": "Move the next coaching call earlier and plan around the expected low point.",
       "why": "The forecast covers the next 7 days.",
+      "urgency": "this week"
+    },
+    {
+      "action": "Send a short, no-pressure message asking how the week is going; offer a 2-minute call instead of the form.",
+      "why": "3 daily check-ins skipped in a row; rough days are more common after a run of skips.",
       "urgency": "this week"
     }
   ],
@@ -135,10 +148,10 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
       "2025-01-31"
     ],
     "risk": [
-      0.204,
-      0.185,
-      0.139,
-      0.13,
+      0.144,
+      0.123,
+      0.107,
+      0.104,
       0.162
     ],
     "urgentRisk": [
@@ -231,7 +244,8 @@ Model and baselines on held-out patients. Includes the definition of a rough pat
 {
   "asOf": "2025-01-31",
   "definition": {
-    "rough_day": "daily feeling <= 2, OR weekly fatigue >= 3, OR ER visit / hospital admission / treatment paused",
+    "label_version": "v2",
+    "rough_day": "relative to the person: daily feeling 1, or 2+ points below their own median of the last 28 check-ins (until 5 check-ins: feeling <= 2); OR on the weekly check-in any of fatigue, nausea, pain, appetite loss, diarrhea, trouble sleeping, anxiety, sadness >= 3 or 2+ above their own usual; OR ER visit / admission / treatment paused. Skipped check-ins are not counted as rough; they are shown to the coach as a warning sign (rough rate on return rises ~1.8x after 5 skips) with a same-day wearable estimate",
     "rough_patch": "a rough day followed by another within 3 days, or any clinical event; onset = first patch day after 7 quiet days",
     "forecast": "each evening, P(rough patch onset in the next 7 days); days already inside a patch are not scored",
     "early_warning": "an alert counts only if it fires 2+ days before onset",
@@ -242,65 +256,65 @@ Model and baselines on held-out patients. Includes the definition of a rough pat
   "counts": {
     "patients": 3000,
     "test_patients": 750,
-    "onsets_total": 3677,
+    "onsets_total": 3013,
     "label_missing_feeling_share": 0.545
   },
   "model": {
     "name": "Radar (gradient boosting, wearable + schedule)",
     "weeks": {
-      "weeks": 14216,
-      "rough_weeks": 786,
-      "auc": 0.804,
-      "precision": 0.195,
+      "weeks": 14501,
+      "rough_weeks": 685,
+      "auc": 0.819,
+      "precision": 0.169,
       "recall": 0.439,
-      "alert_share": 0.125
+      "alert_share": 0.123
     },
     "episodes": {
-      "episodes": 867,
-      "episode_recall": 0.642,
-      "median_lead_days": 6,
+      "episodes": 721,
+      "episode_recall": 0.664,
+      "median_lead_days": 7,
       "lead_days_hist": {
-        "2": 71,
-        "3": 56,
-        "4": 53,
-        "5": 67,
-        "6": 89,
-        "7": 221
+        "2": 46,
+        "3": 39,
+        "4": 33,
+        "5": 50,
+        "6": 67,
+        "7": 244
       },
       "er_admissions": 182,
-      "er_recall": 0.544,
-      "alert_runs": 3192,
-      "alert_precision": 0.147,
-      "alerts_per_patient_month": 0.84
+      "er_recall": 0.549,
+      "alert_runs": 2993,
+      "alert_precision": 0.116,
+      "alerts_per_patient_month": 0.78
     }
   },
   "schedule": {
     "name": "Baseline: treatment schedule only (same learner)",
     "weeks": {
-      "weeks": 14216,
-      "rough_weeks": 786,
-      "auc": 0.79,
-      "precision": 0.184,
-      "recall": 0.403,
-      "alert_share": 0.121
+      "weeks": 14501,
+      "rough_weeks": 685,
+      "auc": 0.808,
+      "precision": 0.161,
+      "recall": 0.422,
+      "alert_share": 0.124
     },
     "episodes": {
-      "episodes": 867,
-      "episode_recall": 0.589,
-      "median_lead_days": 6,
+      "episodes": 721,
+      "episode_recall": 0.617,
+      "median_lead_days": 7,
       "lead_days_hist": {
-        "2": 52,
-        "3": 33,
+        "2": 32,
+        "3": 32,
         "4": 42,
-        "5": 54,
-        "6": 79,
-        "7": 251
+        "5": 39,
+        "6": 45,
+        "7": 255
       },
       "er_admissions": 182,
-      "er_recall": 0.418,
-      "alert_runs": 2567,
-      "alert_precision": 0.139,
-      "alerts_per_patient_month": 0.67
+      "er_recall": 0.434,
+      "alert_runs": 2334,
+      "alert_precision": 0.102,
+      "alerts_per_patient_month": 0.61
     }
   },
   "realDataCheck": {

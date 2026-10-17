@@ -142,7 +142,7 @@ def label_v2(d, train_mask):
     tau = float(np.quantile(p[ref], 1 - expect))
     d["nowcast_p"] = np.where(miss, p, np.nan)
     d["rough_proxy"] = (cand & (p >= tau)).astype(int)
-    if os.environ.get("C3_PROXY", "1") == "0":
+    if os.environ.get("C3_PROXY", "0") == "0":  # served label: proxy measured, kept out (see README)
         d["rough_proxy"] = 0
     d["rough"] = ((d.rough_self == 1) | (d.clinical == 1) | (d.rough_proxy == 1)).astype(int)
     rate = lambda k: float(feel_rough[(~miss) & (d.skips_before == k)].mean())
@@ -418,8 +418,8 @@ def main():
     rough_day = ("relative to the person: daily feeling 1, or 2+ points below their own median of the last 28 check-ins "
                  "(until 5 check-ins: feeling <= 2); OR on the weekly check-in any of fatigue, nausea, pain, appetite loss, "
                  "diarrhea, trouble sleeping, anxiety, sadness >= 3 or 2+ above their own usual; OR ER visit / admission / "
-                 "treatment paused; OR, on a day with no check-in, a same-day wearable nowcast says rough (the run of "
-                 "skipped check-ins is an input, so each extra skipped day weighs more); no check-in AND watch off = unknown"
+                 "treatment paused. Skipped check-ins are not counted as rough; they are shown to the coach as a warning "
+                 "sign (rough rate on return rises ~1.8x after 5 skips) with a same-day wearable estimate"
                  ) if LABEL_VERSION == "v2" else \
         "daily feeling <= 2, OR weekly fatigue >= 3, OR ER visit / hospital admission / treatment paused"
     report = {"definition": {
