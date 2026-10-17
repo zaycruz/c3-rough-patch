@@ -1,7 +1,7 @@
 # C3 Bad Week Radar: API contract
 
 Base URL (deployed): `https://c3-rough-patch.zay-259.workers.dev`. All responses are JSON with `access-control-allow-origin: *`.
-The examples below are real responses, captured by `npm run e2e` on 2026-10-17T17:42:32.390Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
+The examples below are real responses, captured by `npm run e2e` on 2026-10-17T18:29:15.788Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
 
 ## `GET /api/c3/survivors`: roster tiles
 
@@ -81,6 +81,10 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
   "urgentRisk": 0.104,
   "reviewToday": false,
   "noteFlag": null,
+  "escalation": {
+    "reasons": [],
+    "basis": "Model-free same-day rules (analysis/escalation.py); see headline.escalation"
+  },
   "risk": 0.078,
   "scheduleRisk": 0.021,
   "thresholds": {
@@ -388,8 +392,89 @@ All numbers are from held-out test patients (750 patients the model never saw).
     "nextDayAucWearable": 0.482,
     "nextDayAucSelfRating": 0.64
   },
+  "escalation": {
+    "baseline": "Urgent ER tier alone",
+    "text": "Model-free escalation (no model; English, Spanish and Haitian Creole): call today when the diary note names a warning sign or reads like passive suicidal thinking, or the person rates the day 1 of 5. Alone it catches 32% of ER visits and admissions 2-7 days early for about 4 calls per coach per week (caseload 60); about 1 in 8 calls is followed by an ER visit or admission within 7 days. With the urgent tier: 61% vs 47% for the tier alone (95% CI +9 to +19 points), 16 calls per coach per week, 1 in 12 followed by an ER visit. Flag rates are within 0.02 flags per patient-month across languages. Passive-ideation phrases never occur in this synthetic data, so that rule is tested only on written cases, with no outcome.",
+    "rules": {
+      "ideation": "diary note reads like passive suicidal thinking (word list in 3 languages)",
+      "note": "diary note names a red flag (analysis/notes_scan.py)",
+      "checkin": "daily feeling 1 of 5",
+      "mood": "weekly sadness or anxiety 4 of 4 (counted, not validated)"
+    },
+    "pickedRule": "C1",
+    "selectionRule": "val: max share of flag days followed by ER within 7 d, among rules with <= 0.5 flag days per patient-month; ties to the lower number",
+    "erCaught": 0.319,
+    "erCaughtWithUrgent": 0.61,
+    "erCaughtUrgentOnly": 0.467,
+    "gainCi95Points": [
+      9,
+      19.1
+    ],
+    "workload": {
+      "caseloadPerCoach": 60,
+      "caseloadNote": "parameter; the sponsor brief gives no caseload",
+      "escalation": {
+        "callsPerCoachWeek": 4.4,
+        "callsPerErOrAdmission": 8,
+        "flagDaysPerPatientMonth": 0.318
+      },
+      "urgent": {
+        "callsPerCoachWeek": 11.9,
+        "callsPerErOrAdmission": 13,
+        "flagDaysPerPatientMonth": 0.863
+      },
+      "urgent_or_escalation": {
+        "callsPerCoachWeek": 15.5,
+        "callsPerErOrAdmission": 12.2,
+        "flagDaysPerPatientMonth": 1.119
+      }
+    },
+    "byLanguage": {
+      "English": {
+        "patients": 445,
+        "note_flag_days_per_patient_month": 0.061,
+        "ideation_flag_days_per_patient_month": 0,
+        "checkin_flag_days_per_patient_month": 0.293,
+        "mood_flag_days_per_patient_month": 0.011,
+        "escalation_flag_days_per_patient_month": 0.311,
+        "escalation_er_caught_2to7d": 0.346,
+        "urgent_er_caught_2to7d": 0.505,
+        "urgent_or_escalation_er_caught_2to7d": 0.636,
+        "er_events": 107
+      },
+      "Haitian Creole": {
+        "patients": 60,
+        "note_flag_days_per_patient_month": 0.066,
+        "ideation_flag_days_per_patient_month": 0,
+        "checkin_flag_days_per_patient_month": 0.317,
+        "mood_flag_days_per_patient_month": 0.007,
+        "escalation_flag_days_per_patient_month": 0.334,
+        "escalation_er_caught_2to7d": 0.278,
+        "urgent_er_caught_2to7d": 0.444,
+        "urgent_or_escalation_er_caught_2to7d": 0.5,
+        "er_events": 18
+      },
+      "Spanish": {
+        "patients": 245,
+        "note_flag_days_per_patient_month": 0.045,
+        "ideation_flag_days_per_patient_month": 0,
+        "checkin_flag_days_per_patient_month": 0.315,
+        "mood_flag_days_per_patient_month": 0.007,
+        "escalation_flag_days_per_patient_month": 0.326,
+        "escalation_er_caught_2to7d": 0.281,
+        "urgent_er_caught_2to7d": 0.404,
+        "urgent_or_escalation_er_caught_2to7d": 0.596,
+        "er_events": 57
+      }
+    },
+    "ideationNotesInData": 0,
+    "modelFree": true,
+    "reproducesAcrossPlatforms": "escalation-only numbers: exactly; numbers combined with the urgent tier: within the platform tolerance",
+    "language": "rules read English, Spanish and Haitian Creole notes; coach text is English only"
+  },
   "order": [
     "urgent",
+    "escalation",
     "noteScan",
     "roughPatch",
     "realData"

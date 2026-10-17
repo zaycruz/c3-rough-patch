@@ -1,6 +1,6 @@
 {
   "base": "https://c3-rough-patch.zay-259.workers.dev",
-  "ranAt": "2026-10-17T17:42:32.390Z",
+  "ranAt": "2026-10-17T18:29:15.788Z",
   "passed": true,
   "checks": [
     {
@@ -38,7 +38,7 @@
       "name": "roster is precomputed: served as a static JSON asset with CORS and a cache header",
       "ok": true,
       "info": {
-        "ms": 129,
+        "ms": 242,
         "contentType": "application/json; charset=utf-8",
         "cacheControl": "public, max-age=60"
       }
@@ -96,8 +96,8 @@
       "name": "metrics.provenance: run ID, clean 40-hex code commit, the sponsor-data sha256 from data/README.md, a model hash",
       "ok": true,
       "info": {
-        "runId": "export-2026-10-17T17-42-01Z",
-        "codeCommit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
+        "runId": "export-2026-10-17T18-28-28Z",
+        "codeCommit": "6481dacaa1714a51e927248060d83a44435e406b",
         "codeDirty": false
       }
     },
@@ -105,8 +105,8 @@
       "name": "API responses carry x-c3-run and x-c3-commit matching metrics.provenance",
       "ok": true,
       "info": {
-        "run": "export-2026-10-17T17-42-01Z",
-        "commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b"
+        "run": "export-2026-10-17T18-28-28Z",
+        "commit": "6481dacaa1714a51e927248060d83a44435e406b"
       }
     },
     {
@@ -172,6 +172,38 @@
           5.5,
           14.9
         ]
+      }
+    },
+    {
+      "name": "metrics.headline.escalation: model-free, per-coach workload for escalation / urgent / both, gain CI, flag rate by language, ideation rule disclosed",
+      "ok": true,
+      "info": {
+        "erCaught": 0.319,
+        "withUrgent": 0.61,
+        "urgentOnly": 0.467,
+        "gain": [
+          9,
+          19.1
+        ],
+        "workload": {
+          "caseloadPerCoach": 60,
+          "caseloadNote": "parameter; the sponsor brief gives no caseload",
+          "escalation": {
+            "callsPerCoachWeek": 4.4,
+            "callsPerErOrAdmission": 8,
+            "flagDaysPerPatientMonth": 0.318
+          },
+          "urgent": {
+            "callsPerCoachWeek": 11.9,
+            "callsPerErOrAdmission": 13,
+            "flagDaysPerPatientMonth": 0.863
+          },
+          "urgent_or_escalation": {
+            "callsPerCoachWeek": 15.5,
+            "callsPerErOrAdmission": 12.2,
+            "flagDaysPerPatientMonth": 1.119
+          }
+        }
       }
     },
     {
@@ -256,12 +288,12 @@
   "responses": {
     "/": {
       "status": 200,
-      "ms": 464,
+      "ms": 496,
       "bytes": 11084
     },
     "/api/c3/survivors": {
       "status": 200,
-      "ms": 129,
+      "ms": 242,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
@@ -269,14 +301,14 @@
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
         "cf-cache-status": "HIT",
-        "cf-ray": "a4c1194b7f1d745e-MIA",
+        "cf-ray": "a4c15d76b8ddc14d-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:42:15 GMT",
+        "date": "Sat, 17 Oct 2026 18:28:47 GMT",
         "etag": "W/\"42d0cad39c4f488b7806018fdc47a08f\"",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=T2%2BLJt7sMFmSkmG%2FBodVIbwLeVnXDy0rZ53LayeN38W%2FwP7hzwZ1v2wiiljL1%2FW5v8B1zuRfeFJu3nzjI%2Fm%2B2RPgke6s4%2B8J%2FMGYKnMCNXhs81omhg7RgbxpAv9FUg39KkiDn9Pa7qY%2BXbvXMmDtM9MpFSQP\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=Gz72x%2F9XsrOa45FGJQ6NW7Q06hn1nefVqZZMol9d8%2FOVlwdzu3IOSonT%2FicYq24bA6qFqfQ2ARHCxd3B2MkHXR3lU1w%2FRvPr18hm3X4upNXeBnAnavjEEr7uBb5OYSEQQi84Y0%2BUYiJ8pR2TSZlU%2BJy9vZY2\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
@@ -1065,24 +1097,24 @@
     },
     "/api/c3/survivors/c3-P03000": {
       "status": 200,
-      "ms": 179,
+      "ms": 564,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c1194cd874745e-MIA",
+        "cf-ray": "a4c15d786f39c14d-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:42:15 GMT",
+        "date": "Sat, 17 Oct 2026 18:28:48 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=1HDzcMg20CJsY8aRkRM9v6xUSbirnJ8MP1ViV%2FvUnMfGvyO0SKdJcQnmmFOC20XmzMQ2tkiaFxO2BjU9t0kwefULQ%2FZ0YEGOPJLglJnnC9CudSff%2BouWDlKSrRbHseW%2B%2BHXrz0QybdjJLc4dNKth9jEtcluK\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=cCXiuWNTUs%2FSIFKqlNfRY1uVeKauAZzezCRoQS2fdgWo%2FMntv54im9yad77eTHqCwleBsB%2BOUNzPc2sEEFHefCOD0NoN8u9%2BrMUylkzPmG19Ic02C6oG5v611hZAR4d1F3J9acLJtkkaB02WY0OAbX9AMo5w\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked",
-        "x-c3-commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
-        "x-c3-run": "export-2026-10-17T17-42-01Z"
+        "x-c3-commit": "6481dacaa1714a51e927248060d83a44435e406b",
+        "x-c3-run": "export-2026-10-17T18-28-28Z"
       },
       "body": {
         "survivorId": "c3-P03000",
@@ -1094,6 +1126,10 @@
         "urgentRisk": 0.104,
         "reviewToday": false,
         "noteFlag": null,
+        "escalation": {
+          "reasons": [],
+          "basis": "Model-free same-day rules (analysis/escalation.py); see headline.escalation"
+        },
         "risk": 0.078,
         "scheduleRisk": 0.021,
         "thresholds": {
@@ -1666,23 +1702,23 @@
     },
     "/api/c3/survivors/c3-nope": {
       "status": 404,
-      "ms": 22,
+      "ms": 89,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c119b11ac2745e-MIA",
+        "cf-ray": "a4c15e1a184bc14d-MIA",
         "connection": "keep-alive",
         "content-length": "30",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:42:31 GMT",
+        "date": "Sat, 17 Oct 2026 18:29:13 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=%2FwUQfsOhSwU3G6KgvsW7TkXo3vgQJkBOZB%2FzUQh%2Bbp5lHH3OMouiBsm%2BSNBMivBDePcGGgQ1XVUbmq4MXRCWUd7mHlq0DlnCuZlnTdU2cqTNtJwyGxelLxR4B7zGg20WcbulJRRomZ4FB9I2vYhsWdYdjs5v\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=XwUTxP64FOeXJcvYWwvYhACQm4RzCvuyDkfCLtLeISI4d%2BxGnuCaS0ovAGxMFsaj%2BxC9n7SxR6aa8uMq6M%2Bus0vjkP9MvX%2FJWNdvb6E0OLYtQinQomtSl%2B9j%2FwhAYnYw9lwCKLeRMMepnAN4DjmQDl0v1Ym7\"}]}",
         "server": "cloudflare",
-        "x-c3-commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
-        "x-c3-run": "export-2026-10-17T17-42-01Z"
+        "x-c3-commit": "6481dacaa1714a51e927248060d83a44435e406b",
+        "x-c3-run": "export-2026-10-17T18-28-28Z"
       },
       "body": {
         "error": "survivor not found"
@@ -1690,24 +1726,24 @@
     },
     "/api/c3/metrics": {
       "status": 200,
-      "ms": 524,
+      "ms": 1831,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c119b3e9f12b27-MIA",
+        "cf-ray": "a4c15e24adc3a87a-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:42:32 GMT",
+        "date": "Sat, 17 Oct 2026 18:29:15 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=u8cbfDBo7bt1pLgYVJ%2BRADgzbn6CqNN6FFbPOpGy4RI3LSp2ugZrHSAI%2FTtro%2Fk9lepRieu6UlNBi%2FfrVbMIiaoa7cp8cMn%2Bkku2GPBmWEvR8eAn7dIUqsOaDqqR4rlVexk1NU4tb2dCF13XObEkyLYvJmxg\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=v5OEBcA5xQnpHkLR%2BU8drEuvYQHcs4ytGN25QDfCZNxRemRqUWPWQ%2FTIZEv8%2FT2TIMicD6kUcnk7RqTtoilnl1lu7AOQKg1EdA7r%2BMtwOglnDn3pivk4YE%2FOzY3RWVRELgKD9ZNp0QUrej3NHF4MeZriRzfT\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked",
-        "x-c3-commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
-        "x-c3-run": "export-2026-10-17T17-42-01Z"
+        "x-c3-commit": "6481dacaa1714a51e927248060d83a44435e406b",
+        "x-c3-run": "export-2026-10-17T18-28-28Z"
       },
       "body": {
         "asOf": "2025-01-31",
@@ -2712,8 +2748,89 @@
             "nextDayAucWearable": 0.482,
             "nextDayAucSelfRating": 0.64
           },
+          "escalation": {
+            "baseline": "Urgent ER tier alone",
+            "text": "Model-free escalation (no model; English, Spanish and Haitian Creole): call today when the diary note names a warning sign or reads like passive suicidal thinking, or the person rates the day 1 of 5. Alone it catches 32% of ER visits and admissions 2-7 days early for about 4 calls per coach per week (caseload 60); about 1 in 8 calls is followed by an ER visit or admission within 7 days. With the urgent tier: 61% vs 47% for the tier alone (95% CI +9 to +19 points), 16 calls per coach per week, 1 in 12 followed by an ER visit. Flag rates are within 0.02 flags per patient-month across languages. Passive-ideation phrases never occur in this synthetic data, so that rule is tested only on written cases, with no outcome.",
+            "rules": {
+              "ideation": "diary note reads like passive suicidal thinking (word list in 3 languages)",
+              "note": "diary note names a red flag (analysis/notes_scan.py)",
+              "checkin": "daily feeling 1 of 5",
+              "mood": "weekly sadness or anxiety 4 of 4 (counted, not validated)"
+            },
+            "pickedRule": "C1",
+            "selectionRule": "val: max share of flag days followed by ER within 7 d, among rules with <= 0.5 flag days per patient-month; ties to the lower number",
+            "erCaught": 0.319,
+            "erCaughtWithUrgent": 0.61,
+            "erCaughtUrgentOnly": 0.467,
+            "gainCi95Points": [
+              9,
+              19.1
+            ],
+            "workload": {
+              "caseloadPerCoach": 60,
+              "caseloadNote": "parameter; the sponsor brief gives no caseload",
+              "escalation": {
+                "callsPerCoachWeek": 4.4,
+                "callsPerErOrAdmission": 8,
+                "flagDaysPerPatientMonth": 0.318
+              },
+              "urgent": {
+                "callsPerCoachWeek": 11.9,
+                "callsPerErOrAdmission": 13,
+                "flagDaysPerPatientMonth": 0.863
+              },
+              "urgent_or_escalation": {
+                "callsPerCoachWeek": 15.5,
+                "callsPerErOrAdmission": 12.2,
+                "flagDaysPerPatientMonth": 1.119
+              }
+            },
+            "byLanguage": {
+              "English": {
+                "patients": 445,
+                "note_flag_days_per_patient_month": 0.061,
+                "ideation_flag_days_per_patient_month": 0,
+                "checkin_flag_days_per_patient_month": 0.293,
+                "mood_flag_days_per_patient_month": 0.011,
+                "escalation_flag_days_per_patient_month": 0.311,
+                "escalation_er_caught_2to7d": 0.346,
+                "urgent_er_caught_2to7d": 0.505,
+                "urgent_or_escalation_er_caught_2to7d": 0.636,
+                "er_events": 107
+              },
+              "Haitian Creole": {
+                "patients": 60,
+                "note_flag_days_per_patient_month": 0.066,
+                "ideation_flag_days_per_patient_month": 0,
+                "checkin_flag_days_per_patient_month": 0.317,
+                "mood_flag_days_per_patient_month": 0.007,
+                "escalation_flag_days_per_patient_month": 0.334,
+                "escalation_er_caught_2to7d": 0.278,
+                "urgent_er_caught_2to7d": 0.444,
+                "urgent_or_escalation_er_caught_2to7d": 0.5,
+                "er_events": 18
+              },
+              "Spanish": {
+                "patients": 245,
+                "note_flag_days_per_patient_month": 0.045,
+                "ideation_flag_days_per_patient_month": 0,
+                "checkin_flag_days_per_patient_month": 0.315,
+                "mood_flag_days_per_patient_month": 0.007,
+                "escalation_flag_days_per_patient_month": 0.326,
+                "escalation_er_caught_2to7d": 0.281,
+                "urgent_er_caught_2to7d": 0.404,
+                "urgent_or_escalation_er_caught_2to7d": 0.596,
+                "er_events": 57
+              }
+            },
+            "ideationNotesInData": 0,
+            "modelFree": true,
+            "reproducesAcrossPlatforms": "escalation-only numbers: exactly; numbers combined with the urgent tier: within the platform tolerance",
+            "language": "rules read English, Spanish and Haitian Creole notes; coach text is English only"
+          },
           "order": [
             "urgent",
+            "escalation",
             "noteScan",
             "roughPatch",
             "realData"
@@ -3163,9 +3280,9 @@
           ]
         },
         "provenance": {
-          "runId": "export-2026-10-17T17-42-01Z",
-          "exportedAt": "2026-10-17T17-42-01Z",
-          "codeCommit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
+          "runId": "export-2026-10-17T18-28-28Z",
+          "exportedAt": "2026-10-17T18-28-28Z",
+          "codeCommit": "6481dacaa1714a51e927248060d83a44435e406b",
           "codeDirty": false,
           "dataSha256": {
             "synthetic_data/synthetic_daily.csv": "6d9b500ed5fa41ce0eb0f847351abf238623e90d20d534df0c7ea1774eb2a3b7",
