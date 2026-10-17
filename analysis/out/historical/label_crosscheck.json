@@ -1,0 +1,55 @@
+{
+  "budget": 0.12,
+  "v2_onsets": {
+    "score_model": {
+      "week_auc": 0.819,
+      "episode_recall": 0.664,
+      "alert_precision": 0.116,
+      "alerts_per_patient_month": 0.78,
+      "er_recall": 0.549,
+      "median_lead_days": 7.0
+    },
+    "score_model_v1label": {
+      "week_auc": 0.815,
+      "episode_recall": 0.688,
+      "alert_precision": 0.123,
+      "alerts_per_patient_month": 0.84,
+      "er_recall": 0.549,
+      "median_lead_days": 6.0
+    },
+    "score_schedule": {
+      "week_auc": 0.808,
+      "episode_recall": 0.617,
+      "alert_precision": 0.102,
+      "alerts_per_patient_month": 0.61,
+      "er_recall": 0.434,
+      "median_lead_days": 7.0
+    }
+  },
+  "v1_onsets": {
+    "score_model": {
+      "week_auc": 0.799,
+      "episode_recall": 0.61,
+      "alert_precision": 0.139,
+      "alerts_per_patient_month": 0.78,
+      "er_recall": 0.533,
+      "median_lead_days": 6.0
+    },
+    "score_model_v1label": {
+      "week_auc": 0.804,
+      "episode_recall": 0.642,
+      "alert_precision": 0.147,
+      "alerts_per_patient_month": 0.84,
+      "er_recall": 0.544,
+      "median_lead_days": 6.0
+    },
+    "score_schedule": {
+      "week_auc": 0.787,
+      "episode_recall": 0.562,
+      "alert_precision": 0.13,
+      "alerts_per_patient_month": 0.61,
+      "er_recall": 0.418,
+      "median_lead_days": 7.0
+    }
+  }
+}
