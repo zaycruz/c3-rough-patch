@@ -4,3 +4,11 @@ analysis/out/*.parquet
 node_modules/
 .wrangler/
 analysis/out/*.pkl
+
+# sponsor data never goes in git (see data/README.md)
+data/*
+!data/README.md
+runs/reproduce-*.log
+runner/node_modules/
+runner/.wrangler/
+runner/worker-configuration.d.ts

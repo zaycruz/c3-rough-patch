@@ -1,0 +1,65 @@
+{
+  "events": 558,
+  "by_days_before": {
+    "1": {
+      "steps_vs_baseline": -2296.0,
+      "resting_hr_vs_baseline_bpm": 4.15
+    },
+    "2": {
+      "steps_vs_baseline": -947.0,
+      "resting_hr_vs_baseline_bpm": 2.3
+    },
+    "3": {
+      "steps_vs_baseline": -44.0,
+      "resting_hr_vs_baseline_bpm": 1.06
+    },
+    "4": {
+      "steps_vs_baseline": -38.0,
+      "resting_hr_vs_baseline_bpm": 1.32
+    },
+    "5": {
+      "steps_vs_baseline": -506.0,
+      "resting_hr_vs_baseline_bpm": 1.49
+    },
+    "6": {
+      "steps_vs_baseline": -412.0,
+      "resting_hr_vs_baseline_bpm": 1.42
+    },
+    "7": {
+      "steps_vs_baseline": -444.0,
+      "resting_hr_vs_baseline_bpm": 1.38
+    },
+    "8": {
+      "steps_vs_baseline": -194.0,
+      "resting_hr_vs_baseline_bpm": 1.07
+    },
+    "9": {
+      "steps_vs_baseline": 91.0,
+      "resting_hr_vs_baseline_bpm": 0.6
+    },
+    "10": {
+      "steps_vs_baseline": 345.0,
+      "resting_hr_vs_baseline_bpm": 0.33
+    },
+    "11": {
+      "steps_vs_baseline": 372.0,
+      "resting_hr_vs_baseline_bpm": -0.08
+    },
+    "12": {
+      "steps_vs_baseline": 482.0,
+      "resting_hr_vs_baseline_bpm": -0.3
+    },
+    "13": {
+      "steps_vs_baseline": 483.0,
+      "resting_hr_vs_baseline_bpm": -0.44
+    },
+    "14": {
+      "steps_vs_baseline": 237.0,
+      "resting_hr_vs_baseline_bpm": -0.2
+    }
+  },
+  "days_1_to_7_mean": {
+    "steps": -669.0,
+    "rhr_bpm": 1.88
+  }
+}

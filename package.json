@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build:data": ".venv/bin/python -I analysis/train.py ~/Downloads/Challenge3_Bad_Week_Radar && .venv/bin/python -I analysis/export.py",
+    "build:data": "scripts/reproduce.sh data/Challenge3_Bad_Week_Radar quick",
     "typecheck": "tsc --noEmit",
     "deploy": "wrangler deploy",
     "e2e": "node scripts/e2e.mjs",

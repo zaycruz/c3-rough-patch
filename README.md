@@ -77,7 +77,7 @@ How to read it:
 - **A daily top-5 call list per 60-person caseload:** about 8% of listed patients start a patch within a week, vs a 4.7% base rate. Being on the list at some point in the week "reaches" 90% of patches, but the calendar alone reaches 88%, because 35 slots a week touch nearly everyone. Not a useful measure.
 - **Target missed:** we aimed for 25%+ alert precision. The best we reached is 18% alert precision and 23% week precision. The synthetic rough patches are noisy, and 55% of check-ins are missing.
 
-Signals around an ER visit in the synthetic data: resting heart rate climbs about 3 bpm and steps fall about 850 a day from roughly 8 days before. That is the window the forecaster uses.
+Signals before an ER visit in the synthetic data (`analysis/exp/er_presignal.py`, against the person's own median on days -35 to -15): resting heart rate starts rising and steps start falling about 8 days before. Over the last week the average is +1.9 bpm and -670 steps a day, peaking the day before (+4.2 bpm, -2,300 steps). That is the window the forecaster uses.
 
 ### Urgent tier: ER visit or hospital admission
 
@@ -105,19 +105,18 @@ Challenge 3 ships without judging criteria, so we scored ourselves against the C
 |---|---|---|
 | Scientific soundness | The outcome is relative to the person: feeling against their own median, 8 weekly symptoms against their own usual, plus clinical events (ER, admission, pause). One bad day is not a patch. A cross-check against the old label shows the new one does not grade itself. Inputs are only data known by the evening of the forecast: the person's check-ins (ratings lagged 3 days to avoid a leak through the scoring mask), skips and missed calls, the wearable vs their own baseline, and the treatment calendar. Events and diary text are never inputs. | 55% of daily check-ins are missing. Skips predict rough days (1.8x after 5), but filling them in from the wearable made the label track disengagement, so missed days stay unlabelled and the label still under-counts. |
 | Validation | Patients the model never saw (750). Thresholds set on separate validation patients. Every method gets the same alert budget. **Lift over the schedule-only model, 95% CI over patients:** patches caught +8 to +15 points; ER/admissions caught +9 to +20 points, at a 5% alert budget. **Calibrated:** predicted vs observed 7-day risk agrees in every decile (top decile 19% predicted vs 19% observed). Brier score 0.0407 vs 0.0445 for always guessing the base rate. | The lift over the calendar is real but small. Lead time is capped at the 7-day window: the "7" bucket means 7 or more. The calendar baseline has the same median, so lead time is not the wearable's win; the extra patches and ER visits caught are. |
-| Clinical insight | Risk peaks in the days after a dose (the chemo low point), climbs with cycle number, and is higher for IV chemo and chemoradiation. Wearable signals add risk on top: broken sleep, rising resting heart rate, lower HRV, fewer steps, rising skin temperature, watch left off. Before an ER visit, resting heart rate rises about 3 bpm and steps fall about 850 a day from roughly 8 days out. These are associations, not causes. | All of this is from made-up data whose patterns were designed in. On the real fatigue study, the wearable confirms a bad day on the day itself but does not predict the next day (AUC 0.482). |
+| Clinical insight | Risk peaks in the days after a dose (the chemo low point), climbs with cycle number, and is higher for IV chemo and chemoradiation. Wearable signals add risk on top: broken sleep, rising resting heart rate, lower HRV, fewer steps, rising skin temperature, watch left off. Before an ER visit, resting heart rate starts rising and steps start falling about 8 days out (last week: +1.9 bpm, -670 steps a day; the day before: +4.2 bpm, -2,300 steps). These are associations, not causes. | All of this is from made-up data whose patterns were designed in. On the real fatigue study, the wearable confirms a bad day on the day itself but does not predict the next day (AUC 0.482). |
 | Fairness | Week-level AUC, recall and precision by age, sex, race and ethnicity, language, cancer type, device and living alone. AUC is 0.76 to 0.85 in every cancer type and group with enough data. Groups with fewer than 30 rough weeks are marked "too few to judge" rather than reported. | `GET /api/c3/metrics` → `fairness` gives recall at the alert line per group with a 95% CI (patient bootstrap) and a plain-language summary. Only sarcoma is clearly below the overall 28% (13%, CI 0–26%). Haitian Creole speakers (22%, CI 10–36%) and breast cancer (21%, CI 14–28%) are lower, but their CIs still reach the overall: too few patients to be sure. Flagged survivors who prefer Spanish or Haitian Creole, or who live alone, get a social-needs coach action (`kind: "social"`). Asian patients, 10 cancer types and "other" race are too small to judge. |
-| Reproducibility | A fixed seed, a split by patient, and one command (`npm run build:data`) from the raw download to the served JSON. `npm run e2e` re-checks the live API and saves `runs/e2e-*.json`; `npm run contract` rebuilds CONTRACT.md from that run. | Training takes about 3 minutes on a laptop (it also trains the v1 cross-check model and the check-in nowcast). |
+| Reproducibility | A fixed seed, a split by patient, pinned dependencies (`uv.lock`), and one command (`scripts/reproduce.sh`, see [REPRODUCE.md](REPRODUCE.md)) from the sponsor download to every README number, checked against this README. `npm run e2e` re-checks the live API and saves `runs/e2e-*.json`; `npm run contract` rebuilds CONTRACT.md from that run. | Training takes about 3 minutes on a laptop (it also trains the v1 cross-check model and the check-in nowcast). |
 
 ## Run it
 
+Reproduce every number in this README with one command. [REPRODUCE.md](REPRODUCE.md) covers the data, the runtime and which file and key each number comes from:
+
 ```bash
-uv venv .venv && uv pip install --python .venv/bin/python pandas numpy scikit-learn pyarrow
-npm install
-npm run build:data        # train.py (about 3 min) + export.py; reads ~/Downloads/Challenge3_Bad_Week_Radar
-.venv/bin/python -I analysis/real_check.py ~/Downloads/Challenge3_Bad_Week_Radar && .venv/bin/python -I analysis/export.py
-npx tsc --noEmit && npx wrangler deploy   # workers.dev only, no custom domain
-npm run e2e               # hits every endpoint, saves runs/e2e-<time>.json and runs/e2e-latest.json
+scripts/reproduce.sh data/Challenge3_Bad_Week_Radar   # uv installs Python 3.14 + the locked packages; checks data hashes; writes runs/reproduce-<stamp>.md
+npm ci && npx tsc --noEmit && npx wrangler deploy     # workers.dev only, no custom domain
+npm run e2e                                           # hits every endpoint, saves runs/e2e-<time>.json and runs/e2e-latest.json
 ```
 
 Verified by deploying to workers.dev and running the E2E check against it. No dev server was run on this Mac.

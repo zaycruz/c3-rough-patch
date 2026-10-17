@@ -1,0 +1,21 @@
+{
+  // Reproduce runner: a separate Worker (not the live C3 API) that runs scripts/reproduce.sh from a fresh GitHub clone
+  // inside a Cloudflare Sandbox container. Every route needs the RUNNER_TOKEN secret. Delete it after a run:
+  //   npx wrangler delete --name c3-repro-runner
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "c3-repro-runner",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "containers": [
+    {
+      "class_name": "Sandbox",
+      "image": "docker.io/cloudflare/sandbox:0.12.10-python",
+      "instance_type": "standard-4",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": { "bindings": [{ "class_name": "Sandbox", "name": "Sandbox" }] },
+  "migrations": [{ "new_sqlite_classes": ["Sandbox"], "tag": "v1" }]
+}

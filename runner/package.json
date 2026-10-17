@@ -1,0 +1,8 @@
+{
+  "name": "c3-repro-runner",
+  "private": true,
+  "description": "Runs scripts/reproduce.sh from a fresh clone in a Cloudflare Sandbox (container). See ../REPRODUCE.md.",
+  "scripts": { "deploy": "wrangler deploy", "typecheck": "tsc --noEmit" },
+  "dependencies": { "@cloudflare/sandbox": "0.12.10" },
+  "devDependencies": { "typescript": "^5.9.3", "wrangler": "4.151.1" }
+}
