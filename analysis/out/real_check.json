@@ -1,0 +1,39 @@
+{
+  "dataset": "fatigue_study_daily.csv (Rao et al. 2023), people with a Fitbit",
+  "people": 204,
+  "days": 5236,
+  "bad_day_share": 0.085,
+  "same_day_signal_z": {
+    "steps": {
+      "bad_days_z": -0.235,
+      "other_days_z": 0.073
+    },
+    "resting_heart_rate": {
+      "bad_days_z": -0.068,
+      "other_days_z": 0.045
+    },
+    "sleep_minutes": {
+      "bad_days_z": 0.078,
+      "other_days_z": 0.022
+    },
+    "sleep_efficiency_pct": {
+      "bad_days_z": -0.059,
+      "other_days_z": -0.094
+    },
+    "minutes_brisk_activity": {
+      "bad_days_z": 0.048,
+      "other_days_z": 0.166
+    },
+    "avg_heart_rate_asleep": {
+      "bad_days_z": 0.011,
+      "other_days_z": 0.082
+    },
+    "minutes_fitbit_worn": {
+      "bad_days_z": -0.349,
+      "other_days_z": -0.333
+    }
+  },
+  "next_day_auc_wearable_only_prev2days": 0.482,
+  "next_day_auc_yesterdays_self_rating": 0.64,
+  "note": "z = standard deviations from the person's own median. Leave-people-out 5-fold CV."
+}

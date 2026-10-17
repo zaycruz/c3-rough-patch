@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bad Week Radar</title>
+<style>
+:root {
+  --bg: #f7f6f3; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a65; --line: #e4e2dc;
+  --alert: #c2410c; --alert-bg: #fdeee6; --watch: #a16207; --watch-bg: #fdf6e0; --ok: #15803d; --ok-bg: #e8f5ec;
+  --accent: #2f5d8a; --dose: #b7b3a8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a09e96; --line: #33322e;
+    --alert: #fb923c; --alert-bg: #3a2216; --watch: #facc15; --watch-bg: #332b12; --ok: #4ade80; --ok-bg: #15301e;
+    --accent: #7fb0e0; --dose: #5a574f;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { padding: 18px 16px 8px; max-width: 1200px; margin: 0 auto; }
+h1 { margin: 0; font-size: 22px; }
+header p { margin: 4px 0 0; color: var(--muted); }
+main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 12px 16px 40px; max-width: 1200px; margin: 0 auto; }
+@media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+#roster { max-height: 80vh; overflow: auto; }
+.tile { padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.tile:hover, .tile.sel { background: var(--bg); }
+.tile .name { font-weight: 600; font-size: 14px; }
+.tile .hl { color: var(--muted); font-size: 13px; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-right: 6px; }
+.pill.alert { color: var(--alert); background: var(--alert-bg); }
+.pill.watch { color: var(--watch); background: var(--watch-bg); }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+#panel { padding: 16px; min-width: 0; }
+#panel h2 { margin: 0 0 4px; font-size: 19px; }
+.ctx { color: var(--muted); font-size: 13px; }
+.sec { margin-top: 16px; }
+.sec h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.ev { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; }
+.ev .bar { flex: 0 0 60px; height: 8px; margin-top: 7px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.ev .bar i { display: block; height: 100%; background: var(--alert); }
+.rec { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--bg); margin-bottom: 6px; border-radius: 0 6px 6px 0; }
+.rec small { color: var(--muted); display: block; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.chart { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.chart b { font-size: 12px; color: var(--muted); font-weight: 600; }
+svg { width: 100%; height: 80px; display: block; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+td, th { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+td:first-child, th:first-child { text-align: left; }
+.wrap { overflow-x: auto; }
+button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+#outcome { margin-top: 8px; font-size: 13px; }
+.foot { max-width: 1200px; margin: 0 auto; padding: 0 16px 24px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bad Week Radar</h1>
+  <p>Warns a coach 2 to 7 days before a survivor's rough patch, using only their wearable and treatment calendar. <span id="asof"></span></p>
+</header>
+<main>
+  <section class="card" id="roster" aria-label="Caseload"></section>
+  <section class="card" id="panel"><p class="ctx">Pick a survivor.</p></section>
+</main>
+<section class="foot card" style="padding:12px 16px;margin-bottom:24px" id="metrics"></section>
+<p class="foot">Made-up patients (Crane Lab synthetic data, Sylvester). Real-data check: Rao et al. 2023 fatigue study; LifeSnaps (Yfantidou et al. 2022). Not medical advice: the coach routes clinical worries to the care team.</p>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const pct = (x) => (x == null ? "–" : Math.round(x * 100) + "%");
+
+function spark(values, doses, color, opts = {}) {
+  const w = 300, h = 80, pad = 4;
+  const v = values.map((x) => (x == null ? null : +x));
+  const nums = v.filter((x) => x != null);
+  if (!nums.length) return `<svg viewBox="0 0 ${w} ${h}"><text x="8" y="44" fill="currentColor" font-size="12">no data</text></svg>`;
+  let lo = Math.min(...nums, opts.min ?? Infinity), hi = Math.max(...nums, opts.max ?? -Infinity);
+  if (hi === lo) hi = lo + 1;
+  const X = (i) => pad + (i * (w - 2 * pad)) / Math.max(v.length - 1, 1);
+  const Y = (x) => h - pad - ((x - lo) * (h - 2 * pad)) / (hi - lo);
+  let d = "", pen = false;
+  v.forEach((x, i) => { if (x == null) { pen = false; return; } d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(x).toFixed(1); pen = true; });
+  const marks = (doses || []).map((t, i) => (t ? `<line x1="${X(i)}" x2="${X(i)}" y1="0" y2="${h}" stroke="var(--dose)" stroke-dasharray="2 2"/>` : "")).join("");
+  const lines = (opts.lines || []).map(([y, c]) => `<line x1="0" x2="${w}" y1="${Y(y)}" y2="${Y(y)}" stroke="${c}" stroke-width="1" opacity=".7"/>`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img">${marks}${lines}<path d="${d}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+async function loadRoster() {
+  const roster = await (await fetch("/api/c3/survivors")).json();
+  $("#roster").innerHTML = roster.map((r) => `
+    <div class="tile" data-id="${esc(r.survivorId)}">
+      <div class="name"><span class="pill ${r.status}">${r.status}</span>${esc(r.displayName)}</div>
+      <div class="hl">${esc(r.headline)}</div>
+    </div>`).join("");
+  $("#roster").onclick = (e) => { const t = e.target.closest(".tile"); if (t) show(t.dataset.id); };
+  if (roster[0]) show(roster[0].survivorId);
+}
+
+async function show(id) {
+  document.querySelectorAll(".tile").forEach((t) => t.classList.toggle("sel", t.dataset.id === id));
+  const d = await (await fetch(`/api/c3/survivors/${encodeURIComponent(id)}?demo=1`)).json();
+  const c = d.charts, maxShare = Math.max(...d.evidence.map((e) => e.riskShare || 0), 0.01);
+  $("#panel").innerHTML = `
+    <h2><span class="pill ${d.status}">${d.status}</span>${esc(d.displayName)}</h2>
+    <div class="ctx">${esc(d.profile.context)} · ${esc(d.profile.cancerType)} stage ${esc(d.profile.stage)} · ${esc(d.profile.device)} · ${esc(d.profile.language)}</div>
+    <p>${esc(d.summary)}</p>
+    <div class="sec"><h3>Why: signals behind this forecast</h3>
+      ${d.evidence.map((e) => `<div class="ev"><div class="bar" title="share of risk"><i style="width:${Math.max(4, (100 * (e.riskShare || 0)) / maxShare)}%"></i></div><div><b>${esc(e.label)}</b> ${esc(e.text)}</div></div>`).join("")}
+    </div>
+    <div class="sec"><h3>Suggested action for the coach</h3>
+      ${d.recommendations.map((r) => `<div class="rec">${esc(r.action)}<small>${esc(r.urgency)} · ${esc(r.why)}</small></div>`).join("")}
+    </div>
+    <div class="sec"><h3>Last 6 weeks (dashed = dose day)</h3>
+      <div class="charts">
+        <div class="chart"><b>Rough-patch risk, next 7 days</b>${spark(c.risk, c.doseDays, "var(--alert)", { min: 0, lines: [[d.thresholds.alert, "var(--alert)"], [d.thresholds.watch, "var(--watch)"]] })}</div>
+        <div class="chart"><b>Steps</b>${spark(c.steps, c.doseDays, "var(--accent)", { min: 0 })}</div>
+        <div class="chart"><b>Resting heart rate</b>${spark(c.restingHeartRate, c.doseDays, "var(--accent)")}</div>
+        <div class="chart"><b>Sleep hours</b>${spark(c.sleepHours, c.doseDays, "var(--accent)")}</div>
+        <div class="chart"><b>Heart rate variability</b>${spark(c.hrv, c.doseDays, "var(--accent)")}</div>
+        <div class="chart"><b>Skin temp vs usual (°C)</b>${spark(c.skinTempChange, c.doseDays, "var(--accent)", { lines: [[0, "var(--dose)"]] })}</div>
+        <div class="chart"><b>Self-reported feeling, 1–5 (not a model input)</b>${spark(c.selfReportedFeeling, c.doseDays, "var(--muted)", { min: 1, max: 5 })}</div>
+      </div>
+    </div>
+    <div class="sec"><button id="reveal">Demo: what happened next?</button><div id="outcome"></div></div>`;
+  $("#reveal").onclick = () => {
+    const o = d.demo;
+    $("#outcome").innerHTML = `Rough patch: ${o.roughPatchStartsInDays ? `started ${o.roughPatchStartsInDays} day(s) later` : "none in the next 14 days"}.
+      ER / admission: ${o.erOrAdmissionInDays ? `${o.erOrAdmissionInDays} day(s) later` : "none"}. ${o.events.map(esc).join("; ")}`;
+  };
+}
+
+async function loadMetrics() {
+  const m = await (await fetch("/api/c3/metrics")).json();
+  $("#asof").textContent = `Caseload as of ${m.asOf}.`;
+  const rows = ["steps_rule", "schedule", "logistic", "model"].filter((k) => m.methods[k]).map((k) => {
+    const x = m.methods[k], w = x.weeks, e = x.episodes;
+    return `<tr${k === "model" ? ' style="font-weight:600"' : ""}><td>${esc(x.name)}</td><td>${w.auc}</td><td>${pct(w.precision)}</td><td>${pct(w.recall)}</td><td>${pct(e.episode_recall)}</td><td>${pct(e.er_recall)}</td><td>${e.median_lead_days ?? "–"} d</td><td>${pct(e.alert_precision)}</td><td>${e.alerts_per_patient_month}</td></tr>`;
+  }).join("");
+  $("#metrics").innerHTML = `<h3 style="margin:0 0 6px;font-size:14px">How well it works on ${m.counts.test_patients} held-out patients</h3>
+    <div class="wrap"><table><tr><th>Method</th><th>Week AUC</th><th>Week precision</th><th>Week recall</th><th>Patches caught 2–7 d early</th><th>ER/admissions caught</th><th>Median lead</th><th>Alert precision</th><th>Alerts / patient / month</th></tr>${rows}</table></div>
+    ${m.realDataCheck ? `<p style="margin:6px 0 0"><b>Real-data check</b> (${m.realDataCheck.people} people, fatigue study): steps drop on real bad days (${m.realDataCheck.same_day_signal_z.steps.bad_days_z} vs ${m.realDataCheck.same_day_signal_z.steps.other_days_z} SD from their own median), but a next-day forecast from wearables alone scores AUC ${m.realDataCheck.next_day_auc_wearable_only_prev2days} there. Lead time on real patients is not proven yet.</p>` : ""}
+    <p style="margin:6px 0 0">Rough patch: ${esc(m.definition.rough_patch)} (rough day = ${esc(m.definition.rough_day)}). ${esc(m.definition.alert_budget)}.</p>`;
+}
+
+loadRoster(); loadMetrics();
+</script>
+</body>
+</html>

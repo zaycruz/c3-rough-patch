@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+analysis/out/*.parquet
+node_modules/
+.wrangler/
+analysis/out/*.pkl

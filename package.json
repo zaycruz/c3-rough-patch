@@ -1,0 +1,16 @@
+{
+  "name": "c3-rough-patch",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build:data": ".venv/bin/python -I analysis/train.py ~/Downloads/Challenge3_Bad_Week_Radar && .venv/bin/python -I analysis/export.py",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "e2e": "node scripts/e2e.mjs",
+    "contract": "node scripts/contract.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.135.0"
+  }
+}
