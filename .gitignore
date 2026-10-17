@@ -12,3 +12,4 @@ runs/reproduce-*.log
 runner/node_modules/
 runner/.wrangler/
 runner/worker-configuration.d.ts
+runs/repro-cloudflare-last-status.txt

@@ -13,7 +13,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  await page.goto(BASE + "/", { waitUntil: "networkidle" });
+  await page.goto(BASE + "/demo.html", { waitUntil: "networkidle" });
   await page.waitForSelector(".tile");
   check("roster renders 60 tiles", (await page.locator(".tile").count()) === 60);
   await page.waitForSelector("#panel .ev");
