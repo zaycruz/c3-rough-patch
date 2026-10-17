@@ -4,154 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bad Week Radar</title>
-<style>
-:root {
-  --bg: #f7f6f3; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a65; --line: #e4e2dc;
-  --alert: #c2410c; --alert-bg: #fdeee6; --watch: #a16207; --watch-bg: #fdf6e0; --ok: #15803d; --ok-bg: #e8f5ec;
-  --accent: #2f5d8a; --dose: #b7b3a8;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a09e96; --line: #33322e;
-    --alert: #fb923c; --alert-bg: #3a2216; --watch: #facc15; --watch-bg: #332b12; --ok: #4ade80; --ok-bg: #15301e;
-    --accent: #7fb0e0; --dose: #5a574f;
-  }
-}
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-header { padding: 18px 16px 8px; max-width: 1200px; margin: 0 auto; }
-h1 { margin: 0; font-size: 22px; }
-header p { margin: 4px 0 0; color: var(--muted); }
-main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 12px 16px 40px; max-width: 1200px; margin: 0 auto; }
-@media (max-width: 820px) { main { grid-template-columns: 1fr; } }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
-#roster { max-height: 80vh; overflow: auto; }
-.tile { padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
-.tile:hover, .tile.sel { background: var(--bg); }
-.tile .name { font-weight: 600; font-size: 14px; }
-.tile .hl { color: var(--muted); font-size: 13px; }
-.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-right: 6px; }
-.pill.alert { color: var(--alert); background: var(--alert-bg); }
-.pill.watch { color: var(--watch); background: var(--watch-bg); }
-.pill.ok { color: var(--ok); background: var(--ok-bg); }
-.pill.urgent { color: #fff; background: var(--alert); }
-#panel { padding: 16px; min-width: 0; }
-#panel h2 { margin: 0 0 4px; font-size: 19px; }
-.ctx { color: var(--muted); font-size: 13px; }
-.sec { margin-top: 16px; }
-.sec h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-.ev { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; }
-.ev .bar { flex: 0 0 60px; height: 8px; margin-top: 7px; background: var(--line); border-radius: 4px; overflow: hidden; }
-.ev .bar i { display: block; height: 100%; background: var(--alert); }
-.rec { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--bg); margin-bottom: 6px; border-radius: 0 6px 6px 0; }
-.rec small { color: var(--muted); display: block; }
-.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
-.chart { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
-.chart b { font-size: 12px; color: var(--muted); font-weight: 600; }
-svg { width: 100%; height: 80px; display: block; }
-table { border-collapse: collapse; width: 100%; font-size: 13px; }
-td, th { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line); }
-td:first-child, th:first-child { text-align: left; }
-.wrap { overflow-x: auto; }
-button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-#outcome { margin-top: 8px; font-size: 13px; }
-.foot { max-width: 1200px; margin: 0 auto; padding: 0 16px 24px; color: var(--muted); font-size: 12px; }
-</style>
+<meta name="description" content="Patient 360 · Bad Week Radar: a week's warning before a cancer survivor's rough patch, from check-ins, wearable and treatment calendar.">
+<meta name="theme-color" content="#F5F6F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0D12" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="p360.css">
 </head>
 <body>
-<header>
-  <h1>Bad Week Radar</h1>
-  <p>Warns a coach 2 to 7 days before a survivor's rough patch, from their own check-ins, their wearable and their treatment calendar. <span id="asof"></span></p>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="lockup" href="https://patient-360.raava.dev/" aria-label="Patient 360 · Bad Week Radar">
+      <svg viewBox="0 0 24 24" aria-hidden="true" width="22" height="22"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12h3l1.5-3 3 6 1.5-3h1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Patient 360</span><span class="sep" aria-hidden="true">·</span>
+      <span class="prog"><span class="dot c3" aria-hidden="true"></span>Bad Week Radar</span>
+    </a>
+    <nav class="topbar-end" aria-label="Page">
+      <a class="btn hide-sm" href="demo.html">Original demo</a>
+      <a class="btn primary" aria-label="Open Patient 360" href="https://patient-360.raava.dev/#p-c3-P03000.c3"><span class="hide-sm">Open Patient 360</span><span class="show-sm">Open</span> <span aria-hidden="true">→</span></a>
+    </nav>
+  </div>
 </header>
-<main>
-  <section class="card" id="roster" aria-label="Caseload"></section>
-  <section class="card" id="panel"><p class="ctx">Pick a survivor.</p></section>
-</main>
-<section class="foot card" style="padding:12px 16px;margin-bottom:24px" id="metrics"></section>
-<p class="foot">Made-up patients (Crane Lab synthetic data, Sylvester). Real-data check: Rao et al. 2023 fatigue study; LifeSnaps (Yfantidou et al. 2022). Not medical advice: the coach routes clinical worries to the care team.</p>
-<script>
-const $ = (s) => document.querySelector(s);
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const pct = (x) => (x == null ? "–" : Math.round(x * 100) + "%");
 
-function spark(values, doses, color, opts = {}) {
-  const w = 300, h = 80, pad = 4;
-  const v = values.map((x) => (x == null ? null : +x));
-  const nums = v.filter((x) => x != null);
-  if (!nums.length) return `<svg viewBox="0 0 ${w} ${h}"><text x="8" y="44" fill="currentColor" font-size="12">no data</text></svg>`;
-  let lo = Math.min(...nums, opts.min ?? Infinity), hi = Math.max(...nums, opts.max ?? -Infinity);
-  if (hi === lo) hi = lo + 1;
-  const X = (i) => pad + (i * (w - 2 * pad)) / Math.max(v.length - 1, 1);
-  const Y = (x) => h - pad - ((x - lo) * (h - 2 * pad)) / (hi - lo);
-  let d = "", pen = false;
-  v.forEach((x, i) => { if (x == null) { pen = false; return; } d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(x).toFixed(1); pen = true; });
-  const marks = (doses || []).map((t, i) => (t ? `<line x1="${X(i)}" x2="${X(i)}" y1="0" y2="${h}" stroke="var(--dose)" stroke-dasharray="2 2"/>` : "")).join("");
-  const lines = (opts.lines || []).map(([y, c]) => `<line x1="0" x2="${w}" y1="${Y(y)}" y2="${Y(y)}" stroke="${c}" stroke-width="1" opacity=".7"/>`).join("");
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img">${marks}${lines}<path d="${d}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
-}
+<main class="wrap stack" id="main">
+  <section class="intro" aria-labelledby="title">
+    <p class="eyebrow"><span class="dot c3" aria-hidden="true"></span>Challenge 3 · Rough weeks</p>
+    <h1 id="title">A week's warning before a rough patch</h1>
+    <p>Every evening it reads a survivor's own check-ins, their wearable and their treatment calendar, and forecasts whether a rough patch starts in the next 7 days. A rough patch is two bad days within 3 days of each other, or an ER visit, admission or treatment pause.</p>
+  </section>
 
-async function loadRoster() {
-  const roster = await (await fetch("/api/c3/survivors")).json();
-  $("#roster").innerHTML = roster.map((r) => `
-    <div class="tile" data-id="${esc(r.survivorId)}">
-      <div class="name">${r.urgent ? '<span class="pill urgent">urgent</span>' : `<span class="pill ${r.status}">${r.status}</span>`}${esc(r.displayName)}</div>
-      <div class="hl">${esc(r.headline)}</div>
-    </div>`).join("");
-  $("#roster").onclick = (e) => { const t = e.target.closest(".tile"); if (t) show(t.dataset.id); };
-  if (roster[0]) show(roster[0].survivorId);
-}
-
-async function show(id) {
-  document.querySelectorAll(".tile").forEach((t) => t.classList.toggle("sel", t.dataset.id === id));
-  const d = await (await fetch(`/api/c3/survivors/${encodeURIComponent(id)}?demo=1`)).json();
-  const c = d.charts, maxShare = Math.max(...d.evidence.map((e) => e.riskShare || 0), 0.01);
-  $("#panel").innerHTML = `
-    <h2>${d.urgent ? '<span class="pill urgent">urgent</span>' : ""}<span class="pill ${d.status}">${d.status}</span>${esc(d.displayName)}</h2>
-    <div class="ctx">${esc(d.profile.context)} · ${esc(d.profile.cancerType)} stage ${esc(d.profile.stage)} · ${esc(d.profile.device)} · ${esc(d.profile.language)}</div>
-    <p>${esc(d.summary)}</p>
-    <div class="sec"><h3>Why: signals behind this forecast</h3>
-      ${d.evidence.map((e) => `<div class="ev"><div class="bar" title="share of risk"><i style="width:${Math.max(4, (100 * (e.riskShare || 0)) / maxShare)}%"></i></div><div><b>${esc(e.label)}</b> ${esc(e.text)}</div></div>`).join("")}
-    </div>
-    <div class="sec"><h3>Suggested action for the coach</h3>
-      ${d.recommendations.map((r) => `<div class="rec">${esc(r.action)}<small>${esc(r.urgency)} · ${esc(r.why)}</small></div>`).join("")}
-    </div>
-    <div class="sec"><h3>Last 6 weeks (dashed = dose day)</h3>
-      <div class="charts">
-        <div class="chart"><b>Rough-patch risk, next 7 days</b>${spark(c.risk, c.doseDays, "var(--alert)", { min: 0, lines: [[d.thresholds.alert, "var(--alert)"], [d.thresholds.watch, "var(--watch)"]] })}</div>
-        <div class="chart"><b>ER / hospital risk, next 7 days (urgent line)</b>${spark(c.urgentRisk, c.doseDays, "var(--alert)", { min: 0, lines: [[d.thresholds.urgent, "var(--alert)"]] })}</div>
-        <div class="chart"><b>Steps</b>${spark(c.steps, c.doseDays, "var(--accent)", { min: 0 })}</div>
-        <div class="chart"><b>Resting heart rate</b>${spark(c.restingHeartRate, c.doseDays, "var(--accent)")}</div>
-        <div class="chart"><b>Sleep hours</b>${spark(c.sleepHours, c.doseDays, "var(--accent)")}</div>
-        <div class="chart"><b>Heart rate variability</b>${spark(c.hrv, c.doseDays, "var(--accent)")}</div>
-        <div class="chart"><b>Skin temp vs usual (°C)</b>${spark(c.skinTempChange, c.doseDays, "var(--accent)", { lines: [[0, "var(--dose)"]] })}</div>
-        <div class="chart"><b>Self-reported feeling, 1–5 (not a model input)</b>${spark(c.selfReportedFeeling, c.doseDays, "var(--muted)", { min: 1, max: 5 })}</div>
+  <section class="hero" aria-labelledby="hero-label">
+    <div>
+      <div class="chips">
+        <span class="chip source synthetic"><b>Synthetic</b> · Crane Lab</span>
+        <span class="chip source">Held-out patients</span>
+      </div>
+      <p class="hero-num num" aria-describedby="hero-label">48<span class="unit">%</span></p>
+      <p class="hero-label" id="hero-label">of rough patches caught 2 to 7 days before they start</p>
+      <div class="compare" aria-hidden="true">
+        <div class="lbl"><span>Radar</span><span class="num">48%</span></div>
+        <div class="track"><span class="fill" style="width:48%"></span></div>
+        <div class="lbl"><span>Treatment calendar alone</span><span class="num">36%</span></div>
+        <div class="track"><span class="fill base" style="width:36%"></span></div>
+      </div>
+      <div class="hero-vs">
+        <p class="vs-row"><span class="k">Compared</span><span><b>36%</b> from the treatment calendar alone, at the same alert budget</span></p>
+        <p class="vs-row"><span class="k">95% CI</span><span><b>+7.8 to +15.2 points</b> of lift, bootstrap over patients</span></p>
+        <p class="vs-row"><span class="k">Source</span><span>750 test patients the model never saw, of 3,000</span></p>
       </div>
     </div>
-    <div class="sec"><button id="reveal">Demo: what happened next?</button><div id="outcome"></div></div>`;
-  $("#reveal").onclick = () => {
-    const o = d.demo;
-    $("#outcome").innerHTML = `Rough patch: ${o.roughPatchStartsInDays ? `started ${o.roughPatchStartsInDays} day(s) later` : "none in the next 14 days"}.
-      ER / admission: ${o.erOrAdmissionInDays ? `${o.erOrAdmissionInDays} day(s) later` : "none"}. ${o.events.map(esc).join("; ")}`;
-  };
-}
+    <div class="hero-side">
+      <div class="meaning">
+        <h3>What it means for a coach</h3>
+        <p>About one new alert per coach per day on a 60-person caseload, with a median 6 days of lead. Enough time to send a short message or move the call earlier.</p>
+      </div>
+      <div class="meaning">
+        <h3>What to do</h3>
+        <p>Treat an alert as a nudge to reach out, not a diagnosis. About 1 alert in 5.5 is followed by a rough patch within a week.</p>
+      </div>
+      <div class="btn-row">
+        <a class="btn primary" href="https://patient-360.raava.dev/#p-c3-P03000.c3">See it in Patient 360 <span aria-hidden="true">→</span></a>
+        <a class="btn" href="demo.html">Original demo</a>
+      </div>
+    </div>
+  </section>
 
-async function loadMetrics() {
-  const m = await (await fetch("/api/c3/metrics")).json();
-  $("#asof").textContent = `Caseload as of ${m.asOf}.`;
-  const rows = ["steps_rule", "schedule", "logistic", "model"].filter((k) => m.methods[k]).map((k) => {
-    const x = m.methods[k], w = x.weeks, e = x.episodes;
-    return `<tr${k === "model" ? ' style="font-weight:600"' : ""}><td>${esc(x.name)}</td><td>${w.auc}</td><td>${pct(w.precision)}</td><td>${pct(w.recall)}</td><td>${pct(e.episode_recall)}</td><td>${pct(e.er_recall)}</td><td>${e.median_lead_days ?? "–"} d</td><td>${pct(e.alert_precision)}</td><td>${e.alerts_per_patient_month}</td></tr>`;
-  }).join("");
-  $("#metrics").innerHTML = `<h3 style="margin:0 0 6px;font-size:14px">How well it works on ${m.counts.test_patients} held-out patients</h3>
-    <div class="wrap"><table><tr><th>Method</th><th>Week AUC</th><th>Week precision</th><th>Week recall</th><th>Patches caught 2–7 d early</th><th>ER/admissions caught</th><th>Median lead (max 7)</th><th>Alert precision</th><th>Alerts / patient / month</th></tr>${rows}</table></div>
-    ${m.urgent ? `<p style="margin:6px 0 0"><b>Urgent tier</b> (separate ER / hospital head, ${esc(m.urgent.definition)}): catches ${pct(m.urgent.methods.urgent.er_recall_2to7d)} of ER visits and admissions 2–7 days early vs ${pct(m.urgent.methods.schedule.er_recall_2to7d)} for the calendar alone; ${pct(m.urgent.methods.urgent.flag_precision)} of urgent flags are followed by one within a week (base rate ${(m.urgent.methods.urgent.base_rate*100).toFixed(1)}% of days); ${m.urgent.methods.urgent.flags_per_patient_month} flags per patient per month.</p>` : ""}
-    ${m.lift_vs_schedule_ci95 ? `<p style="margin:6px 0 0"><b>Beyond the calendar</b>: 95% CI for extra patches caught +${Math.round(m.lift_vs_schedule_ci95.episode_recall_diff[0]*100)} to +${Math.round(m.lift_vs_schedule_ci95.episode_recall_diff[1]*100)} points, ER/admissions +${Math.round(m.lift_vs_schedule_ci95.er_recall_diff[0]*100)} to +${Math.round(m.lift_vs_schedule_ci95.er_recall_diff[1]*100)}. <b>Calibrated</b>: top risk decile predicted ${pct(m.calibration.model.deciles.at(-1).predicted)}, observed ${pct(m.calibration.model.deciles.at(-1).observed)}. Subgroup results in <code>/api/c3/metrics</code>.</p>` : ""}
-    ${m.ablation_without_checkins ? `<p style="margin:6px 0 0"><b>What the check-ins add</b>: without them, the same model catches ${pct(m.ablation_without_checkins.episodes.episode_recall)} of patches early with ${pct(m.ablation_without_checkins.episodes.alert_precision)} alert precision (95% CI for the gain in patches caught: ${Math.round(m.ablation_without_checkins.lift_of_checkins_ci95.episode_recall_diff[0]*100)} to +${Math.round(m.ablation_without_checkins.lift_of_checkins_ci95.episode_recall_diff[1]*100)} points). Ratings are used up to 3 days back; skipped check-ins and missed calls up to today.</p>` : ""}
-    ${m.realDataCheck ? `<p style="margin:6px 0 0"><b>Real-data check</b> (${m.realDataCheck.people} people, fatigue study): steps drop on real bad days (${m.realDataCheck.same_day_signal_z.steps.bad_days_z} vs ${m.realDataCheck.same_day_signal_z.steps.other_days_z} SD from their own median), but a next-day forecast from wearables alone scores AUC ${m.realDataCheck.next_day_auc_wearable_only_prev2days} there. Yesterday's own rating scores ${m.realDataCheck.next_day_auc_yesterdays_self_rating}, which is why check-ins are inputs. Lead time on real patients is not proven yet.</p>` : ""}
-    <p style="margin:6px 0 0">Rough patch: ${esc(m.definition.rough_patch)} (rough day = ${esc(m.definition.rough_day)}). ${esc(m.definition.alert_budget)}.</p>`;
-}
+  <section aria-labelledby="results-h">
+    <div class="section-head">
+      <h2 id="results-h">Against the treatment calendar</h2>
+      <p>Held-out test patients. Alert line set on separate validation patients, same budget for every method.</p>
+    </div>
+    <ol class="results">
+      <li class="result">
+        <p class="big num">36<small>%</small></p>
+        <div>
+          <h3>ER visits and admissions caught early</h3>
+          <p class="gloss">Hospital-level events with an alert 2 to 7 days ahead, at the same 5% alert budget.</p>
+          <p class="src"><span class="sig yes">✓ Better than the calendar</span></p>
+        </div>
+        <dl><dt>Baseline</dt><dd>22% (calendar)</dd><dt>Difference</dt><dd>+14 points</dd><dt>95% CI</dt><dd>+8.5 to +19.9 points</dd><dt>Source</dt><dd>Held-out · Synthetic</dd></dl>
+      </li>
+      <li class="result">
+        <p class="big num">18<small>%</small></p>
+        <div>
+          <h3>Alerts that came true</h3>
+          <p class="gloss">Alert precision: alerts followed by a rough patch within a week. The base rate is about 1 week in 21.</p>
+          <p class="src"><span class="sig na">CI not reported</span></p>
+        </div>
+        <dl><dt>Baseline</dt><dd>11% (calendar)</dd><dt>Difference</dt><dd>+7 points</dd><dt>95% CI</dt><dd>Not reported</dd><dt>Source</dt><dd>Held-out · Synthetic</dd></dl>
+      </li>
+      <li class="result">
+        <p class="big num">0.48</p>
+        <div>
+          <h3>Real-data check: next-day forecast</h3>
+          <p class="gloss">AUC of a forecast from the wearable alone, on 204 real people with a Fitbit. 0.5 is chance. On real people the wearable confirms a bad day but does not yet predict one.</p>
+          <p class="src"><span class="sig no">▲ No better than chance</span></p>
+        </div>
+        <dl><dt>Comparison</dt><dd>0.64 (own rating yesterday)</dd><dt>95% CI</dt><dd>Not reported</dd><dt>Source</dt><dd>Real · fatigue study</dd></dl>
+      </li>
+    </ol>
+  </section>
 
-loadRoster(); loadMetrics();
-</script>
+  <section class="grid-2" aria-label="Urgent tier and limits">
+    <div class="card">
+      <p class="eyebrow">Urgent tier</p>
+      <h2 class="mt-2">Call today: ER-level risk</h2>
+      <p class="muted mt-3">A separate model flags the top 3% of days for an ER visit or admission. It catches 47% of them 2 to 7 days early, against 36% from the calendar. A flag carries about 6 times the usual risk (7.4% vs 1.2%): a reason to call, not a diagnosis.</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Know the limits</p>
+      <ul class="notes mt-3">
+        <li><span><b>Lead time is shown on synthetic data only.</b> The patterns in it were designed in.</span></li>
+        <li><span>55% of daily check-ins are missing. A run of skipped check-ins is itself a warning sign (1.8 times after 5 or more).</span></li>
+        <li><span>Sarcoma recall is clearly lower (13%). Several groups are too small to judge.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="p360-h">
+    <div class="section-head">
+      <h2 id="p360-h">See it in Patient 360</h2>
+      <p>The clinician console that brings all four programs together.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card raised">
+        <a class="patient" href="https://patient-360.raava.dev/#p-c3-P03000.c3">
+          <span class="avatar" aria-hidden="true">49M</span>
+          <span class="who"><b>P03000 · 49 · kidney cancer</b><span><span class="status act">● Act today</span> Urgent: 7-day ER or hospital risk above the urgent line</span></span>
+          <span class="go">Open <span aria-hidden="true">→</span></span>
+        </a>
+      </div>
+      <div class="card raised">
+        <a class="patient" href="https://patient-360.raava.dev/#p-c3-P02836.c3">
+          <span class="avatar" aria-hidden="true">52M</span>
+          <span class="who"><b>P02836 · 52 · lung cancer</b><span><span class="status act">● Alert</span> Rough patch risk 34% in the next 7 days: he has gone quiet on check-ins</span></span>
+          <span class="go">Open <span aria-hidden="true">→</span></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="api-h">
+    <div class="section-head">
+      <h2 id="api-h">Endpoints</h2>
+      <p>JSON over HTTPS, no key needed. Contract in CONTRACT.md.</p>
+    </div>
+    <ul class="endpoints">
+      <li><a href="/api/c3/survivors"><span class="verb">GET</span><span class="path">/api/c3/survivors</span><span class="arrow" aria-hidden="true">→</span><span class="desc">Tonight's caseload: 60 survivors in priority order, urgent first, each with a tier and a one-line reason.</span></a></li>
+      <li><a href="/api/c3/survivors/c3-P03000"><span class="verb">GET</span><span class="path">/api/c3/survivors/:id</span><span class="arrow" aria-hidden="true">→</span><span class="desc">One survivor: 7-day risk, the signals behind it, charts against their own baseline and a suggested action.</span></a></li>
+      <li><a href="/api/c3/metrics"><span class="verb">GET</span><span class="path">/api/c3/metrics</span><span class="arrow" aria-hidden="true">→</span><span class="desc">Held-out results for every method, calibration, fairness by group, the real-data check and a ready-made headline.</span></a></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="repro-h">
+    <div class="section-head">
+      <h2 id="repro-h">Reproduce</h2>
+      <p>Fixed seed and a split by patient, from the raw download to the served JSON.</p>
+    </div>
+    <div class="card repro">
+      <a class="repo-link" href="https://github.com/zaycruz/c3-rough-patch">github.com/zaycruz/c3-rough-patch <span aria-hidden="true">→</span></a>
+      <ol class="steps">
+        <li><div><code>npm install</code><p class="note">Set up the Python venv first (README › Run it). The data is read from the Challenge 3 download.</p></div></li>
+        <li><div><code>npm run build:data</code><p class="note">Labels, features, models and the held-out evaluation. About 3 minutes.</p></div></li>
+        <li><div><code>npm run e2e</code><p class="note">Checks every live endpoint; saves a JSON record under runs/.</p></div></li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-in">
+    <a class="lockup" href="https://patient-360.raava.dev/"><span class="dot c3" aria-hidden="true"></span>Patient 360</a>
+    <p>Patient 360 · Emerge hackathon · Synthetic data from the Crane Lab set, hospital-risk data from MEPS 2017 · Not for clinical use</p>
+  </div>
+</footer>
 </body>
 </html>
