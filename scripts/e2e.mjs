@@ -81,6 +81,20 @@ responses["/api/c3/survivors/c3-nope"] = missing;
 const met = await get("/api/c3/metrics");
 responses["/api/c3/metrics"] = met;
 const M = met.body?.methods || {};
+{
+  const P = met.body?.provenance || {};
+  const hex = (x) => typeof x === "string" && /^[0-9a-f]{64}$/.test(x);
+  const DATA_SHA = { "synthetic_data/synthetic_daily.csv": "6d9b500ed5fa41ce0eb0f847351abf238623e90d20d534df0c7ea1774eb2a3b7",
+    "synthetic_data/synthetic_patients.csv": "81a65878cf4e8ff04d1986b9b874d67acae129732e3e5a700943b5a98151cc18",
+    "fatigue_study_daily.csv": "8ed37e47cf37ddbef74266f350a1112437af80bc9496e1f74be33d55ae71dc2b" };
+  check("metrics.provenance: run ID, clean 40-hex code commit, the sponsor-data sha256 from data/README.md, a model hash",
+    typeof P.runId === "string" && P.runId.length > 0 && /^[0-9a-f]{40}$/.test(P.codeCommit || "") && P.codeDirty === false &&
+    Object.entries(DATA_SHA).every(([f, h]) => P.dataSha256?.[f] === h) && hex(P.modelSha256) && /platform-specific/.test(P.modelNote || ""),
+    { runId: P.runId, codeCommit: P.codeCommit, codeDirty: P.codeDirty });
+  check("API responses carry x-c3-run and x-c3-commit matching metrics.provenance",
+    met.headers["x-c3-run"] === P.runId && met.headers["x-c3-commit"] === P.codeCommit,
+    { run: met.headers["x-c3-run"], commit: met.headers["x-c3-commit"] });
+}
 check("metrics 200 with model and baselines", met.status === 200 && M.model && M.schedule && M.steps_rule);
 if (M.model && M.schedule && M.steps_rule) {
   const sum = (k) => ({ weekAuc: M[k].weeks.auc, weekPrecision: M[k].weeks.precision, weekRecall: M[k].weeks.recall,

@@ -4,7 +4,8 @@
  *                               then alert > watch > ok, then by risk. Precomputed: served as the static asset
  *                               public/api/c3/survivors (see public/_headers); this route is the same data as a fallback
  *   GET /api/c3/survivors/:id   survivor panel: status, evidence, recommendations, chart series
- *   GET /api/c3/metrics         held-out evaluation: headline (with CIs), model vs baselines, fairness by group
+ *   GET /api/c3/metrics         held-out evaluation: headline (with CIs), model vs baselines, fairness by group,
+ *                               provenance (run ID, code commit, sponsor-data sha256, model hash)
  *   GET /                       standalone demo page (public/index.html)
  * Scores are computed offline (analysis/train.py, analysis/export.py) and baked into src/data.
  */
@@ -24,10 +25,13 @@ const CORS = {
   "access-control-allow-headers": "content-type",
 };
 
+/** Which run produced the baked data (analysis/export.py provenance), on every API response. */
+const RUN = { "x-c3-run": M.provenance.runId, "x-c3-commit": M.provenance.codeCommit ?? "unknown" };
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60", ...CORS },
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60", ...CORS, ...RUN },
   });
 
 /** The coach view never sees the demo-only outcome unless the demo page asks for it. */

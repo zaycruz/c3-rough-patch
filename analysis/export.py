@@ -5,8 +5,12 @@ Picks held-out (test) patients active on AS_OF, scores them as of that evening, 
 and writes src/data/survivors.json, src/data/metrics.json and the precomputed roster public/api/c3/survivors
 (served as a static asset, so the roster never waits on a Worker cold start).
 """
+import hashlib
 import json
+import os
 import pickle
+import platform
+import subprocess
 import sys
 from pathlib import Path
 
@@ -37,6 +41,29 @@ GROUPS = {
     "checkins": ["feel_last", "feel_rel_last", "feel_rel_mean7", "rough_self_14", "sym_max_last", "sym_rel_last",
                  "skip_run", "calls_missed_28"],
 }
+INPUTS = ["synthetic_data/synthetic_daily.csv", "synthetic_data/synthetic_patients.csv", "fatigue_study_daily.csv"]
+
+
+def provenance():
+    """What produced the served numbers: code commit, sponsor-data hashes, model file hash, run ID.
+    C3_DATA: the sponsor folder (default data/Challenge3_Bad_Week_Radar); C3_RUN_ID: set by scripts/reproduce.sh."""
+    sha = lambda b: hashlib.sha256(b).hexdigest()
+    git = lambda *a: subprocess.run(["git", "-C", str(ROOT), *a], capture_output=True, text=True).stdout.strip()
+    data = Path(os.environ.get("C3_DATA", ROOT / "data" / "Challenge3_Bad_Week_Radar")).expanduser()
+    stamp = pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%dT%H-%M-%SZ")
+    return {
+        "runId": os.environ.get("C3_RUN_ID", f"export-{stamp}"),
+        "exportedAt": stamp,
+        "codeCommit": git("rev-parse", "HEAD") or None,
+        "codeDirty": bool(git("status", "--porcelain", "--", "analysis", "scripts", "pyproject.toml", "uv.lock")),
+        "dataSha256": {f: (sha((data / f).read_bytes()) if (data / f).exists() else None) for f in INPUTS},
+        "modelSha256": sha((OUT / "gbm.pkl").read_bytes()),
+        "modelNote": "gbm.pkl hash is platform-specific: the macOS arm64 and Linux x86_64 fits differ slightly (see REPRODUCE.md)",
+        "platform": f"{platform.system()} {platform.machine()}, Python {platform.python_version()}",
+        "reproduce": "scripts/reproduce.sh <sponsor folder>; data hashes in data/README.md",
+    }
+
+
 WEARABLE = ["steps", "resting_heart_rate", "hrv_rmssd_ms", "sleep", "skin_temp_change_c", "wear"]
 LABEL = {"steps": "Steps", "resting_heart_rate": "Resting heart rate", "hrv_rmssd_ms": "Heart rate variability",
          "sleep": "Sleep", "skin_temp_change_c": "Skin temperature", "wear": "Watch wear",
@@ -471,6 +498,7 @@ def main():
         m["realDataCheck"] = json.loads(rc.read_text())
     m["headline"] = headline_block(m)
     m["fairness"] = fairness_block(m)
+    m["provenance"] = provenance()
     (DATA / "metrics.json").write_text(json.dumps(m))
     print(pd.Series([s["status"] for s in survivors]).value_counts().to_dict())
     hits = sum(1 for s in survivors if s["status"] != "ok" and details[s["survivorId"]]["demo"]["roughPatchStartsInDays"])

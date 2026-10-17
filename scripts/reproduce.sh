@@ -65,7 +65,7 @@ step "real-data check" "${PY[@]}" analysis/real_check.py "$DATA"
 step "diary-note red-flag scan (self-test + eval)" "${PY[@]}" analysis/notes_scan.py
 step "urgent tier + note scan CIs" "${PY[@]}" analysis/urgent_ci.py
 step "notes as model inputs (experiment)" "${PY[@]}" analysis/exp/notes_features.py
-step "export to src/data + static roster" "${PY[@]}" analysis/export.py
+step "export to src/data + static roster" env C3_DATA="$DATA" C3_RUN_ID="reproduce-$STAMP" "${PY[@]}" analysis/export.py
 step "ER pre-signal" "${PY[@]}" analysis/exp/er_presignal.py "$DATA"
 
 if [ "$MODE" = full ]; then
