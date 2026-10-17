@@ -151,6 +151,96 @@ def describe_checkins(x, h):
                 text=text[0].upper() + text[1:] + " (ratings up to 3 days ago)")
 
 
+def social_needs(row, status):
+    """Coach actions for social needs the record shows (language, living alone). Shown when the survivor is flagged."""
+    if status == "ok":
+        return []
+    out = []
+    if str(row.preferred_language) != "English":
+        out.append({"action": f"Reach out in {row.preferred_language}, or book an interpreter for the call.",
+                    "why": f"Their preferred language is {row.preferred_language}; a rough week is harder to describe in a second language.",
+                    "urgency": "this week", "kind": "social"})
+    if str(row.lives_alone).lower() in ("yes", "true", "1"):
+        out.append({"action": "Ask who can help this week with rides, meals and errands; offer social work or community resources if no one can.",
+                    "why": "They live alone, so a rough patch at home has less backup.",
+                    "urgency": "this week", "kind": "social"})
+    return out
+
+
+def headline_block(m):
+    """Ready-to-show headline numbers for the console and the MCP server (all from held-out test patients)."""
+    M, U = m["methods"], m["urgent"]["methods"]
+    mo, ca = M["model"]["episodes"], M["schedule"]["episodes"]
+    ci, eci = m["lift_vs_schedule_ci95"]["episode_recall_diff"], m["lift_vs_schedule_ci95"]["er_recall_diff"]
+    pts = lambda v: f"{v * 100:+.0f}"
+    rc = m.get("realDataCheck", {})
+    return {
+        "urgent": {
+            "text": (f"Urgent ER tier: catches {U['urgent']['er_recall_2to7d']:.0%} of ER visits and hospital admissions 2-7 days "
+                     f"early vs {U['schedule']['er_recall_2to7d']:.0%} from the treatment calendar; when it flags, an ER visit "
+                     f"follows {U['urgent']['flag_precision']:.1%} of the time vs a {U['urgent']['base_rate']:.1%} base rate."),
+            "erCaught": U["urgent"]["er_recall_2to7d"], "erCaughtCalendar": U["schedule"]["er_recall_2to7d"],
+            "flagPrecision": U["urgent"]["flag_precision"], "baseRate": U["urgent"]["base_rate"],
+            "flagsPerPatientMonth": U["urgent"]["flags_per_patient_month"]},
+        "roughPatch": {
+            "text": (f"Catches {mo['episode_recall']:.0%} of rough patches 2-7 days early vs {ca['episode_recall']:.0%} from the "
+                     f"treatment calendar (95% CI {pts(ci[0])} to {pts(ci[1])} points), at the same alert budget of about one "
+                     f"new alert per coach per day; ER visits and admissions {mo['er_recall']:.0%} vs {ca['er_recall']:.0%} "
+                     f"(CI {pts(eci[0])} to {pts(eci[1])})."),
+            "caught": mo["episode_recall"], "caughtCalendar": ca["episode_recall"], "liftCi95Points": [round(ci[0] * 100, 1), round(ci[1] * 100, 1)],
+            "erCaught": mo["er_recall"], "erCaughtCalendar": ca["er_recall"], "erLiftCi95Points": [round(eci[0] * 100, 1), round(eci[1] * 100, 1)],
+            "alertPrecision": mo["alert_precision"], "alertPrecisionCalendar": ca["alert_precision"],
+            "alertsPerPatientMonth": mo["alerts_per_patient_month"], "medianLeadDays": mo["median_lead_days"],
+            "alertBudget": m["definition"]["alert_budget"]},
+        "realData": {
+            "text": (f"On real data (fatigue study, {rc.get('people', '?')} people), wearables confirm a bad day but do not yet "
+                     f"predict one (next-day AUC {rc.get('next_day_auc_wearable_only_prev2days', '?')}); the person's own "
+                     f"rating does better ({rc.get('next_day_auc_yesterdays_self_rating', '?')}). Lead times are shown on synthetic data."),
+            "nextDayAucWearable": rc.get("next_day_auc_wearable_only_prev2days"),
+            "nextDayAucSelfRating": rc.get("next_day_auc_yesterdays_self_rating")},
+        "order": ["urgent", "roughPatch", "realData"],
+    }
+
+
+FAIR_DIMS = {"preferred_language": "Language", "race_ethnicity": "Race and ethnicity", "cancer_type": "Cancer type",
+             "sex": "Sex", "age_group": "Age", "lives_alone": "Lives alone", "device": "Device"}
+
+
+def fairness_block(m):
+    """Recall at the alert line by group, with patient-bootstrap CIs; groups with < 30 rough weeks flagged."""
+    sg = m["subgroups"]
+    overall = m["methods"]["model"]["weeks"]["recall"]
+    dims, gaps, soft = [], [], []
+    for k, lab in FAIR_DIMS.items():
+        rows = []
+        for r in sg[k]:
+            row = {"group": r["group"], "patients": r["patients"], "roughWeeks": r["rough_weeks"]}
+            if "recall" in r:
+                lo, hi = r["recall_ci95"]
+                row.update(recall=r["recall"], recallCi95=r["recall_ci95"], precision=r["precision"], auc=r["auc"],
+                           tooFewToJudge=False, belowOverall=bool(hi < overall))
+                if hi < overall:
+                    gaps.append(f"{lab} {r['group']} ({r['recall']:.0%}, CI {lo:.0%}-{hi:.0%})")
+                elif r["recall"] <= overall - 0.05:
+                    row["lowerButUncertain"] = True
+                    soft.append(f"{lab} {r['group']} ({r['recall']:.0%}, CI {lo:.0%}-{hi:.0%})")
+            else:
+                row.update(tooFewToJudge=True, note=r["note"])
+            rows.append(row)
+        dims.append({"dimension": k, "label": lab, "rows": rows})
+    summary = (("Recall is clearly below the overall " + f"{overall:.0%}" + " (whole CI below it) for: " + "; ".join(gaps) + ". ")
+               if gaps else f"No group's recall is clearly below the overall {overall:.0%}. ")
+    if soft:
+        summary += "Lower, but the CI still reaches the overall (too few patients to be sure): " + "; ".join(soft) + ". "
+    summary += "Groups with fewer than 30 rough weeks are marked too few to judge."
+    return {
+        "metric": "week-level recall at the alert line (share of rough weeks that got an alert), held-out patients",
+        "overallRecall": overall,
+        "summary": summary,
+        "dimensions": dims,
+    }
+
+
 def schedule_context(row):
     plan, doc = row.treatment_plan, row.day_of_cycle
     if row.treatment_phase != "on treatment":
@@ -277,7 +367,8 @@ def main():
         er_in = nxt.index[nxt.er == 1]
         name = f"{pid} · {int(row.age)}{row.sex[0].upper()} · {row.cancer_type}"
         survivors.append({"survivorId": sid, "displayName": name, "status": status, "headline": headline,
-                          "updatedAt": AS_OF.strftime("%Y-%m-%dT20:00:00Z"), "urgent": bool(urgent), "risk": round(score, 3)})
+                          "updatedAt": AS_OF.strftime("%Y-%m-%dT20:00:00Z"), "urgent": bool(urgent), "risk": round(score, 3),
+                          "urgentRisk": round(urgent_risk, 3), "tier": "urgent" if urgent else status})
         details[sid] = {
             "survivorId": sid, "displayName": name, "status": status, "headline": headline, "summary": summary,
             "urgent": bool(urgent), "urgentRisk": round(urgent_risk, 3),
@@ -291,7 +382,7 @@ def main():
                                        skin_hot, rhr_up, urgent) + ([{
                 "action": "Send a short, no-pressure message asking how the week is going; offer a 2-minute call instead of the form.",
                 "why": f"{run} daily check-ins skipped in a row; rough days are more common after a run of skips.",
-                "urgency": "this week"}] if run >= 3 and top != "checkins" and status != "ok" else []),
+                "urgency": "this week"}] if run >= 3 and top != "checkins" and status != "ok" else []) + social_needs(row, status),
             "charts": {
                 "dates": [t.strftime("%Y-%m-%d") for t in h.date],
                 "risk": series(risk, 3),
@@ -311,13 +402,18 @@ def main():
                      "events": [f"{t:%Y-%m-%d}: {e}" for t, e in zip(nxt.date, nxt.events) if isinstance(e, str)]},
         }
     order = {"alert": 0, "watch": 1, "ok": 2}
-    survivors.sort(key=lambda s: (not s["urgent"], order[s["status"]], -s["risk"]))
+    survivors.sort(key=lambda s: (not s["urgent"], -s["urgentRisk"] if s["urgent"] else 0, order[s["status"]], -s["risk"]))
+    for i, s in enumerate(survivors):
+        s["priority"] = i + 1
+        details[s["survivorId"]].update(tier=s["tier"], priority=i + 1)
     DATA.mkdir(parents=True, exist_ok=True)
     (DATA / "survivors.json").write_text(json.dumps({"asOf": AS_OF.strftime("%Y-%m-%d"), "roster": survivors, "details": details}))
     m = json.loads((OUT / "metrics.json").read_text())
     rc = OUT / "real_check.json"
     if rc.exists():
         m["realDataCheck"] = json.loads(rc.read_text())
+    m["headline"] = headline_block(m)
+    m["fairness"] = fairness_block(m)
     (DATA / "metrics.json").write_text(json.dumps(m))
     print(pd.Series([s["status"] for s in survivors]).value_counts().to_dict())
     hits = sum(1 for s in survivors if s["status"] != "ok" and details[s["survivorId"]]["demo"]["roughPatchStartsInDays"])

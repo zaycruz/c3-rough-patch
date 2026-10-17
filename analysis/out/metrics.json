@@ -417,7 +417,11 @@
         "rough_weeks": 291,
         "auc": 0.803,
         "recall": 0.251,
-        "precision": 0.215
+        "precision": 0.215,
+        "recall_ci95": [
+          0.201,
+          0.302
+        ]
       },
       {
         "group": "65+",
@@ -425,7 +429,11 @@
         "rough_weeks": 252,
         "auc": 0.85,
         "recall": 0.298,
-        "precision": 0.273
+        "precision": 0.273,
+        "recall_ci95": [
+          0.24,
+          0.37
+        ]
       },
       {
         "group": "under 50",
@@ -433,7 +441,11 @@
         "rough_weeks": 142,
         "auc": 0.837,
         "recall": 0.289,
-        "precision": 0.203
+        "precision": 0.203,
+        "recall_ci95": [
+          0.224,
+          0.365
+        ]
       }
     ],
     "sex": [
@@ -443,7 +455,11 @@
         "rough_weeks": 437,
         "auc": 0.817,
         "recall": 0.291,
-        "precision": 0.229
+        "precision": 0.229,
+        "recall_ci95": [
+          0.252,
+          0.336
+        ]
       },
       {
         "group": "male",
@@ -451,7 +467,11 @@
         "rough_weeks": 248,
         "auc": 0.838,
         "recall": 0.25,
-        "precision": 0.237
+        "precision": 0.237,
+        "recall_ci95": [
+          0.194,
+          0.303
+        ]
       }
     ],
     "race_ethnicity": [
@@ -467,7 +487,11 @@
         "rough_weeks": 149,
         "auc": 0.827,
         "recall": 0.255,
-        "precision": 0.247
+        "precision": 0.247,
+        "recall_ci95": [
+          0.177,
+          0.332
+        ]
       },
       {
         "group": "Hispanic or Latino",
@@ -475,7 +499,11 @@
         "rough_weeks": 354,
         "auc": 0.838,
         "recall": 0.291,
-        "precision": 0.25
+        "precision": 0.25,
+        "recall_ci95": [
+          0.238,
+          0.335
+        ]
       },
       {
         "group": "Other or more than one",
@@ -489,7 +517,11 @@
         "rough_weeks": 133,
         "auc": 0.798,
         "recall": 0.278,
-        "precision": 0.2
+        "precision": 0.2,
+        "recall_ci95": [
+          0.196,
+          0.366
+        ]
       }
     ],
     "preferred_language": [
@@ -499,7 +531,11 @@
         "rough_weeks": 409,
         "auc": 0.818,
         "recall": 0.267,
-        "precision": 0.218
+        "precision": 0.218,
+        "recall_ci95": [
+          0.216,
+          0.312
+        ]
       },
       {
         "group": "Haitian Creole",
@@ -507,7 +543,11 @@
         "rough_weeks": 60,
         "auc": 0.828,
         "recall": 0.217,
-        "precision": 0.22
+        "precision": 0.22,
+        "recall_ci95": [
+          0.103,
+          0.358
+        ]
       },
       {
         "group": "Spanish",
@@ -515,7 +555,11 @@
         "rough_weeks": 216,
         "auc": 0.845,
         "recall": 0.31,
-        "precision": 0.261
+        "precision": 0.261,
+        "recall_ci95": [
+          0.252,
+          0.374
+        ]
       }
     ],
     "cancer_type": [
@@ -531,7 +575,11 @@
         "rough_weeks": 150,
         "auc": 0.782,
         "recall": 0.207,
-        "precision": 0.163
+        "precision": 0.163,
+        "recall_ci95": [
+          0.14,
+          0.276
+        ]
       },
       {
         "group": "cervical",
@@ -545,7 +593,11 @@
         "rough_weeks": 105,
         "auc": 0.775,
         "recall": 0.276,
-        "precision": 0.284
+        "precision": 0.284,
+        "recall_ci95": [
+          0.184,
+          0.383
+        ]
       },
       {
         "group": "endometrial",
@@ -553,7 +605,11 @@
         "rough_weeks": 41,
         "auc": 0.854,
         "recall": 0.366,
-        "precision": 0.246
+        "precision": 0.246,
+        "recall_ci95": [
+          0.225,
+          0.54
+        ]
       },
       {
         "group": "head and neck",
@@ -579,7 +635,11 @@
         "rough_weeks": 57,
         "auc": 0.852,
         "recall": 0.404,
-        "precision": 0.267
+        "precision": 0.267,
+        "recall_ci95": [
+          0.298,
+          0.51
+        ]
       },
       {
         "group": "lymphoma",
@@ -587,7 +647,11 @@
         "rough_weeks": 68,
         "auc": 0.826,
         "recall": 0.309,
-        "precision": 0.219
+        "precision": 0.219,
+        "recall_ci95": [
+          0.193,
+          0.422
+        ]
       },
       {
         "group": "melanoma",
@@ -607,7 +671,11 @@
         "rough_weeks": 72,
         "auc": 0.76,
         "recall": 0.25,
-        "precision": 0.257
+        "precision": 0.257,
+        "recall_ci95": [
+          0.159,
+          0.346
+        ]
       },
       {
         "group": "pancreatic",
@@ -627,7 +695,11 @@
         "rough_weeks": 30,
         "auc": 0.777,
         "recall": 0.133,
-        "precision": 0.129
+        "precision": 0.129,
+        "recall_ci95": [
+          0.0,
+          0.261
+        ]
       },
       {
         "group": "stomach",
@@ -643,7 +715,11 @@
         "rough_weeks": 409,
         "auc": 0.814,
         "recall": 0.249,
-        "precision": 0.219
+        "precision": 0.219,
+        "recall_ci95": [
+          0.206,
+          0.292
+        ]
       },
       {
         "group": "Fitbit tracker",
@@ -651,7 +727,11 @@
         "rough_weeks": 276,
         "auc": 0.844,
         "recall": 0.315,
-        "precision": 0.248
+        "precision": 0.248,
+        "recall_ci95": [
+          0.268,
+          0.372
+        ]
       }
     ],
     "lives_alone": [
@@ -661,7 +741,11 @@
         "rough_weeks": 498,
         "auc": 0.822,
         "recall": 0.279,
-        "precision": 0.224
+        "precision": 0.224,
+        "recall_ci95": [
+          0.239,
+          0.321
+        ]
       },
       {
         "group": "yes",
@@ -669,7 +753,11 @@
         "rough_weeks": 187,
         "auc": 0.841,
         "recall": 0.267,
-        "precision": 0.254
+        "precision": 0.254,
+        "recall_ci95": [
+          0.199,
+          0.343
+        ]
       }
     ]
   },

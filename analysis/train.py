@@ -352,21 +352,30 @@ def calibration(df, score_col, bins=10):
             "brier_if_base_rate": round(float(np.mean((y.mean() - y) ** 2)), 4), "deciles": rows}
 
 
-def subgroups(df, score_col, thr):
-    """Week-level AUC / recall / precision per subgroup; groups with < 30 rough weeks are marked too small."""
+def subgroups(df, score_col, thr, reps=500):
+    """Week-level AUC / recall / precision per subgroup at the alert line, with a 95% CI for recall from resampling
+    the group's patients. Groups with < 30 rough weeks are marked too few to judge."""
     df = df.assign(age_group=pd.cut(df.age, [0, 49, 64, 120], labels=["under 50", "50-64", "65+"]).astype(str))
+    wk = df[(df.day_in_program % 7 == 0) & (df.in_episode == 0) & (df.day_in_program >= 14)]
+    rng = np.random.default_rng(SEED)
     out = {}
     for col in ("age_group", "sex", "race_ethnicity", "preferred_language", "cancer_type", "device", "lives_alone"):
         rows = []
-        for v, g in df.groupby(col):
-            w = g[(g.day_in_program % 7 == 0) & (g.in_episode == 0) & (g.day_in_program >= 14)]
+        for v, w in wk.groupby(col):
             pos = int(w.target.sum())
-            row = {"group": str(v), "patients": int(g.patient_id.nunique()), "rough_weeks": pos}
+            row = {"group": str(v), "patients": int(w.patient_id.nunique()), "rough_weeks": pos}
             if pos >= 30 and pos < len(w):
                 pred = w[score_col] >= thr
                 tp = int((pred & (w.target == 1)).sum())
+                # per-patient (rough weeks, caught) for the patient bootstrap
+                pp = (w.assign(hit=(pred & (w.target == 1)).astype(int)).groupby("patient_id")[["target", "hit"]].sum().values)
+                bs = []
+                for _ in range(reps):
+                    s = pp[rng.integers(0, len(pp), len(pp))].sum(0)
+                    bs.append(s[1] / max(s[0], 1))
                 row.update(auc=round(float(roc_auc_score(w.target, w[score_col])), 3),
-                           recall=round(tp / pos, 3), precision=round(tp / max(int(pred.sum()), 1), 3))
+                           recall=round(tp / pos, 3), precision=round(tp / max(int(pred.sum()), 1), 3),
+                           recall_ci95=[round(float(np.percentile(bs, 2.5)), 3), round(float(np.percentile(bs, 97.5)), 3)])
             else:
                 row["note"] = "too few rough weeks to judge"
             rows.append(row)
