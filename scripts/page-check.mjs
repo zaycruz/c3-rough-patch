@@ -19,7 +19,7 @@ try {
   await page.waitForSelector("#panel .ev");
   check("panel shows evidence", (await page.locator("#panel .ev").count()) > 0);
   check("panel shows recommendations", (await page.locator("#panel .rec").count()) > 0);
-  check("panel draws 7 charts", (await page.locator("#panel .chart svg path").count()) >= 6);
+  check("panel draws 8 charts", (await page.locator("#panel .chart svg").count()) === 8);
   await page.locator('.tile[data-id="c3-P02836"]').click();
   await page.waitForFunction(() => document.querySelector("#panel h2")?.textContent.includes("P02836"));
   await page.locator("#reveal").click();

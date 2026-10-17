@@ -1,6 +1,6 @@
 {
   "base": "https://c3-rough-patch.zay-259.workers.dev",
-  "ranAt": "2026-10-17T14:21:41.679Z",
+  "ranAt": "2026-10-17T14:37:18.105Z",
   "passed": true,
   "checks": [
     {
@@ -31,15 +31,19 @@
       "ok": true
     },
     {
-      "name": "roster sorted alert > watch > ok",
+      "name": "roster sorted urgent > alert > watch > ok",
+      "ok": true
+    },
+    {
+      "name": "urgent survivors are always status alert",
       "ok": true
     },
     {
       "name": "roster has at least one alert",
       "ok": true,
       "info": {
-        "alert": 8,
-        "watch": 8,
+        "alert": 9,
+        "watch": 7,
         "ok": 44
       }
     },
@@ -109,540 +113,634 @@
       "info": {
         "medianLeadDays": 6
       }
+    },
+    {
+      "name": "urgent head beats schedule-only on ER recall and AUC",
+      "ok": true,
+      "info": {
+        "urgent": {
+          "er_events": 182,
+          "er_recall_2to7d": 0.467,
+          "median_lead_days": 4,
+          "flag_precision": 0.074,
+          "flags_per_patient_month": 0.38,
+          "auc": 0.859,
+          "average_precision": 0.064,
+          "base_rate": 0.0119
+        },
+        "schedule": {
+          "er_events": 182,
+          "er_recall_2to7d": 0.363,
+          "median_lead_days": 5,
+          "flag_precision": 0.069,
+          "flags_per_patient_month": 0.23,
+          "auc": 0.845,
+          "average_precision": 0.0486,
+          "base_rate": 0.0119
+        }
+      }
     }
   ],
   "responses": {
     "/": {
       "status": 200,
-      "ms": 258,
-      "bytes": 11387
+      "ms": 358,
+      "bytes": 12322
     },
     "/api/c3/survivors": {
       "status": 200,
-      "ms": 272,
+      "ms": 68,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4bff34d7d742631-MIA",
+        "cf-ray": "a4c00a2dac9f57db-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 14:21:33 GMT",
+        "date": "Sat, 17 Oct 2026 14:37:10 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=tDQ31Ez368Zy9TwWwDknBoLQYKf33FxuiA5r6DPeXqmvS60N65aiYriaUDu4rfSy2%2Fju8GzTHud4%2Br%2BxDYrkwkPr4F9rFkUpDs%2Bszz7ZJIno%2FN1VOm2Dg6c4It6qWN%2Brq2rVHiTWLciwHBmS22xOp3R%2BM2rX\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=Flh%2B2pqKhumqYhQMe9eAHDlN9Ck5zjky7N8iGjMv0z%2FnSPg3tid%2FsOjwlDcHFzssKfSGgUMovfRONYSaIyM1RO1tAeAWiCS3y%2F2dIGAs9WcgHespn8nSgLl5KG4IzoRt7GVa%2BSjbXt57TO8WAQOs9zqqHvBE\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
       "body": [
         {
+          "survivorId": "c3-P02185",
+          "displayName": "P02185 · 42M · lymphoma",
+          "status": "alert",
+          "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": true
+        },
+        {
+          "survivorId": "c3-P03000",
+          "displayName": "P03000 · 49M · kidney",
+          "status": "alert",
+          "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": true
+        },
+        {
           "survivorId": "c3-P02465",
           "displayName": "P02465 · 59M · bladder",
           "status": "alert",
           "headline": "Rough patch risk 51% in the next 7 days, driven by sleep",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02836",
           "displayName": "P02836 · 52M · lung",
           "status": "alert",
           "headline": "Rough patch risk 24% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01289",
           "displayName": "P01289 · 62M · bladder",
           "status": "alert",
           "headline": "Rough patch risk 17% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
-        },
-        {
-          "survivorId": "c3-P02185",
-          "displayName": "P02185 · 42M · lymphoma",
-          "status": "alert",
-          "headline": "Rough patch risk 16% in the next 7 days, driven by steps",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02312",
           "displayName": "P02312 · 49F · head and neck",
           "status": "alert",
           "headline": "Rough patch risk 16% in the next 7 days, from several small wearable changes",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01652",
           "displayName": "P01652 · 73M · colorectal",
           "status": "alert",
           "headline": "Rough patch risk 15% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01560",
           "displayName": "P01560 · 55F · ovarian",
           "status": "alert",
           "headline": "Rough patch risk 15% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00557",
           "displayName": "P00557 · 70M · stomach",
           "status": "alert",
           "headline": "Rough patch risk 14% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00454",
           "displayName": "P00454 · 62M · lymphoma",
           "status": "watch",
           "headline": "Rough patch risk 13% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
-        },
-        {
-          "survivorId": "c3-P03000",
-          "displayName": "P03000 · 49M · kidney",
-          "status": "watch",
-          "headline": "Rough patch risk 12% in the next 7 days, driven by sleep",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02078",
           "displayName": "P02078 · 49F · breast",
           "status": "watch",
           "headline": "Rough patch risk 12% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02009",
           "displayName": "P02009 · 67F · stomach",
           "status": "watch",
           "headline": "Rough patch risk 11% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02859",
           "displayName": "P02859 · 73F · colorectal",
           "status": "watch",
           "headline": "Rough patch risk 10% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00439",
           "displayName": "P00439 · 56F · breast",
           "status": "watch",
           "headline": "Rough patch risk 9% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00145",
           "displayName": "P00145 · 69M · pancreatic",
           "status": "watch",
           "headline": "Rough patch risk 9% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02498",
           "displayName": "P02498 · 36M · colorectal",
           "status": "watch",
           "headline": "Rough patch risk 9% in the next 7 days, mostly from the treatment calendar",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01389",
           "displayName": "P01389 · 59F · breast",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01543",
           "displayName": "P01543 · 64M · lung",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02202",
           "displayName": "P02202 · 44F · sarcoma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01758",
           "displayName": "P01758 · 59M · head and neck",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02402",
           "displayName": "P02402 · 30F · leukemia",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02942",
           "displayName": "P02942 · 87F · colorectal",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02529",
           "displayName": "P02529 · 64F · breast",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00235",
           "displayName": "P00235 · 88F · colorectal",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02604",
           "displayName": "P02604 · 59F · breast",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00761",
           "displayName": "P00761 · 73F · bladder",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02440",
           "displayName": "P02440 · 57F · endometrial",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01802",
           "displayName": "P01802 · 55F · endometrial",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01743",
           "displayName": "P01743 · 45M · melanoma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00297",
           "displayName": "P00297 · 55M · multiple myeloma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02710",
           "displayName": "P02710 · 55M · melanoma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00393",
           "displayName": "P00393 · 57M · colorectal",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02538",
           "displayName": "P02538 · 64M · multiple myeloma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02891",
           "displayName": "P02891 · 64F · lung",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00718",
           "displayName": "P00718 · 58M · prostate",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02720",
           "displayName": "P02720 · 53F · melanoma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00153",
           "displayName": "P00153 · 76F · kidney",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00823",
           "displayName": "P00823 · 79F · multiple myeloma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00855",
           "displayName": "P00855 · 69F · lung",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01011",
           "displayName": "P01011 · 63F · colorectal",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00963",
           "displayName": "P00963 · 68M · kidney",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00386",
           "displayName": "P00386 · 71M · multiple myeloma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02770",
           "displayName": "P02770 · 66M · prostate",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01208",
           "displayName": "P01208 · 61M · prostate",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00938",
           "displayName": "P00938 · 62M · leukemia",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01173",
           "displayName": "P01173 · 41F · breast",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02287",
           "displayName": "P02287 · 60M · prostate",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01699",
           "displayName": "P01699 · 79F · lung",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01769",
           "displayName": "P01769 · 47M · multiple myeloma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01128",
           "displayName": "P01128 · 61F · breast",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01749",
           "displayName": "P01749 · 69F · ovarian",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00253",
           "displayName": "P00253 · 67F · breast",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02523",
           "displayName": "P02523 · 40F · colorectal",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00691",
           "displayName": "P00691 · 54F · endometrial",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P01265",
           "displayName": "P01265 · 48M · colorectal",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00751",
           "displayName": "P00751 · 67F · lung",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02422",
           "displayName": "P02422 · 63M · prostate",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00949",
           "displayName": "P00949 · 61F · breast",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P00602",
           "displayName": "P00602 · 52M · multiple myeloma",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         },
         {
           "survivorId": "c3-P02033",
           "displayName": "P02033 · 71F · endometrial",
           "status": "ok",
           "headline": "Steady. Wearable signals near their usual.",
-          "updatedAt": "2025-01-31T20:00:00Z"
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
         }
       ]
     },
-    "/api/c3/survivors/c3-P02465": {
+    "/api/c3/survivors/c3-P02185": {
       "status": 200,
-      "ms": 40,
+      "ms": 50,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4bff34f39e82631-MIA",
+        "cf-ray": "a4c00a2e1d9557db-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 14:21:33 GMT",
+        "date": "Sat, 17 Oct 2026 14:37:10 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=fqENLUA12VrKa8Nx0G3sUWEv9D18fBmPsxyykUVR6FBZOqtAEIjUT0iO0PvjQyyQEiSlUJe%2BTilgJrsE7JscsGq1bDhAGenb44149xEsB7qUiCYYD5zvs7ulsV4lY6IGpRPuMsywxNvASYg42mUuH7h6wkHR\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=D7oXW9nTPT%2FTwzb6xkFoBgZArUmveaGe%2Bu9qdTFri2806k5EYyzXDRRwUNB1olt8E5zykFm04Zdy1SrT56i%2FXXAwtfyUDDxGdvkmXRAJyEzMF4UUkqIhzsB4rzX57meNg5NhheidgMOFG9UWagnGNtLJ9vsj\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
       "body": {
-        "survivorId": "c3-P02465",
-        "displayName": "P02465 · 59M · bladder",
+        "survivorId": "c3-P02185",
+        "displayName": "P02185 · 42M · lymphoma",
         "status": "alert",
-        "headline": "Rough patch risk 51% in the next 7 days, driven by sleep",
-        "summary": "Risk of a rough patch in the next 7 days: 51% (alert line 13%). The treatment calendar alone gives 2%; wearable signals move it +48 points. Biggest wearable driver: Sleep efficiency 62% vs usual 74%, waking 8.0x a night vs 1.0x, 7.7 h asleep vs 8.0 h.",
-        "risk": 0.506,
-        "scheduleRisk": 0.023,
+        "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+        "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 6% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 16% (alert line 13%). The treatment calendar alone gives 10%; wearable signals move it +6 points. Biggest wearable driver: Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days).",
+        "urgent": true,
+        "urgentRisk": 0.06,
+        "risk": 0.162,
+        "scheduleRisk": 0.102,
         "thresholds": {
           "alert": 0.133,
-          "watch": 0.087
+          "watch": 0.087,
+          "urgent": 0.058
         },
         "profile": {
-          "age": 59,
+          "age": 42,
           "sex": "male",
-          "cancerType": "bladder",
-          "stage": "III",
+          "cancerType": "lymphoma",
+          "stage": "I",
           "treatmentPlan": "IV chemo every 21 days",
-          "device": "Fitbit smartwatch",
-          "language": "Spanish",
-          "livesAlone": "yes",
-          "context": "Day 14 of cycle 2 (IV chemo every 21 days)"
+          "device": "Fitbit tracker",
+          "language": "Haitian Creole",
+          "livesAlone": "no",
+          "context": "Day 5 of cycle 4 (IV chemo every 21 days)"
         },
         "evidence": [
           {
-            "signal": "sleep",
-            "label": "Sleep",
-            "riskShare": 0.415,
-            "value": 62,
-            "baseline": 74.5,
-            "unit": "% efficiency",
-            "change": "-12 pts",
-            "text": "Sleep efficiency 62% vs usual 74%, waking 8.0x a night vs 1.0x, 7.7 h asleep vs 8.0 h"
-          },
-          {
-            "signal": "resting_heart_rate",
-            "label": "Resting heart rate",
-            "riskShare": 0.253,
-            "value": 72.5,
-            "baseline": 69,
-            "unit": "bpm",
-            "change": "+3.5 bpm",
-            "text": "Resting heart rate +3.5 bpm vs their usual (72 vs 69)"
-          },
-          {
             "signal": "steps",
             "label": "Steps",
-            "riskShare": 0.144,
-            "value": 476,
-            "baseline": 1310,
+            "riskShare": 0.067,
+            "value": 7721,
+            "baseline": 12395,
             "unit": "steps/day",
-            "change": "-64%",
-            "text": "Steps 64% below their usual (476 vs 1,310 a day, last 3 days)"
+            "change": "-38%",
+            "text": "Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days)"
+          },
+          {
+            "signal": "sleep",
+            "label": "Sleep",
+            "riskShare": 0.049,
+            "value": 87,
+            "baseline": 92,
+            "unit": "% efficiency",
+            "change": "-5 pts",
+            "text": "Sleep efficiency 87% vs usual 92%, waking 3.5x a night vs 2.0x, 6.8 h asleep vs 7.1 h"
+          },
+          {
+            "signal": "hrv_rmssd_ms",
+            "label": "Heart rate variability",
+            "riskShare": 0.018,
+            "value": 63,
+            "baseline": 85.7,
+            "unit": "ms",
+            "change": "-26%",
+            "text": "Heart rate variability 26% lower than usual (recovery down)"
           },
           {
             "signal": "schedule",
             "label": "Treatment calendar",
-            "riskShare": 0.023,
-            "text": "Day 14 of cycle 2 (IV chemo every 21 days). The calendar alone predicts 2% risk of a rough patch this week."
+            "riskShare": 0.102,
+            "text": "Day 5 of cycle 4 (IV chemo every 21 days). The calendar alone predicts 10% risk of a rough patch this week."
           }
         ],
         "recommendations": [
           {
-            "action": "Check in this week about sleep: nights, naps, worries. Share the sleep tips sheet.",
-            "why": "Sleep got shorter or more broken than usual.",
+            "action": "Call today. Ask how they feel, about fever, fluids and anything new. If anything is off, have them call their care team now.",
+            "why": "Their wearable pattern matches the days before an ER visit or hospital stay. The coach does not diagnose; the care team decides.",
+            "urgency": "today"
+          },
+          {
+            "action": "Check in this week: ask about energy and what got in the way of moving. Offer a lighter activity goal.",
+            "why": "Movement has dropped well below their usual.",
             "urgency": "within 2 days"
           },
           {
@@ -697,312 +795,356 @@
             "2025-01-31"
           ],
           "risk": [
-            0.111,
-            0.113,
-            0.117,
-            0.117,
-            0.117,
-            0.24,
-            0.113,
-            0.143,
-            0.124,
-            0.107,
-            0.114,
-            0.104,
-            0.144,
             0.1,
-            0.099,
-            0.075,
-            0.036,
-            0.034,
+            0.08,
+            0.074,
+            0.066,
+            0.047,
+            0.038,
+            0.038,
             0.041,
-            0.021,
-            0.013,
-            0.012,
-            0.051,
-            0.096,
-            0.136,
-            0.147,
-            0.149,
-            0.136,
-            0.189,
-            0.179,
+            0.027,
+            0.018,
+            0.061,
+            0.105,
+            0.145,
+            0.133,
+            0.156,
+            0.148,
+            0.152,
+            0.138,
+            0.134,
+            0.114,
+            0.091,
             0.106,
-            0.097,
-            0.109,
-            0.097,
-            0.111,
+            0.09,
             0.085,
-            0.155,
-            0.048,
-            0.037,
+            0.108,
+            0.083,
+            0.038,
+            0.02,
+            0.019,
+            0.019,
             0.016,
-            0.046,
-            0.506
+            0.06,
+            0.11,
+            0.167,
+            0.133,
+            0.209,
+            0.185,
+            0.204,
+            0.185,
+            0.139,
+            0.13,
+            0.162
+          ],
+          "urgentRisk": [
+            0.032,
+            0.03,
+            0.023,
+            0.022,
+            0.017,
+            0.01,
+            0.008,
+            0.003,
+            0,
+            0.001,
+            0,
+            0.001,
+            0,
+            0.001,
+            0,
+            0,
+            0.019,
+            0.026,
+            0.028,
+            0.031,
+            0.023,
+            0.017,
+            0.017,
+            0.024,
+            0.056,
+            0.068,
+            0.028,
+            0.005,
+            0.001,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.007,
+            0.006,
+            0.016,
+            0.03,
+            0.06
           ],
           "steps": [
-            1308,
-            800,
-            1029,
+            10512,
+            11752,
+            10251,
+            24527,
+            8645,
+            8804,
+            16385,
+            14988,
+            12773,
+            11125,
+            20272,
+            6745,
+            15365,
+            5875,
+            10436,
+            13643,
+            9097,
+            9620,
+            15665,
+            9327,
             null,
-            1380,
-            1277,
-            1473,
-            1864,
-            1397,
-            927,
-            1306,
-            626,
-            932,
-            631,
-            1561,
-            1428,
-            1394,
-            1020,
-            1117,
-            1480,
-            1981,
+            10359,
+            13179,
+            8797,
             null,
-            1587,
-            1313,
-            1244,
-            1265,
-            1662,
-            1405,
-            1791,
-            1847,
-            696,
-            1150,
-            891,
-            null,
-            858,
-            1099,
-            872,
-            1496,
-            802,
-            null,
-            null,
-            476
+            8561,
+            12481,
+            22688,
+            12710,
+            16713,
+            12309,
+            10529,
+            17291,
+            7156,
+            14127,
+            8793,
+            10233,
+            15018,
+            9421,
+            7779,
+            7663,
+            null
           ],
           "restingHeartRate": [
-            69.1,
-            72.4,
-            68.2,
+            77.8,
+            77.7,
+            75.7,
+            76.4,
+            77,
+            77.8,
+            79.2,
+            80.2,
+            75.4,
+            77.6,
+            77.5,
+            76.1,
+            80,
+            77.6,
+            78.9,
+            79.3,
+            79.2,
+            78,
+            75.9,
+            76.6,
             null,
-            66.6,
-            67.3,
-            68,
-            69.8,
-            70.2,
-            69.9,
-            68.4,
-            70.4,
-            69.9,
-            71.2,
-            68.1,
-            68,
-            67.3,
-            68.7,
-            70.7,
-            64.9,
-            68.6,
+            77.8,
+            76.5,
+            79.8,
             null,
-            67.5,
-            70,
-            69.2,
-            67.6,
-            68.4,
-            68.4,
-            68.5,
-            68.2,
-            70.2,
-            69.6,
-            69.6,
-            null,
-            69.6,
-            68,
-            65.6,
-            66.1,
-            70.6,
-            null,
-            null,
-            72.5
+            77.5,
+            76.8,
+            76.8,
+            77.9,
+            77.2,
+            73.9,
+            76.5,
+            74.5,
+            74.6,
+            75.9,
+            81.2,
+            80,
+            76.4,
+            78.9,
+            77.4,
+            79.7,
+            null
           ],
           "hrv": [
-            25.5,
-            24.1,
-            24.2,
+            73.1,
+            96.7,
+            71.2,
+            78.1,
+            101.4,
+            92.4,
+            75.4,
+            75.6,
+            82.3,
+            94.3,
+            82.2,
+            74.2,
+            98.6,
+            79.7,
+            91.5,
+            93.6,
+            87.5,
+            107.9,
+            81.7,
+            76.9,
             null,
-            20.9,
-            29.7,
-            18.9,
-            33.8,
-            21.7,
-            19,
-            22.3,
-            33.9,
-            18.7,
-            24.8,
-            26.7,
-            24.2,
-            22.8,
-            24.7,
-            21.7,
-            21.5,
-            27.8,
+            79.3,
+            78.4,
+            85.2,
             null,
-            25.9,
-            23.8,
-            26.2,
-            33.2,
-            22.2,
-            22.7,
-            31.8,
-            21.9,
-            25.4,
-            25.1,
-            18.8,
-            null,
-            27.5,
-            20.2,
-            31.5,
-            35,
-            31.2,
-            null,
-            null,
-            18.1
+            81.7,
+            87.6,
+            89,
+            82.7,
+            86.8,
+            87.5,
+            115.5,
+            86.1,
+            95.3,
+            78.4,
+            89.5,
+            72.9,
+            107,
+            70.7,
+            59,
+            67.1,
+            null
           ],
           "sleepHours": [
-            8.53,
-            8.18,
-            8.77,
-            null,
-            7.53,
-            8.28,
-            8.02,
+            7.42,
             6.52,
-            7.88,
-            8.72,
-            9.17,
-            8.15,
-            7.8,
-            6.93,
-            8.07,
-            7.97,
-            7.93,
-            7.6,
-            8.62,
-            9.08,
-            8.05,
+            7,
+            7,
+            7.63,
+            7.2,
+            6.85,
+            8.13,
+            8.02,
+            7,
+            6.72,
+            6.07,
+            8.45,
+            7.32,
+            6.43,
+            7.7,
+            7.9,
+            6.77,
+            6.28,
+            7.2,
             null,
-            7.47,
-            7.88,
-            7.67,
-            8.52,
-            8.93,
-            8.05,
-            7.08,
-            7.58,
-            8.68,
-            8.27,
-            7.95,
+            8.95,
+            7.05,
+            6.62,
             null,
-            8.53,
-            8.43,
-            8.92,
-            7.85,
-            7.38,
-            null,
-            null,
-            7.73
+            6.88,
+            7.28,
+            6.55,
+            7.9,
+            6.45,
+            7.2,
+            5.97,
+            7.12,
+            7.1,
+            6.98,
+            6.88,
+            8.03,
+            6.23,
+            7.37,
+            6.37,
+            7.13,
+            null
           ],
           "skinTempChange": [
-            -1.02,
-            -0.15,
-            -0.32,
-            null,
-            -0.53,
-            -1.31,
-            0.22,
-            -0.62,
-            0.35,
-            -0.07,
-            0.45,
-            -0.33,
-            -0.28,
-            -0.52,
-            0.4,
-            1.04,
-            0.32,
-            -1.22,
-            0.39,
-            0,
-            1.08,
-            null,
-            -0.11,
-            -0.68,
-            0.46,
-            0.34,
-            -0.33,
-            -0.01,
-            0.77,
-            0.13,
-            1.15,
-            -0.19,
-            0.27,
-            null,
-            0.81,
-            0.82,
-            -0.16,
-            0.36,
-            0.92,
             null,
             null,
-            0.48
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
           ],
           "watchWornHours": [
-            20.9,
             21.4,
-            20.9,
-            1.6,
-            22.9,
-            21.1,
-            21.8,
-            14.5,
-            21.6,
-            20.6,
-            15.4,
-            22.8,
-            21.7,
             21.9,
-            21.6,
-            20.7,
             21.2,
-            21.1,
-            24,
-            21.5,
-            21.3,
-            1.6,
-            21.1,
-            23.6,
-            15.7,
-            14.1,
-            23.9,
-            23.4,
             22.1,
-            22.5,
+            13.7,
+            24,
+            23.1,
             23.2,
-            23.4,
+            22.3,
+            21.7,
             20.5,
-            0.4,
-            23.4,
+            20.2,
+            21.9,
+            21.2,
+            20.8,
+            22.2,
+            21.7,
+            21.1,
+            23.3,
+            22,
+            2.5,
+            16.6,
+            21.3,
+            22.1,
+            1.7,
+            14.4,
             21.4,
-            23.2,
-            22.7,
-            20.3,
-            1.2,
-            0.9,
-            20.3
+            22.9,
+            21.7,
+            15.8,
+            22.8,
+            24,
+            22.5,
+            20.1,
+            16,
+            22.6,
+            16.6,
+            22,
+            24,
+            21.2,
+            19.6,
+            3.4
           ],
           "doseDays": [
             0,
@@ -1012,18 +1154,6 @@
             0,
             0,
             0,
-            1,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
             0,
             0,
             0,
@@ -1043,51 +1173,63 @@
             0,
             0,
             0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
             0,
             0,
             0,
             0
           ],
           "selfReportedFeeling": [
-            4,
-            5,
-            5,
-            5,
-            5,
-            5,
-            5,
-            5,
+            2,
             5,
             4,
             null,
+            5,
+            null,
+            4,
+            5,
+            5,
             4,
             null,
             5,
             null,
-            null,
-            null,
-            5,
-            5,
-            null,
-            5,
-            null,
-            5,
-            null,
-            5,
-            5,
-            null,
-            null,
-            null,
-            null,
-            5,
-            null,
-            null,
+            4,
             null,
             null,
             4,
             5,
             null,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            null,
+            null,
             5,
+            4,
+            null,
+            5,
+            null,
+            4,
+            null,
+            3,
+            null,
+            5,
+            null,
+            4,
             null,
             null,
             null
@@ -1095,31 +1237,31 @@
         }
       }
     },
-    "/api/c3/survivors/c3-P02465?demo=1": {
+    "/api/c3/survivors/c3-P02185?demo=1": {
       "status": 200,
       "demo": {
         "note": "Hidden from the coach view: what actually happened in the 14 days after the forecast.",
-        "roughPatchStartsInDays": 1,
+        "roughPatchStartsInDays": null,
         "erOrAdmissionInDays": null,
         "events": []
       }
     },
     "/api/c3/survivors/c3-nope": {
       "status": 404,
-      "ms": 75,
+      "ms": 34,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4bff37e28622631-MIA",
+        "cf-ray": "a4c00a5b0fc857db-MIA",
         "connection": "keep-alive",
         "content-length": "30",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 14:21:41 GMT",
+        "date": "Sat, 17 Oct 2026 14:37:17 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=EDHhcgCNrmLEdrUZIOOfBt7qd3eQSp82ajaurTncs3FTFBp5XZvEpjWARrs1ytYkKPCZW0GBaNojCD4sMMIB6ltluPUBvGc%2FsLPF487PCgAamRqNegqbsjVPFbyhUFTT7wGsRLU8am6gMTIA%2BLpcuszsUU%2Fb\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=2t1470GDADIREj%2B8A9Fjos%2Bs3GhxcNXwMYCD5xFcED7kBIx7QSRPKin7wNweHX0cJPvbILFiKmtzpf83GpbJKYTjhTS8Yy7EbVFdD6uPs9d%2FP97EuMiM1fh0StCYryW2lNnhyWthxqakLLjp3b89ikHisizf\"}]}",
         "server": "cloudflare"
       },
       "body": {
@@ -1128,20 +1270,20 @@
     },
     "/api/c3/metrics": {
       "status": 200,
-      "ms": 138,
+      "ms": 152,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4bff37f194ede1b-MIA",
+        "cf-ray": "a4c00a5b9cce72d3-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 14:21:41 GMT",
+        "date": "Sat, 17 Oct 2026 14:37:18 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=843znoB1wQlbpfHsjlW1%2B%2BVLGjed8urDkm8lOt3xzhSJe4mUrJxX1veVnjJhIWPdUEiw3i0bIc%2FPEo%2BG6IzxMwvgt1tHyi1twvjY1qQQoSKFoTEjha436Fu96JtT9Xfal8efW01fY7hrSZ2I%2F8gT2elxGkLm\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=ZgryeqDqPYlBFwAeIDdCJGnkX32MMUtkCCy2I%2F99CeqguqcoTSbjzLZUhCUQJPuMk9WQZsWI%2B3%2BK3mjZU75eMNrTmvjr1BsviJ84LNpVMmi6rQsI7XOtxltNBPr2U3ySgAgYkqQ96LM19JDq3c1ZVUwIM%2Bfp\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
@@ -1278,6 +1420,103 @@
               "alert_precision": 0.147,
               "alerts_per_patient_month": 0.84
             }
+          }
+        },
+        "urgent": {
+          "definition": "P(ER visit or hospital admission in the next 7 days); urgent when in the top 3% of validation days. Separate flag; does not change the rough-patch status.",
+          "methods": {
+            "urgent": {
+              "er_events": 182,
+              "er_recall_2to7d": 0.467,
+              "median_lead_days": 4,
+              "flag_precision": 0.074,
+              "flags_per_patient_month": 0.38,
+              "auc": 0.859,
+              "average_precision": 0.064,
+              "base_rate": 0.0119
+            },
+            "schedule": {
+              "er_events": 182,
+              "er_recall_2to7d": 0.363,
+              "median_lead_days": 5,
+              "flag_precision": 0.069,
+              "flags_per_patient_month": 0.23,
+              "auc": 0.845,
+              "average_precision": 0.0486,
+              "base_rate": 0.0119
+            },
+            "radar": {
+              "er_events": 182,
+              "er_recall_2to7d": 0.231,
+              "median_lead_days": 6,
+              "flag_precision": 0.068,
+              "flags_per_patient_month": 0.25,
+              "auc": 0.774,
+              "average_precision": 0.0343,
+              "base_rate": 0.0119
+            }
+          },
+          "names": {
+            "urgent": "Urgent head (wearable + schedule)",
+            "schedule": "Urgent head, schedule only",
+            "radar": "Rough-patch Radar used for ER at the same budget"
+          },
+          "calibration": {
+            "brier": 0.0115,
+            "base_rate": 0.0119,
+            "brier_if_base_rate": 0.0117,
+            "deciles": [
+              {
+                "predicted": 0,
+                "observed": 0,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0001,
+                "observed": 0,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0002,
+                "observed": 0.0005,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0004,
+                "observed": 0.0005,
+                "days": 10505
+              },
+              {
+                "predicted": 0.0007,
+                "observed": 0.0014,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0018,
+                "observed": 0.0048,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0047,
+                "observed": 0.0075,
+                "days": 10505
+              },
+              {
+                "predicted": 0.0103,
+                "observed": 0.0179,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0209,
+                "observed": 0.0312,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0588,
+                "observed": 0.055,
+                "days": 10506
+              }
+            ]
           }
         },
         "calibration": {

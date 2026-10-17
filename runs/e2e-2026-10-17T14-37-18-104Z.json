@@ -1,0 +1,1971 @@
+{
+  "base": "https://c3-rough-patch.zay-259.workers.dev",
+  "ranAt": "2026-10-17T14:37:18.105Z",
+  "passed": true,
+  "checks": [
+    {
+      "name": "GET / returns 200 HTML",
+      "ok": true
+    },
+    {
+      "name": "roster 200 and non-empty array",
+      "ok": true,
+      "info": {
+        "count": 60
+      }
+    },
+    {
+      "name": "roster CORS header",
+      "ok": true
+    },
+    {
+      "name": "roster tiles have exactly the contract keys",
+      "ok": true
+    },
+    {
+      "name": "roster ids are c3-prefixed",
+      "ok": true
+    },
+    {
+      "name": "roster status in ok|watch|alert",
+      "ok": true
+    },
+    {
+      "name": "roster sorted urgent > alert > watch > ok",
+      "ok": true
+    },
+    {
+      "name": "urgent survivors are always status alert",
+      "ok": true
+    },
+    {
+      "name": "roster has at least one alert",
+      "ok": true,
+      "info": {
+        "alert": 9,
+        "watch": 7,
+        "ok": 44
+      }
+    },
+    {
+      "name": "every survivor panel matches the contract (and hides demo outcome)",
+      "ok": true,
+      "info": {
+        "ok": 60,
+        "failures": []
+      }
+    },
+    {
+      "name": "flagged survivors whose rough patch did start within 14 days (informational)",
+      "ok": true,
+      "info": {
+        "flagged": 16,
+        "startedWithin14d": 6
+      }
+    },
+    {
+      "name": "unknown survivor returns 404 JSON",
+      "ok": true
+    },
+    {
+      "name": "metrics 200 with model and baselines",
+      "ok": true
+    },
+    {
+      "name": "model beats both baselines on week AUC and episode recall",
+      "ok": true,
+      "info": {
+        "steps_rule": {
+          "weekAuc": 0.556,
+          "weekPrecision": 0.094,
+          "weekRecall": 0.198,
+          "episodeRecall": 0.392,
+          "erRecall": 0.516,
+          "medianLeadDays": 5,
+          "alertPrecision": 0.081,
+          "alertsPerPatientMonth": 1.25
+        },
+        "schedule": {
+          "weekAuc": 0.79,
+          "weekPrecision": 0.184,
+          "weekRecall": 0.403,
+          "episodeRecall": 0.589,
+          "erRecall": 0.418,
+          "medianLeadDays": 6,
+          "alertPrecision": 0.139,
+          "alertsPerPatientMonth": 0.67
+        },
+        "model": {
+          "weekAuc": 0.804,
+          "weekPrecision": 0.195,
+          "weekRecall": 0.439,
+          "episodeRecall": 0.642,
+          "erRecall": 0.544,
+          "medianLeadDays": 6,
+          "alertPrecision": 0.147,
+          "alertsPerPatientMonth": 0.84
+        }
+      }
+    },
+    {
+      "name": "median lead time >= 2 days",
+      "ok": true,
+      "info": {
+        "medianLeadDays": 6
+      }
+    },
+    {
+      "name": "urgent head beats schedule-only on ER recall and AUC",
+      "ok": true,
+      "info": {
+        "urgent": {
+          "er_events": 182,
+          "er_recall_2to7d": 0.467,
+          "median_lead_days": 4,
+          "flag_precision": 0.074,
+          "flags_per_patient_month": 0.38,
+          "auc": 0.859,
+          "average_precision": 0.064,
+          "base_rate": 0.0119
+        },
+        "schedule": {
+          "er_events": 182,
+          "er_recall_2to7d": 0.363,
+          "median_lead_days": 5,
+          "flag_precision": 0.069,
+          "flags_per_patient_month": 0.23,
+          "auc": 0.845,
+          "average_precision": 0.0486,
+          "base_rate": 0.0119
+        }
+      }
+    }
+  ],
+  "responses": {
+    "/": {
+      "status": 200,
+      "ms": 358,
+      "bytes": 12322
+    },
+    "/api/c3/survivors": {
+      "status": 200,
+      "ms": 68,
+      "headers": {
+        "access-control-allow-headers": "content-type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cache-control": "public, max-age=60",
+        "cf-ray": "a4c00a2dac9f57db-MIA",
+        "connection": "keep-alive",
+        "content-encoding": "br",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 17 Oct 2026 14:37:10 GMT",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=Flh%2B2pqKhumqYhQMe9eAHDlN9Ck5zjky7N8iGjMv0z%2FnSPg3tid%2FsOjwlDcHFzssKfSGgUMovfRONYSaIyM1RO1tAeAWiCS3y%2F2dIGAs9WcgHespn8nSgLl5KG4IzoRt7GVa%2BSjbXt57TO8WAQOs9zqqHvBE\"}]}",
+        "server": "cloudflare",
+        "transfer-encoding": "chunked"
+      },
+      "body": [
+        {
+          "survivorId": "c3-P02185",
+          "displayName": "P02185 · 42M · lymphoma",
+          "status": "alert",
+          "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": true
+        },
+        {
+          "survivorId": "c3-P03000",
+          "displayName": "P03000 · 49M · kidney",
+          "status": "alert",
+          "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": true
+        },
+        {
+          "survivorId": "c3-P02465",
+          "displayName": "P02465 · 59M · bladder",
+          "status": "alert",
+          "headline": "Rough patch risk 51% in the next 7 days, driven by sleep",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02836",
+          "displayName": "P02836 · 52M · lung",
+          "status": "alert",
+          "headline": "Rough patch risk 24% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01289",
+          "displayName": "P01289 · 62M · bladder",
+          "status": "alert",
+          "headline": "Rough patch risk 17% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02312",
+          "displayName": "P02312 · 49F · head and neck",
+          "status": "alert",
+          "headline": "Rough patch risk 16% in the next 7 days, from several small wearable changes",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01652",
+          "displayName": "P01652 · 73M · colorectal",
+          "status": "alert",
+          "headline": "Rough patch risk 15% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01560",
+          "displayName": "P01560 · 55F · ovarian",
+          "status": "alert",
+          "headline": "Rough patch risk 15% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00557",
+          "displayName": "P00557 · 70M · stomach",
+          "status": "alert",
+          "headline": "Rough patch risk 14% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00454",
+          "displayName": "P00454 · 62M · lymphoma",
+          "status": "watch",
+          "headline": "Rough patch risk 13% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02078",
+          "displayName": "P02078 · 49F · breast",
+          "status": "watch",
+          "headline": "Rough patch risk 12% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02009",
+          "displayName": "P02009 · 67F · stomach",
+          "status": "watch",
+          "headline": "Rough patch risk 11% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02859",
+          "displayName": "P02859 · 73F · colorectal",
+          "status": "watch",
+          "headline": "Rough patch risk 10% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00439",
+          "displayName": "P00439 · 56F · breast",
+          "status": "watch",
+          "headline": "Rough patch risk 9% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00145",
+          "displayName": "P00145 · 69M · pancreatic",
+          "status": "watch",
+          "headline": "Rough patch risk 9% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02498",
+          "displayName": "P02498 · 36M · colorectal",
+          "status": "watch",
+          "headline": "Rough patch risk 9% in the next 7 days, mostly from the treatment calendar",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01389",
+          "displayName": "P01389 · 59F · breast",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01543",
+          "displayName": "P01543 · 64M · lung",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02202",
+          "displayName": "P02202 · 44F · sarcoma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01758",
+          "displayName": "P01758 · 59M · head and neck",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02402",
+          "displayName": "P02402 · 30F · leukemia",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02942",
+          "displayName": "P02942 · 87F · colorectal",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02529",
+          "displayName": "P02529 · 64F · breast",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00235",
+          "displayName": "P00235 · 88F · colorectal",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02604",
+          "displayName": "P02604 · 59F · breast",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00761",
+          "displayName": "P00761 · 73F · bladder",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02440",
+          "displayName": "P02440 · 57F · endometrial",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01802",
+          "displayName": "P01802 · 55F · endometrial",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01743",
+          "displayName": "P01743 · 45M · melanoma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00297",
+          "displayName": "P00297 · 55M · multiple myeloma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02710",
+          "displayName": "P02710 · 55M · melanoma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00393",
+          "displayName": "P00393 · 57M · colorectal",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02538",
+          "displayName": "P02538 · 64M · multiple myeloma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02891",
+          "displayName": "P02891 · 64F · lung",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00718",
+          "displayName": "P00718 · 58M · prostate",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02720",
+          "displayName": "P02720 · 53F · melanoma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00153",
+          "displayName": "P00153 · 76F · kidney",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00823",
+          "displayName": "P00823 · 79F · multiple myeloma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00855",
+          "displayName": "P00855 · 69F · lung",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01011",
+          "displayName": "P01011 · 63F · colorectal",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00963",
+          "displayName": "P00963 · 68M · kidney",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00386",
+          "displayName": "P00386 · 71M · multiple myeloma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02770",
+          "displayName": "P02770 · 66M · prostate",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01208",
+          "displayName": "P01208 · 61M · prostate",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00938",
+          "displayName": "P00938 · 62M · leukemia",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01173",
+          "displayName": "P01173 · 41F · breast",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02287",
+          "displayName": "P02287 · 60M · prostate",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01699",
+          "displayName": "P01699 · 79F · lung",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01769",
+          "displayName": "P01769 · 47M · multiple myeloma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01128",
+          "displayName": "P01128 · 61F · breast",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01749",
+          "displayName": "P01749 · 69F · ovarian",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00253",
+          "displayName": "P00253 · 67F · breast",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02523",
+          "displayName": "P02523 · 40F · colorectal",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00691",
+          "displayName": "P00691 · 54F · endometrial",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P01265",
+          "displayName": "P01265 · 48M · colorectal",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00751",
+          "displayName": "P00751 · 67F · lung",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02422",
+          "displayName": "P02422 · 63M · prostate",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00949",
+          "displayName": "P00949 · 61F · breast",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P00602",
+          "displayName": "P00602 · 52M · multiple myeloma",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        },
+        {
+          "survivorId": "c3-P02033",
+          "displayName": "P02033 · 71F · endometrial",
+          "status": "ok",
+          "headline": "Steady. Wearable signals near their usual.",
+          "updatedAt": "2025-01-31T20:00:00Z",
+          "urgent": false
+        }
+      ]
+    },
+    "/api/c3/survivors/c3-P02185": {
+      "status": 200,
+      "ms": 50,
+      "headers": {
+        "access-control-allow-headers": "content-type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cache-control": "public, max-age=60",
+        "cf-ray": "a4c00a2e1d9557db-MIA",
+        "connection": "keep-alive",
+        "content-encoding": "br",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 17 Oct 2026 14:37:10 GMT",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=D7oXW9nTPT%2FTwzb6xkFoBgZArUmveaGe%2Bu9qdTFri2806k5EYyzXDRRwUNB1olt8E5zykFm04Zdy1SrT56i%2FXXAwtfyUDDxGdvkmXRAJyEzMF4UUkqIhzsB4rzX57meNg5NhheidgMOFG9UWagnGNtLJ9vsj\"}]}",
+        "server": "cloudflare",
+        "transfer-encoding": "chunked"
+      },
+      "body": {
+        "survivorId": "c3-P02185",
+        "displayName": "P02185 · 42M · lymphoma",
+        "status": "alert",
+        "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+        "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 6% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 16% (alert line 13%). The treatment calendar alone gives 10%; wearable signals move it +6 points. Biggest wearable driver: Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days).",
+        "urgent": true,
+        "urgentRisk": 0.06,
+        "risk": 0.162,
+        "scheduleRisk": 0.102,
+        "thresholds": {
+          "alert": 0.133,
+          "watch": 0.087,
+          "urgent": 0.058
+        },
+        "profile": {
+          "age": 42,
+          "sex": "male",
+          "cancerType": "lymphoma",
+          "stage": "I",
+          "treatmentPlan": "IV chemo every 21 days",
+          "device": "Fitbit tracker",
+          "language": "Haitian Creole",
+          "livesAlone": "no",
+          "context": "Day 5 of cycle 4 (IV chemo every 21 days)"
+        },
+        "evidence": [
+          {
+            "signal": "steps",
+            "label": "Steps",
+            "riskShare": 0.067,
+            "value": 7721,
+            "baseline": 12395,
+            "unit": "steps/day",
+            "change": "-38%",
+            "text": "Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days)"
+          },
+          {
+            "signal": "sleep",
+            "label": "Sleep",
+            "riskShare": 0.049,
+            "value": 87,
+            "baseline": 92,
+            "unit": "% efficiency",
+            "change": "-5 pts",
+            "text": "Sleep efficiency 87% vs usual 92%, waking 3.5x a night vs 2.0x, 6.8 h asleep vs 7.1 h"
+          },
+          {
+            "signal": "hrv_rmssd_ms",
+            "label": "Heart rate variability",
+            "riskShare": 0.018,
+            "value": 63,
+            "baseline": 85.7,
+            "unit": "ms",
+            "change": "-26%",
+            "text": "Heart rate variability 26% lower than usual (recovery down)"
+          },
+          {
+            "signal": "schedule",
+            "label": "Treatment calendar",
+            "riskShare": 0.102,
+            "text": "Day 5 of cycle 4 (IV chemo every 21 days). The calendar alone predicts 10% risk of a rough patch this week."
+          }
+        ],
+        "recommendations": [
+          {
+            "action": "Call today. Ask how they feel, about fever, fluids and anything new. If anything is off, have them call their care team now.",
+            "why": "Their wearable pattern matches the days before an ER visit or hospital stay. The coach does not diagnose; the care team decides.",
+            "urgency": "today"
+          },
+          {
+            "action": "Check in this week: ask about energy and what got in the way of moving. Offer a lighter activity goal.",
+            "why": "Movement has dropped well below their usual.",
+            "urgency": "within 2 days"
+          },
+          {
+            "action": "Move the next coaching call earlier and plan around the expected low point.",
+            "why": "The forecast covers the next 7 days.",
+            "urgency": "this week"
+          }
+        ],
+        "charts": {
+          "dates": [
+            "2024-12-21",
+            "2024-12-22",
+            "2024-12-23",
+            "2024-12-24",
+            "2024-12-25",
+            "2024-12-26",
+            "2024-12-27",
+            "2024-12-28",
+            "2024-12-29",
+            "2024-12-30",
+            "2024-12-31",
+            "2025-01-01",
+            "2025-01-02",
+            "2025-01-03",
+            "2025-01-04",
+            "2025-01-05",
+            "2025-01-06",
+            "2025-01-07",
+            "2025-01-08",
+            "2025-01-09",
+            "2025-01-10",
+            "2025-01-11",
+            "2025-01-12",
+            "2025-01-13",
+            "2025-01-14",
+            "2025-01-15",
+            "2025-01-16",
+            "2025-01-17",
+            "2025-01-18",
+            "2025-01-19",
+            "2025-01-20",
+            "2025-01-21",
+            "2025-01-22",
+            "2025-01-23",
+            "2025-01-24",
+            "2025-01-25",
+            "2025-01-26",
+            "2025-01-27",
+            "2025-01-28",
+            "2025-01-29",
+            "2025-01-30",
+            "2025-01-31"
+          ],
+          "risk": [
+            0.1,
+            0.08,
+            0.074,
+            0.066,
+            0.047,
+            0.038,
+            0.038,
+            0.041,
+            0.027,
+            0.018,
+            0.061,
+            0.105,
+            0.145,
+            0.133,
+            0.156,
+            0.148,
+            0.152,
+            0.138,
+            0.134,
+            0.114,
+            0.091,
+            0.106,
+            0.09,
+            0.085,
+            0.108,
+            0.083,
+            0.038,
+            0.02,
+            0.019,
+            0.019,
+            0.016,
+            0.06,
+            0.11,
+            0.167,
+            0.133,
+            0.209,
+            0.185,
+            0.204,
+            0.185,
+            0.139,
+            0.13,
+            0.162
+          ],
+          "urgentRisk": [
+            0.032,
+            0.03,
+            0.023,
+            0.022,
+            0.017,
+            0.01,
+            0.008,
+            0.003,
+            0,
+            0.001,
+            0,
+            0.001,
+            0,
+            0.001,
+            0,
+            0,
+            0.019,
+            0.026,
+            0.028,
+            0.031,
+            0.023,
+            0.017,
+            0.017,
+            0.024,
+            0.056,
+            0.068,
+            0.028,
+            0.005,
+            0.001,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.007,
+            0.006,
+            0.016,
+            0.03,
+            0.06
+          ],
+          "steps": [
+            10512,
+            11752,
+            10251,
+            24527,
+            8645,
+            8804,
+            16385,
+            14988,
+            12773,
+            11125,
+            20272,
+            6745,
+            15365,
+            5875,
+            10436,
+            13643,
+            9097,
+            9620,
+            15665,
+            9327,
+            null,
+            10359,
+            13179,
+            8797,
+            null,
+            8561,
+            12481,
+            22688,
+            12710,
+            16713,
+            12309,
+            10529,
+            17291,
+            7156,
+            14127,
+            8793,
+            10233,
+            15018,
+            9421,
+            7779,
+            7663,
+            null
+          ],
+          "restingHeartRate": [
+            77.8,
+            77.7,
+            75.7,
+            76.4,
+            77,
+            77.8,
+            79.2,
+            80.2,
+            75.4,
+            77.6,
+            77.5,
+            76.1,
+            80,
+            77.6,
+            78.9,
+            79.3,
+            79.2,
+            78,
+            75.9,
+            76.6,
+            null,
+            77.8,
+            76.5,
+            79.8,
+            null,
+            77.5,
+            76.8,
+            76.8,
+            77.9,
+            77.2,
+            73.9,
+            76.5,
+            74.5,
+            74.6,
+            75.9,
+            81.2,
+            80,
+            76.4,
+            78.9,
+            77.4,
+            79.7,
+            null
+          ],
+          "hrv": [
+            73.1,
+            96.7,
+            71.2,
+            78.1,
+            101.4,
+            92.4,
+            75.4,
+            75.6,
+            82.3,
+            94.3,
+            82.2,
+            74.2,
+            98.6,
+            79.7,
+            91.5,
+            93.6,
+            87.5,
+            107.9,
+            81.7,
+            76.9,
+            null,
+            79.3,
+            78.4,
+            85.2,
+            null,
+            81.7,
+            87.6,
+            89,
+            82.7,
+            86.8,
+            87.5,
+            115.5,
+            86.1,
+            95.3,
+            78.4,
+            89.5,
+            72.9,
+            107,
+            70.7,
+            59,
+            67.1,
+            null
+          ],
+          "sleepHours": [
+            7.42,
+            6.52,
+            7,
+            7,
+            7.63,
+            7.2,
+            6.85,
+            8.13,
+            8.02,
+            7,
+            6.72,
+            6.07,
+            8.45,
+            7.32,
+            6.43,
+            7.7,
+            7.9,
+            6.77,
+            6.28,
+            7.2,
+            null,
+            8.95,
+            7.05,
+            6.62,
+            null,
+            6.88,
+            7.28,
+            6.55,
+            7.9,
+            6.45,
+            7.2,
+            5.97,
+            7.12,
+            7.1,
+            6.98,
+            6.88,
+            8.03,
+            6.23,
+            7.37,
+            6.37,
+            7.13,
+            null
+          ],
+          "skinTempChange": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "watchWornHours": [
+            21.4,
+            21.9,
+            21.2,
+            22.1,
+            13.7,
+            24,
+            23.1,
+            23.2,
+            22.3,
+            21.7,
+            20.5,
+            20.2,
+            21.9,
+            21.2,
+            20.8,
+            22.2,
+            21.7,
+            21.1,
+            23.3,
+            22,
+            2.5,
+            16.6,
+            21.3,
+            22.1,
+            1.7,
+            14.4,
+            21.4,
+            22.9,
+            21.7,
+            15.8,
+            22.8,
+            24,
+            22.5,
+            20.1,
+            16,
+            22.6,
+            16.6,
+            22,
+            24,
+            21.2,
+            19.6,
+            3.4
+          ],
+          "doseDays": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "selfReportedFeeling": [
+            2,
+            5,
+            4,
+            null,
+            5,
+            null,
+            4,
+            5,
+            5,
+            4,
+            null,
+            5,
+            null,
+            4,
+            null,
+            null,
+            4,
+            5,
+            null,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            null,
+            null,
+            5,
+            4,
+            null,
+            5,
+            null,
+            4,
+            null,
+            3,
+            null,
+            5,
+            null,
+            4,
+            null,
+            null,
+            null
+          ]
+        }
+      }
+    },
+    "/api/c3/survivors/c3-P02185?demo=1": {
+      "status": 200,
+      "demo": {
+        "note": "Hidden from the coach view: what actually happened in the 14 days after the forecast.",
+        "roughPatchStartsInDays": null,
+        "erOrAdmissionInDays": null,
+        "events": []
+      }
+    },
+    "/api/c3/survivors/c3-nope": {
+      "status": 404,
+      "ms": 34,
+      "headers": {
+        "access-control-allow-headers": "content-type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cache-control": "public, max-age=60",
+        "cf-ray": "a4c00a5b0fc857db-MIA",
+        "connection": "keep-alive",
+        "content-length": "30",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 17 Oct 2026 14:37:17 GMT",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=2t1470GDADIREj%2B8A9Fjos%2Bs3GhxcNXwMYCD5xFcED7kBIx7QSRPKin7wNweHX0cJPvbILFiKmtzpf83GpbJKYTjhTS8Yy7EbVFdD6uPs9d%2FP97EuMiM1fh0StCYryW2lNnhyWthxqakLLjp3b89ikHisizf\"}]}",
+        "server": "cloudflare"
+      },
+      "body": {
+        "error": "survivor not found"
+      }
+    },
+    "/api/c3/metrics": {
+      "status": 200,
+      "ms": 152,
+      "headers": {
+        "access-control-allow-headers": "content-type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cache-control": "public, max-age=60",
+        "cf-ray": "a4c00a5b9cce72d3-MIA",
+        "connection": "keep-alive",
+        "content-encoding": "br",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 17 Oct 2026 14:37:18 GMT",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=ZgryeqDqPYlBFwAeIDdCJGnkX32MMUtkCCy2I%2F99CeqguqcoTSbjzLZUhCUQJPuMk9WQZsWI%2B3%2BK3mjZU75eMNrTmvjr1BsviJ84LNpVMmi6rQsI7XOtxltNBPr2U3ySgAgYkqQ96LM19JDq3c1ZVUwIM%2Bfp\"}]}",
+        "server": "cloudflare",
+        "transfer-encoding": "chunked"
+      },
+      "body": {
+        "asOf": "2025-01-31",
+        "definition": {
+          "rough_day": "daily feeling <= 2, OR weekly fatigue >= 3, OR ER visit / hospital admission / treatment paused",
+          "rough_patch": "a rough day followed by another within 3 days, or any clinical event; onset = first patch day after 7 quiet days",
+          "forecast": "each evening, P(rough patch onset in the next 7 days); days already inside a patch are not scored",
+          "early_warning": "an alert counts only if it fires 2+ days before onset",
+          "inputs": "wearable signals vs personal baseline, wear time, known treatment schedule. No self-reports, no events.",
+          "split": "by patient: 60% train, 15% validation (thresholds), 25% test (all numbers below)",
+          "alert_budget": "thresholds put 12% of quiet validation days on alert, same budget for every method"
+        },
+        "counts": {
+          "patients": 3000,
+          "test_patients": 750,
+          "onsets_total": 3677,
+          "label_missing_feeling_share": 0.545
+        },
+        "methods": {
+          "steps_rule": {
+            "name": "Baseline: steps drop",
+            "weeks": {
+              "weeks": 14216,
+              "rough_weeks": 786,
+              "auc": 0.556,
+              "precision": 0.094,
+              "recall": 0.198,
+              "alert_share": 0.117
+            },
+            "episodes": {
+              "episodes": 867,
+              "episode_recall": 0.392,
+              "median_lead_days": 5,
+              "lead_days_hist": {
+                "2": 54,
+                "3": 34,
+                "4": 48,
+                "5": 50,
+                "6": 42,
+                "7": 112
+              },
+              "er_admissions": 182,
+              "er_recall": 0.516,
+              "alert_runs": 4769,
+              "alert_precision": 0.081,
+              "alerts_per_patient_month": 1.25
+            }
+          },
+          "schedule": {
+            "name": "Baseline: treatment schedule only (same learner)",
+            "weeks": {
+              "weeks": 14216,
+              "rough_weeks": 786,
+              "auc": 0.79,
+              "precision": 0.184,
+              "recall": 0.403,
+              "alert_share": 0.121
+            },
+            "episodes": {
+              "episodes": 867,
+              "episode_recall": 0.589,
+              "median_lead_days": 6,
+              "lead_days_hist": {
+                "2": 52,
+                "3": 33,
+                "4": 42,
+                "5": 54,
+                "6": 79,
+                "7": 251
+              },
+              "er_admissions": 182,
+              "er_recall": 0.418,
+              "alert_runs": 2567,
+              "alert_precision": 0.139,
+              "alerts_per_patient_month": 0.67
+            }
+          },
+          "logistic": {
+            "name": "Logistic, wearable + schedule (comparison)",
+            "weeks": {
+              "weeks": 14216,
+              "rough_weeks": 786,
+              "auc": 0.754,
+              "precision": 0.121,
+              "recall": 0.232,
+              "alert_share": 0.106
+            },
+            "episodes": {
+              "episodes": 867,
+              "episode_recall": 0.443,
+              "median_lead_days": 6,
+              "lead_days_hist": {
+                "2": 49,
+                "3": 35,
+                "4": 52,
+                "5": 48,
+                "6": 41,
+                "7": 159
+              },
+              "er_admissions": 182,
+              "er_recall": 0.566,
+              "alert_runs": 2412,
+              "alert_precision": 0.143,
+              "alerts_per_patient_month": 0.63
+            }
+          },
+          "model": {
+            "name": "Radar (gradient boosting, wearable + schedule)",
+            "weeks": {
+              "weeks": 14216,
+              "rough_weeks": 786,
+              "auc": 0.804,
+              "precision": 0.195,
+              "recall": 0.439,
+              "alert_share": 0.125
+            },
+            "episodes": {
+              "episodes": 867,
+              "episode_recall": 0.642,
+              "median_lead_days": 6,
+              "lead_days_hist": {
+                "2": 71,
+                "3": 56,
+                "4": 53,
+                "5": 67,
+                "6": 89,
+                "7": 221
+              },
+              "er_admissions": 182,
+              "er_recall": 0.544,
+              "alert_runs": 3192,
+              "alert_precision": 0.147,
+              "alerts_per_patient_month": 0.84
+            }
+          }
+        },
+        "urgent": {
+          "definition": "P(ER visit or hospital admission in the next 7 days); urgent when in the top 3% of validation days. Separate flag; does not change the rough-patch status.",
+          "methods": {
+            "urgent": {
+              "er_events": 182,
+              "er_recall_2to7d": 0.467,
+              "median_lead_days": 4,
+              "flag_precision": 0.074,
+              "flags_per_patient_month": 0.38,
+              "auc": 0.859,
+              "average_precision": 0.064,
+              "base_rate": 0.0119
+            },
+            "schedule": {
+              "er_events": 182,
+              "er_recall_2to7d": 0.363,
+              "median_lead_days": 5,
+              "flag_precision": 0.069,
+              "flags_per_patient_month": 0.23,
+              "auc": 0.845,
+              "average_precision": 0.0486,
+              "base_rate": 0.0119
+            },
+            "radar": {
+              "er_events": 182,
+              "er_recall_2to7d": 0.231,
+              "median_lead_days": 6,
+              "flag_precision": 0.068,
+              "flags_per_patient_month": 0.25,
+              "auc": 0.774,
+              "average_precision": 0.0343,
+              "base_rate": 0.0119
+            }
+          },
+          "names": {
+            "urgent": "Urgent head (wearable + schedule)",
+            "schedule": "Urgent head, schedule only",
+            "radar": "Rough-patch Radar used for ER at the same budget"
+          },
+          "calibration": {
+            "brier": 0.0115,
+            "base_rate": 0.0119,
+            "brier_if_base_rate": 0.0117,
+            "deciles": [
+              {
+                "predicted": 0,
+                "observed": 0,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0001,
+                "observed": 0,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0002,
+                "observed": 0.0005,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0004,
+                "observed": 0.0005,
+                "days": 10505
+              },
+              {
+                "predicted": 0.0007,
+                "observed": 0.0014,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0018,
+                "observed": 0.0048,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0047,
+                "observed": 0.0075,
+                "days": 10505
+              },
+              {
+                "predicted": 0.0103,
+                "observed": 0.0179,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0209,
+                "observed": 0.0312,
+                "days": 10506
+              },
+              {
+                "predicted": 0.0588,
+                "observed": 0.055,
+                "days": 10506
+              }
+            ]
+          }
+        },
+        "calibration": {
+          "model": {
+            "brier": 0.0476,
+            "base_rate": 0.0551,
+            "brier_if_base_rate": 0.052,
+            "deciles": [
+              {
+                "predicted": 0.002,
+                "observed": 0.0016,
+                "days": 9723
+              },
+              {
+                "predicted": 0.0041,
+                "observed": 0.0056,
+                "days": 9723
+              },
+              {
+                "predicted": 0.0112,
+                "observed": 0.0138,
+                "days": 9723
+              },
+              {
+                "predicted": 0.017,
+                "observed": 0.0167,
+                "days": 9722
+              },
+              {
+                "predicted": 0.0229,
+                "observed": 0.0217,
+                "days": 9723
+              },
+              {
+                "predicted": 0.0326,
+                "observed": 0.0282,
+                "days": 9723
+              },
+              {
+                "predicted": 0.0584,
+                "observed": 0.0577,
+                "days": 9722
+              },
+              {
+                "predicted": 0.087,
+                "observed": 0.0814,
+                "days": 9723
+              },
+              {
+                "predicted": 0.1203,
+                "observed": 0.1237,
+                "days": 9723
+              },
+              {
+                "predicted": 0.2068,
+                "observed": 0.2002,
+                "days": 9723
+              }
+            ]
+          },
+          "schedule": {
+            "brier": 0.0481,
+            "base_rate": 0.0551,
+            "brier_if_base_rate": 0.052,
+            "deciles": [
+              {
+                "predicted": 0.0009,
+                "observed": 0.0043,
+                "days": 9469
+              },
+              {
+                "predicted": 0.0041,
+                "observed": 0.0043,
+                "days": 9949
+              },
+              {
+                "predicted": 0.0122,
+                "observed": 0.0164,
+                "days": 9655
+              },
+              {
+                "predicted": 0.0179,
+                "observed": 0.0214,
+                "days": 9520
+              },
+              {
+                "predicted": 0.0241,
+                "observed": 0.0211,
+                "days": 10007
+              },
+              {
+                "predicted": 0.0351,
+                "observed": 0.0304,
+                "days": 9737
+              },
+              {
+                "predicted": 0.0613,
+                "observed": 0.0571,
+                "days": 9650
+              },
+              {
+                "predicted": 0.0909,
+                "observed": 0.0809,
+                "days": 9669
+              },
+              {
+                "predicted": 0.1228,
+                "observed": 0.1175,
+                "days": 9848
+              },
+              {
+                "predicted": 0.1961,
+                "observed": 0.1964,
+                "days": 9724
+              }
+            ]
+          }
+        },
+        "subgroups": {
+          "age_group": [
+            {
+              "group": "50-64",
+              "patients": 327,
+              "rough_weeks": 332,
+              "auc": 0.795,
+              "recall": 0.413,
+              "precision": 0.182
+            },
+            {
+              "group": "65+",
+              "patients": 262,
+              "rough_weeks": 291,
+              "auc": 0.819,
+              "recall": 0.447,
+              "precision": 0.235
+            },
+            {
+              "group": "under 50",
+              "patients": 161,
+              "rough_weeks": 163,
+              "auc": 0.8,
+              "recall": 0.479,
+              "precision": 0.168
+            }
+          ],
+          "sex": [
+            {
+              "group": "female",
+              "patients": 436,
+              "rough_weeks": 483,
+              "auc": 0.789,
+              "recall": 0.431,
+              "precision": 0.173
+            },
+            {
+              "group": "male",
+              "patients": 314,
+              "rough_weeks": 303,
+              "auc": 0.819,
+              "recall": 0.452,
+              "precision": 0.241
+            }
+          ],
+          "race_ethnicity": [
+            {
+              "group": "Asian",
+              "patients": 24,
+              "rough_weeks": 27,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "Black",
+              "patients": 154,
+              "rough_weeks": 175,
+              "auc": 0.799,
+              "recall": 0.383,
+              "precision": 0.205
+            },
+            {
+              "group": "Hispanic or Latino",
+              "patients": 396,
+              "rough_weeks": 425,
+              "auc": 0.815,
+              "recall": 0.454,
+              "precision": 0.202
+            },
+            {
+              "group": "Other or more than one",
+              "patients": 32,
+              "rough_weeks": 21,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "White",
+              "patients": 144,
+              "rough_weeks": 138,
+              "auc": 0.773,
+              "recall": 0.435,
+              "precision": 0.168
+            }
+          ],
+          "preferred_language": [
+            {
+              "group": "English",
+              "patients": 445,
+              "rough_weeks": 450,
+              "auc": 0.786,
+              "recall": 0.413,
+              "precision": 0.18
+            },
+            {
+              "group": "Haitian Creole",
+              "patients": 60,
+              "rough_weeks": 73,
+              "auc": 0.807,
+              "recall": 0.342,
+              "precision": 0.205
+            },
+            {
+              "group": "Spanish",
+              "patients": 245,
+              "rough_weeks": 263,
+              "auc": 0.836,
+              "recall": 0.51,
+              "precision": 0.217
+            }
+          ],
+          "cancer_type": [
+            {
+              "group": "bladder",
+              "patients": 26,
+              "rough_weeks": 27,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "breast",
+              "patients": 158,
+              "rough_weeks": 165,
+              "auc": 0.764,
+              "recall": 0.4,
+              "precision": 0.139
+            },
+            {
+              "group": "cervical",
+              "patients": 18,
+              "rough_weeks": 18,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "colorectal",
+              "patients": 68,
+              "rough_weeks": 119,
+              "auc": 0.764,
+              "recall": 0.479,
+              "precision": 0.295
+            },
+            {
+              "group": "endometrial",
+              "patients": 43,
+              "rough_weeks": 47,
+              "auc": 0.792,
+              "recall": 0.404,
+              "precision": 0.16
+            },
+            {
+              "group": "head and neck",
+              "patients": 30,
+              "rough_weeks": 29,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "kidney",
+              "patients": 20,
+              "rough_weeks": 13,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "leukemia",
+              "patients": 17,
+              "rough_weeks": 19,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "lung",
+              "patients": 62,
+              "rough_weeks": 61,
+              "auc": 0.876,
+              "recall": 0.656,
+              "precision": 0.276
+            },
+            {
+              "group": "lymphoma",
+              "patients": 61,
+              "rough_weeks": 75,
+              "auc": 0.815,
+              "recall": 0.533,
+              "precision": 0.17
+            },
+            {
+              "group": "melanoma",
+              "patients": 21,
+              "rough_weeks": 11,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "multiple myeloma",
+              "patients": 32,
+              "rough_weeks": 29,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "ovarian",
+              "patients": 53,
+              "rough_weeks": 73,
+              "auc": 0.74,
+              "recall": 0.315,
+              "precision": 0.142
+            },
+            {
+              "group": "pancreatic",
+              "patients": 24,
+              "rough_weeks": 25,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "prostate",
+              "patients": 71,
+              "rough_weeks": 22,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "sarcoma",
+              "patients": 23,
+              "rough_weeks": 27,
+              "note": "too few rough weeks to judge"
+            },
+            {
+              "group": "stomach",
+              "patients": 23,
+              "rough_weeks": 26,
+              "note": "too few rough weeks to judge"
+            }
+          ],
+          "device": [
+            {
+              "group": "Fitbit smartwatch",
+              "patients": 423,
+              "rough_weeks": 448,
+              "auc": 0.8,
+              "recall": 0.404,
+              "precision": 0.183
+            },
+            {
+              "group": "Fitbit tracker",
+              "patients": 327,
+              "rough_weeks": 338,
+              "auc": 0.81,
+              "recall": 0.485,
+              "precision": 0.21
+            }
+          ],
+          "lives_alone": [
+            {
+              "group": "no",
+              "patients": 566,
+              "rough_weeks": 594,
+              "auc": 0.8,
+              "recall": 0.428,
+              "precision": 0.194
+            },
+            {
+              "group": "yes",
+              "patients": 184,
+              "rough_weeks": 192,
+              "auc": 0.816,
+              "recall": 0.474,
+              "precision": 0.197
+            }
+          ]
+        },
+        "lift_vs_schedule_ci95": {
+          "episode_recall_diff": [
+            0.03,
+            0.077
+          ],
+          "er_recall_diff": [
+            0.059,
+            0.194
+          ],
+          "reps": 1000,
+          "unit": "patients"
+        },
+        "feature_importance_auc_drop": {
+          "on_treatment": 0.1369,
+          "iv_chemo": 0.1123,
+          "days_since_dose": 0.0534,
+          "day_in_program": 0.0271,
+          "dose_soon": 0.0246,
+          "radiation": 0.0152,
+          "sleep_efficiency_pct_z3": 0.0064,
+          "cycle_number": 0.0061,
+          "resting_heart_rate_z3": 0.0042,
+          "resting_heart_rate_z7": 0.0038,
+          "skin_temp_change_c_z3": 0.002,
+          "watch_worn_z7": 0.0019,
+          "steps_z3": 0.0018,
+          "nadir_window": 0.0012,
+          "skin_temp_change_c_max3": 0.001
+        },
+        "realDataCheck": {
+          "dataset": "fatigue_study_daily.csv (Rao et al. 2023), people with a Fitbit",
+          "people": 204,
+          "days": 5236,
+          "bad_day_share": 0.085,
+          "same_day_signal_z": {
+            "steps": {
+              "bad_days_z": -0.235,
+              "other_days_z": 0.073
+            },
+            "resting_heart_rate": {
+              "bad_days_z": -0.068,
+              "other_days_z": 0.045
+            },
+            "sleep_minutes": {
+              "bad_days_z": 0.078,
+              "other_days_z": 0.022
+            },
+            "sleep_efficiency_pct": {
+              "bad_days_z": -0.059,
+              "other_days_z": -0.094
+            },
+            "minutes_brisk_activity": {
+              "bad_days_z": 0.048,
+              "other_days_z": 0.166
+            },
+            "avg_heart_rate_asleep": {
+              "bad_days_z": 0.011,
+              "other_days_z": 0.082
+            },
+            "minutes_fitbit_worn": {
+              "bad_days_z": -0.349,
+              "other_days_z": -0.333
+            }
+          },
+          "next_day_auc_wearable_only_prev2days": 0.482,
+          "next_day_auc_yesterdays_self_rating": 0.64,
+          "note": "z = standard deviations from the person's own median. Leave-people-out 5-fold CV."
+        }
+      }
+    }
+  }
+}

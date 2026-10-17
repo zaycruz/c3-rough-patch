@@ -1,6 +1,6 @@
 {
   "base": "https://c3-rough-patch.zay-259.workers.dev",
-  "ranAt": "2026-10-17T14:21:44.121Z",
+  "ranAt": "2026-10-17T14:37:19.848Z",
   "passed": true,
   "checks": [
     {
@@ -16,7 +16,7 @@
       "ok": true
     },
     {
-      "name": "panel draws 7 charts",
+      "name": "panel draws 8 charts",
       "ok": true
     },
     {

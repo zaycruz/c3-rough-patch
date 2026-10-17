@@ -19,7 +19,7 @@ The examples below are real responses, captured by \`npm run e2e\` on ${run.ranA
 
 ## \`GET /api/c3/survivors\`: roster tiles
 
-Sorted by \`status\` (alert, then watch, then ok), then by risk. \`status\`: \`alert\` = rough patch predicted in the next 7 days; \`watch\` = raised risk; \`ok\` = near their usual. ${roster.length} survivors, showing 3:
+Sorted with \`urgent\` first, then by \`status\` (alert, then watch, then ok), then by risk. \`urgent\` (boolean): the separate ER/hospital model flags an ER visit or admission risk in the next 7 days; an urgent survivor is always \`alert\`. Show it as a stronger badge and a "call today" action. \`status\`: \`alert\` = rough patch predicted in the next 7 days; \`watch\` = raised risk; \`ok\` = near their usual. ${roster.length} survivors, showing 3:
 
 ${j(roster.slice(0, 3))}
 

@@ -19,6 +19,7 @@ AS_OF = pd.Timestamp("2025-01-31")
 CASELOAD = 60
 WINDOW = 42  # days of history in the charts
 SEED = 7
+ER_BASE = 0.0119  # share of scored test days followed by an ER visit / admission within 7 days (metrics.json urgent.base_rate)
 
 # wearable signal groups the explanation can name; each maps to the model features it owns
 GROUPS = {
@@ -109,10 +110,14 @@ def schedule_context(row):
     return f"On treatment ({plan})"
 
 
-def actions(status, top, skin_hot, rhr_up):
+def actions(status, top, skin_hot, rhr_up, urgent=False):
     if status == "ok":
         return [{"action": "No change. Keep the regular check-in.", "why": "Signals are near their usual.", "urgency": "routine"}]
     recs = []
+    if urgent:
+        recs.append({"action": "Call today. Ask how they feel, about fever, fluids and anything new. If anything is off, have them call their care team now.",
+                     "why": "Their wearable pattern matches the days before an ER visit or hospital stay. The coach does not diagnose; the care team decides.",
+                     "urgency": "today"})
     if skin_hot and rhr_up:
         recs.append({"action": "Call today and ask them to contact their care team about a possible fever or infection.",
                      "why": "Skin temperature and resting heart rate are both up from their usual. The coach should not diagnose; the care team decides.",
@@ -144,6 +149,7 @@ def actions(status, top, skin_hot, rhr_up):
 def main():
     art = pickle.loads((OUT / "gbm.pkl").read_bytes())
     gb, gs, feats, thr = art["model"], art["schedule_model"], art["features"], art["thresholds"]
+    gu, thr_u = art["urgent_model"], art["urgent_threshold"]
     sys.path.insert(0, str(ROOT / "analysis"))
     from train import SCHEDULE
     d = pd.read_parquet(OUT / "scored.parquet")
@@ -158,6 +164,10 @@ def main():
         score, contrib = drivers(gb, x)
         sched = float(gs.predict_proba(F.loc[[idx], SCHEDULE])[:, 1][0])
         status = "alert" if score >= thr["alert"] else "watch" if score >= thr["watch"] else "ok"
+        urgent_risk = float(gu.predict_proba(x)[:, 1][0])
+        urgent = urgent_risk >= thr_u
+        if urgent:
+            status = "alert"  # an ER-level risk is always a rough patch soon
         ranked = sorted(contrib.items(), key=lambda kv: -kv[1])
         # a wearable signal is a driver only if it moved the risk AND moved in a worrying direction
         evidence = []
@@ -174,7 +184,9 @@ def main():
         rhr_up = bool(last3.resting_heart_rate.mean() - hist.iloc[-35:-7].resting_heart_rate.median() > 3)
         top = evidence[0]["signal"] if evidence[0]["signal"] != "schedule" and score - sched > 0.02 else "schedule"
         wear_lift = score - sched
-        if status == "ok":
+        if urgent:
+            headline = f"Urgent: ER or hospital risk {urgent_risk:.0%} in the next 7 days, about {urgent_risk / ER_BASE:.0f}x usual"
+        elif status == "ok":
             headline = "Steady. Wearable signals near their usual."
         elif top == "schedule" and score - sched > 0.03:
             headline = f"Rough patch risk {score:.0%} in the next 7 days, from several small wearable changes"
@@ -182,7 +194,8 @@ def main():
             headline = f"Rough patch risk {score:.0%} in the next 7 days, mostly from the treatment calendar"
         else:
             headline = f"Rough patch risk {score:.0%} in the next 7 days, driven by {LABEL.get(top, 'the treatment calendar').lower()}"
-        summary = (f"Risk of a rough patch in the next 7 days: {score:.0%} (alert line {thr['alert']:.0%}). "
+        summary = ((f"Urgent: risk of an ER visit or hospital admission in the next 7 days is {urgent_risk:.0%} "
+                    f"(urgent line {thr_u:.0%}, typical day {ER_BASE:.1%}). ") if urgent else "") + (f"Risk of a rough patch in the next 7 days: {score:.0%} (alert line {thr['alert']:.0%}). "
                    f"The treatment calendar alone gives {sched:.0%}; wearable signals move it {int(round(wear_lift * 100)):+d} points. "
                    + ("Biggest wearable driver: " + evidence[0]["text"] + "." if top != "schedule"
                       else "Several small wearable changes add up; no single signal is far out of line."
@@ -198,19 +211,21 @@ def main():
         er_in = nxt.index[nxt.er == 1]
         name = f"{pid} · {int(row.age)}{row.sex[0].upper()} · {row.cancer_type}"
         survivors.append({"survivorId": sid, "displayName": name, "status": status, "headline": headline,
-                          "updatedAt": AS_OF.strftime("%Y-%m-%dT20:00:00Z"), "risk": round(score, 3)})
+                          "updatedAt": AS_OF.strftime("%Y-%m-%dT20:00:00Z"), "urgent": bool(urgent), "risk": round(score, 3)})
         details[sid] = {
             "survivorId": sid, "displayName": name, "status": status, "headline": headline, "summary": summary,
+            "urgent": bool(urgent), "urgentRisk": round(urgent_risk, 3),
             "risk": round(score, 3), "scheduleRisk": round(sched, 3),
-            "thresholds": {k: round(v, 3) for k, v in thr.items()},
+            "thresholds": {**{k: round(v, 3) for k, v in thr.items()}, "urgent": round(thr_u, 3)},
             "profile": {"age": int(row.age), "sex": row.sex, "cancerType": row.cancer_type, "stage": row.stage,
                         "treatmentPlan": row.treatment_plan, "device": row.device, "language": row.preferred_language,
                         "livesAlone": row.lives_alone, "context": schedule_context(row)},
             "evidence": evidence,
-            "recommendations": actions(status, top, skin_hot, rhr_up),
+            "recommendations": actions(status, top, skin_hot, rhr_up, urgent),
             "charts": {
                 "dates": [t.strftime("%Y-%m-%d") for t in h.date],
                 "risk": series(risk, 3),
+                "urgentRisk": series(gu.predict_proba(hf)[:, 1], 3),
                 "steps": series(h.steps, 0),
                 "restingHeartRate": series(h.resting_heart_rate),
                 "hrv": series(h.hrv_rmssd_ms),
@@ -226,7 +241,7 @@ def main():
                      "events": [f"{t:%Y-%m-%d}: {e}" for t, e in zip(nxt.date, nxt.events) if isinstance(e, str)]},
         }
     order = {"alert": 0, "watch": 1, "ok": 2}
-    survivors.sort(key=lambda s: (order[s["status"]], -s["risk"]))
+    survivors.sort(key=lambda s: (not s["urgent"], order[s["status"]], -s["risk"]))
     DATA.mkdir(parents=True, exist_ok=True)
     (DATA / "survivors.json").write_text(json.dumps({"asOf": AS_OF.strftime("%Y-%m-%d"), "roster": survivors, "details": details}))
     m = json.loads((OUT / "metrics.json").read_text())

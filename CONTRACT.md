@@ -1,34 +1,37 @@
 # C3 Bad Week Radar: API contract
 
 Base URL (deployed): `https://c3-rough-patch.zay-259.workers.dev`. All responses are JSON with `access-control-allow-origin: *`.
-The examples below are real responses, captured by `npm run e2e` on 2026-10-17T14:21:41.679Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
+The examples below are real responses, captured by `npm run e2e` on 2026-10-17T14:37:18.105Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
 
 ## `GET /api/c3/survivors`: roster tiles
 
-Sorted by `status` (alert, then watch, then ok), then by risk. `status`: `alert` = rough patch predicted in the next 7 days; `watch` = raised risk; `ok` = near their usual. 60 survivors, showing 3:
+Sorted with `urgent` first, then by `status` (alert, then watch, then ok), then by risk. `urgent` (boolean): the separate ER/hospital model flags an ER visit or admission risk in the next 7 days; an urgent survivor is always `alert`. Show it as a stronger badge and a "call today" action. `status`: `alert` = rough patch predicted in the next 7 days; `watch` = raised risk; `ok` = near their usual. 60 survivors, showing 3:
 
 ```json
 [
+  {
+    "survivorId": "c3-P02185",
+    "displayName": "P02185 · 42M · lymphoma",
+    "status": "alert",
+    "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+    "updatedAt": "2025-01-31T20:00:00Z",
+    "urgent": true
+  },
+  {
+    "survivorId": "c3-P03000",
+    "displayName": "P03000 · 49M · kidney",
+    "status": "alert",
+    "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
+    "updatedAt": "2025-01-31T20:00:00Z",
+    "urgent": true
+  },
   {
     "survivorId": "c3-P02465",
     "displayName": "P02465 · 59M · bladder",
     "status": "alert",
     "headline": "Rough patch risk 51% in the next 7 days, driven by sleep",
-    "updatedAt": "2025-01-31T20:00:00Z"
-  },
-  {
-    "survivorId": "c3-P02836",
-    "displayName": "P02836 · 52M · lung",
-    "status": "alert",
-    "headline": "Rough patch risk 24% in the next 7 days, mostly from the treatment calendar",
-    "updatedAt": "2025-01-31T20:00:00Z"
-  },
-  {
-    "survivorId": "c3-P01289",
-    "displayName": "P01289 · 62M · bladder",
-    "status": "alert",
-    "headline": "Rough patch risk 17% in the next 7 days, mostly from the treatment calendar",
-    "updatedAt": "2025-01-31T20:00:00Z"
+    "updatedAt": "2025-01-31T20:00:00Z",
+    "urgent": false
   }
 ]
 ```
@@ -43,70 +46,78 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
 
 ```json
 {
-  "survivorId": "c3-P02465",
-  "displayName": "P02465 · 59M · bladder",
+  "survivorId": "c3-P02185",
+  "displayName": "P02185 · 42M · lymphoma",
   "status": "alert",
-  "headline": "Rough patch risk 51% in the next 7 days, driven by sleep",
-  "summary": "Risk of a rough patch in the next 7 days: 51% (alert line 13%). The treatment calendar alone gives 2%; wearable signals move it +48 points. Biggest wearable driver: Sleep efficiency 62% vs usual 74%, waking 8.0x a night vs 1.0x, 7.7 h asleep vs 8.0 h.",
-  "risk": 0.506,
-  "scheduleRisk": 0.023,
+  "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+  "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 6% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 16% (alert line 13%). The treatment calendar alone gives 10%; wearable signals move it +6 points. Biggest wearable driver: Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days).",
+  "urgent": true,
+  "urgentRisk": 0.06,
+  "risk": 0.162,
+  "scheduleRisk": 0.102,
   "thresholds": {
     "alert": 0.133,
-    "watch": 0.087
+    "watch": 0.087,
+    "urgent": 0.058
   },
   "profile": {
-    "age": 59,
+    "age": 42,
     "sex": "male",
-    "cancerType": "bladder",
-    "stage": "III",
+    "cancerType": "lymphoma",
+    "stage": "I",
     "treatmentPlan": "IV chemo every 21 days",
-    "device": "Fitbit smartwatch",
-    "language": "Spanish",
-    "livesAlone": "yes",
-    "context": "Day 14 of cycle 2 (IV chemo every 21 days)"
+    "device": "Fitbit tracker",
+    "language": "Haitian Creole",
+    "livesAlone": "no",
+    "context": "Day 5 of cycle 4 (IV chemo every 21 days)"
   },
   "evidence": [
     {
-      "signal": "sleep",
-      "label": "Sleep",
-      "riskShare": 0.415,
-      "value": 62,
-      "baseline": 74.5,
-      "unit": "% efficiency",
-      "change": "-12 pts",
-      "text": "Sleep efficiency 62% vs usual 74%, waking 8.0x a night vs 1.0x, 7.7 h asleep vs 8.0 h"
-    },
-    {
-      "signal": "resting_heart_rate",
-      "label": "Resting heart rate",
-      "riskShare": 0.253,
-      "value": 72.5,
-      "baseline": 69,
-      "unit": "bpm",
-      "change": "+3.5 bpm",
-      "text": "Resting heart rate +3.5 bpm vs their usual (72 vs 69)"
-    },
-    {
       "signal": "steps",
       "label": "Steps",
-      "riskShare": 0.144,
-      "value": 476,
-      "baseline": 1310,
+      "riskShare": 0.067,
+      "value": 7721,
+      "baseline": 12395,
       "unit": "steps/day",
-      "change": "-64%",
-      "text": "Steps 64% below their usual (476 vs 1,310 a day, last 3 days)"
+      "change": "-38%",
+      "text": "Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days)"
+    },
+    {
+      "signal": "sleep",
+      "label": "Sleep",
+      "riskShare": 0.049,
+      "value": 87,
+      "baseline": 92,
+      "unit": "% efficiency",
+      "change": "-5 pts",
+      "text": "Sleep efficiency 87% vs usual 92%, waking 3.5x a night vs 2.0x, 6.8 h asleep vs 7.1 h"
+    },
+    {
+      "signal": "hrv_rmssd_ms",
+      "label": "Heart rate variability",
+      "riskShare": 0.018,
+      "value": 63,
+      "baseline": 85.7,
+      "unit": "ms",
+      "change": "-26%",
+      "text": "Heart rate variability 26% lower than usual (recovery down)"
     },
     {
       "signal": "schedule",
       "label": "Treatment calendar",
-      "riskShare": 0.023,
-      "text": "Day 14 of cycle 2 (IV chemo every 21 days). The calendar alone predicts 2% risk of a rough patch this week."
+      "riskShare": 0.102,
+      "text": "Day 5 of cycle 4 (IV chemo every 21 days). The calendar alone predicts 10% risk of a rough patch this week."
     }
   ],
   "recommendations": [
     {
-      "action": "Check in this week about sleep: nights, naps, worries. Share the sleep tips sheet.",
-      "why": "Sleep got shorter or more broken than usual.",
+      "action": "Call today. Ask how they feel, about fever, fluids and anything new. If anything is off, have them call their care team now.",
+      "why": "Their wearable pattern matches the days before an ER visit or hospital stay. The coach does not diagnose; the care team decides.",
+      "urgency": "today"
+    },
+    {
+      "action": "Check in this week: ask about energy and what got in the way of moving. Offer a lighter activity goal.",
+      "why": "Movement has dropped well below their usual.",
       "urgency": "within 2 days"
     },
     {
@@ -124,56 +135,63 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
       "2025-01-31"
     ],
     "risk": [
-      0.048,
-      0.037,
+      0.204,
+      0.185,
+      0.139,
+      0.13,
+      0.162
+    ],
+    "urgentRisk": [
+      0.007,
+      0.006,
       0.016,
-      0.046,
-      0.506
+      0.03,
+      0.06
     ],
     "steps": [
-      1496,
-      802,
-      null,
-      null,
-      476
+      15018,
+      9421,
+      7779,
+      7663,
+      null
     ],
     "restingHeartRate": [
-      66.1,
-      70.6,
-      null,
-      null,
-      72.5
+      76.4,
+      78.9,
+      77.4,
+      79.7,
+      null
     ],
     "hrv": [
-      35,
-      31.2,
-      null,
-      null,
-      18.1
+      107,
+      70.7,
+      59,
+      67.1,
+      null
     ],
     "sleepHours": [
-      7.85,
-      7.38,
-      null,
-      null,
-      7.73
+      6.23,
+      7.37,
+      6.37,
+      7.13,
+      null
     ],
     "skinTempChange": [
-      0.36,
-      0.92,
       null,
       null,
-      0.48
+      null,
+      null,
+      null
     ],
     "watchWornHours": [
-      22.7,
-      20.3,
-      1.2,
-      0.9,
-      20.3
+      22,
+      24,
+      21.2,
+      19.6,
+      3.4
     ],
     "doseDays": [
-      0,
+      1,
       0,
       0,
       0,
@@ -181,7 +199,7 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
     ],
     "selfReportedFeeling": [
       null,
-      5,
+      4,
       null,
       null,
       null
@@ -196,7 +214,7 @@ Add `?demo=1` to also get the hidden outcome (what really happened in the 14 day
 {
   "demo": {
     "note": "Hidden from the coach view: what actually happened in the 14 days after the forecast.",
-    "roughPatchStartsInDays": 1,
+    "roughPatchStartsInDays": null,
     "erOrAdmissionInDays": null,
     "events": []
   }

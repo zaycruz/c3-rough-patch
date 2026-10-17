@@ -22,6 +22,7 @@ SRC = Path(sys.argv[1]).expanduser() / "synthetic_data" if len(sys.argv) > 1 els
 OUT = ROOT / "analysis" / "out"
 DATA = ROOT / "src" / "data"
 HORIZON = 7  # predict an onset within the next 7 days
+URGENT_RATE = 0.03  # share of quiet validation days flagged urgent
 MIN_LEAD = 2  # an alert counts as early warning only if it fires at least 2 days before onset
 SEED = 7
 
@@ -195,6 +196,37 @@ def week_metrics(df, score_col, thr):
     }
 
 
+def urgent_metrics(df, score_col, thr):
+    """ER/admission events (first in 7 days, day 14+): caught if flagged 2-7 days before. Precision = urgent runs
+    followed by an ER/admission within 7 days. AUC/AP over scored days (no ER in the past 7 days)."""
+    from sklearn.metrics import average_precision_score
+    n, hit, leads, runs, good, months = 0, 0, [], 0, 0, 0.0
+    for _, p in df.groupby("patient_id"):
+        a = (p[score_col].values >= thr).astype(int)
+        er = p.er.values
+        months += len(p) / 30.4
+        for i in np.where(er == 1)[0]:
+            if i < 14 or er[max(0, i - 7):i].any():
+                continue
+            n += 1
+            start = max(0, i - HORIZON)
+            w = a[start: i - MIN_LEAD + 1]
+            if w.any():
+                hit += 1
+                leads.append(i - (start + int(np.argmax(w))))
+        for i in range(len(a)):
+            if a[i] and not a[max(0, i - 3):i].any():
+                runs += 1
+                good += int(er[i + 1: i + 1 + HORIZON].any())
+    q = df[(df.er_recent == 0) & (df.day_in_program >= 14)]
+    return {"er_events": n, "er_recall_2to7d": round(hit / max(n, 1), 3),
+            "median_lead_days": float(np.median(leads)) if leads else None,
+            "flag_precision": round(good / max(runs, 1), 3), "flags_per_patient_month": round(runs / max(months, 1), 2),
+            "auc": round(float(roc_auc_score(q.er_ahead, q[score_col])), 3),
+            "average_precision": round(float(average_precision_score(q.er_ahead, q[score_col])), 4),
+            "base_rate": round(float(q.er_ahead.mean()), 4)}
+
+
 def calibration(df, score_col, bins=10):
     """Predicted vs observed 7-day onset rate on scored held-out days, by risk decile; plus Brier score."""
     q = df[(df.in_episode == 0) & (df.day_in_program >= 14)]
@@ -311,6 +343,28 @@ def main():
                                 "episodes": episode_metrics(test, f"score_{k}", thr[k]["alert"])}
         print(nm, json.dumps(report["methods"][k]))
 
+    # urgent tier: a separate head for ER visit / hospital admission in the next 7 days, shown as its own flag
+    d["er_recent"] = d.groupby("patient_id").er.transform(lambda s: s.rolling(7, min_periods=1).sum()).clip(0, 1)
+    use_u = (d.er_recent == 0) & (d.day_in_program >= 14)
+    tr_u, va_u = [(use_u & (d.split == k)).values for k in ("train", "val")]
+    eu = d.er_ahead.values
+    gu = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED).fit(F[tr_u], eu[tr_u])
+    gus = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED).fit(F.loc[tr_u, SCHEDULE], eu[tr_u])
+    d["score_urgent"] = gu.predict_proba(F)[:, 1]
+    d["score_urgent_schedule"] = gus.predict_proba(F[SCHEDULE])[:, 1]
+    thr_u = {k: float(np.quantile(d.loc[va_u, c], 1 - URGENT_RATE))
+             for k, c in (("urgent", "score_urgent"), ("schedule", "score_urgent_schedule"), ("radar", "score_model"))}
+    test = d[d.split == "test"]
+    report["urgent"] = {
+        "definition": f"P(ER visit or hospital admission in the next {HORIZON} days); urgent when in the top "
+                      f"{URGENT_RATE:.0%} of validation days. Separate flag; does not change the rough-patch status.",
+        "methods": {k: urgent_metrics(test, c, thr_u[k]) for k, c in
+                    (("urgent", "score_urgent"), ("schedule", "score_urgent_schedule"), ("radar", "score_model"))},
+        "names": {"urgent": "Urgent head (wearable + schedule)", "schedule": "Urgent head, schedule only",
+                  "radar": "Rough-patch Radar used for ER at the same budget"},
+        "calibration": calibration(test.assign(target=test.er_ahead, in_episode=test.er_recent), "score_urgent"),
+    }
+    print("URGENT", json.dumps(report["urgent"]["methods"]))
     report["calibration"] = {k: calibration(test, f"score_{k}") for k in ("model", "schedule")}
     report["subgroups"] = subgroups(test, "score_model", thr["model"]["alert"])
     report["lift_vs_schedule_ci95"] = bootstrap_lift(test, thr)
@@ -328,7 +382,8 @@ def main():
     DATA.mkdir(parents=True, exist_ok=True)
     (OUT / "metrics.json").write_text(json.dumps(report, indent=2))
     import pickle
-    (OUT / "gbm.pkl").write_bytes(pickle.dumps({"model": gb, "schedule_model": gs, "features": feats, "thresholds": thr["model"]}))
+    (OUT / "gbm.pkl").write_bytes(pickle.dumps({"model": gb, "schedule_model": gs, "features": feats, "thresholds": thr["model"],
+                                              "urgent_model": gu, "urgent_threshold": thr_u["urgent"]}))
     d.to_parquet(OUT / "scored.parquet")
     F.to_parquet(OUT / "features.parquet")
     print("wrote", OUT / "metrics.json")

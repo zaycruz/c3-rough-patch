@@ -30,11 +30,13 @@ responses["/api/c3/survivors"] = roster;
 const list = Array.isArray(roster.body) ? roster.body : [];
 check("roster 200 and non-empty array", roster.status === 200 && list.length > 0, { count: list.length });
 check("roster CORS header", roster.headers["access-control-allow-origin"] === "*");
-const keys = ["survivorId", "displayName", "status", "headline", "updatedAt"];
+const keys = ["survivorId", "displayName", "status", "headline", "updatedAt", "urgent"];
 check("roster tiles have exactly the contract keys", list.every((r) => JSON.stringify(Object.keys(r).sort()) === JSON.stringify([...keys].sort())));
 check("roster ids are c3-prefixed", list.every((r) => /^c3-P\d{5}$/.test(r.survivorId)));
 check("roster status in ok|watch|alert", list.every((r) => STATUSES.includes(r.status)));
-check("roster sorted alert > watch > ok", list.every((r, i) => i === 0 || STATUSES.indexOf(list[i - 1].status) <= STATUSES.indexOf(r.status)));
+const rank = (r) => (r.urgent ? -1 : STATUSES.indexOf(r.status));
+check("roster sorted urgent > alert > watch > ok", list.every((r, i) => i === 0 || rank(list[i - 1]) <= rank(r)));
+check("urgent survivors are always status alert", list.every((r) => !r.urgent || r.status === "alert"));
 const mix = Object.fromEntries(STATUSES.map((s) => [s, list.filter((r) => r.status === s).length]));
 check("roster has at least one alert", mix.alert > 0, mix);
 
@@ -48,8 +50,8 @@ for (const r of list) {
   const ok = d.status === 200 && b.survivorId === r.survivorId && b.status === r.status && b.headline === r.headline &&
     typeof b.summary === "string" && Array.isArray(b.evidence) && b.evidence.length > 0 &&
     Array.isArray(b.recommendations) && b.recommendations.length > 0 && b.charts && n > 0 &&
-    ["risk", "steps", "restingHeartRate", "hrv", "sleepHours", "doseDays"].every((k) => Array.isArray(b.charts[k]) && b.charts[k].length === n) &&
-    !("demo" in b);
+    ["risk", "urgentRisk", "steps", "restingHeartRate", "hrv", "sleepHours", "doseDays"].every((k) => Array.isArray(b.charts[k]) && b.charts[k].length === n) &&
+    typeof b.urgent === "boolean" && b.urgent === r.urgent && typeof b.urgentRisk === "number" && !("demo" in b);
   if (ok) detailOk++; else failures.push(r.survivorId);
   if (r === list[0]) responses[`/api/c3/survivors/${r.survivorId}`] = d;
   const demo = await get(`/api/c3/survivors/${r.survivorId}?demo=1`);
@@ -77,6 +79,8 @@ if (M.model && M.schedule && M.steps_rule) {
     s.model.weekAuc > s.schedule.weekAuc && s.model.weekAuc > s.steps_rule.weekAuc &&
     s.model.episodeRecall > s.schedule.episodeRecall && s.model.episodeRecall > s.steps_rule.episodeRecall, s);
   check("median lead time >= 2 days", s.model.medianLeadDays >= 2, { medianLeadDays: s.model.medianLeadDays });
+  const U = met.body?.urgent?.methods;
+  check("urgent head beats schedule-only on ER recall and AUC", U && U.urgent.er_recall_2to7d > U.schedule.er_recall_2to7d && U.urgent.auc > U.schedule.auc, U && { urgent: U.urgent, schedule: U.schedule });
 }
 
 const passed = checks.every((c) => c.ok);

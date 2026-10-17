@@ -40,6 +40,18 @@ How to read it:
 
 Signals around an ER visit in the synthetic data: resting heart rate climbs about 3 bpm and steps fall about 850 a day from roughly 8 days before. That is the window the forecaster uses.
 
+### Urgent tier: ER visit or hospital admission
+
+A separate model predicts an ER visit or hospital admission in the next 7 days. It uses the same inputs as the rough-patch model, and is trained on days with no ER visit in the past week. It flags the top 3% of days as **urgent**. That is a separate signal: an urgent survivor is always on alert, sorts first, and gets a "call today" action. The rough-patch alert is unchanged, so the urgent tier costs it nothing.
+
+| On held-out patients (182 ER/admissions) | ER caught 2–7 d early | Median lead | Flag precision | Flags / patient / month | AUC | Avg precision |
+|---|---|---|---|---|---|---|
+| Urgent head (wearable + schedule) | 47% | 4 d | 7.4% | 0.38 | 0.859 | 0.064 |
+| Urgent head, schedule only | 36% | 5 d | 6.9% | 0.23 | 0.845 | 0.0486 |
+| Rough-patch Radar, same 3% budget | 23% | 6 d | 6.8% | 0.25 | 0.774 | 0.0343 |
+
+The base rate is 1.2% of days, so an urgent flag carries about 6x the usual risk. That is enough for a "call today" check-in, and not enough for anything clinical.
+
 ### Real-data check (fatigue study, 204 people with a Fitbit)
 
 - On real bad days, steps are lower than the person's own normal: -0.235 SD on bad days vs 0.073 SD on other days, a same-day AUC of about 0.59.
@@ -78,7 +90,8 @@ Verified by deploying to workers.dev and running the E2E check against it. No de
 3. **Open P02836** (52M, lung cancer, alert) (45 s). Over 10 days their risk climbed from 6% to 24%, and it has been over the alert line for the last 4 days. The calendar alone says 24% (mid-chemoradiation), and the wearable confirms it: steps are 34% below their usual. They have *not said anything*: when they checked in they rated their days 4 to 5 out of 5, and they have skipped the last 3 check-ins. Suggested action: check in this week, lower the activity goal, and move the coaching call earlier.
 4. **Reveal (15 s).** Click "what happened next". The rough patch started 7 days later, with an ER visit and hospital admission on day 8. The coach had a week's head start.
 5. **Contrast (15 s).** Open P02465. The calendar alone says 2%, the wearable says 51%: sleep is broken up (8 wakings a night vs 1) and resting heart rate is up. This is a rough patch the schedule cannot see. It started the next day.
-6. **Honesty (15 s).** The metrics table: model vs calendar vs steps rule, same alert budget. Then the real-data caveat.
+6. **Urgent (15 s).** The two red "urgent" survivors at the top have an ER-level risk 5 to 9 times the usual. For P03000, treatment was paused 6 days later. Neither went to the ER in the next 7 days, though: urgent flags are right about 1 time in 13. It is a reason to call, not a diagnosis.
+7. **Honesty (15 s).** The metrics table: model vs calendar vs steps rule, same alert budget. Then the real-data caveat.
 
 ## Files
 

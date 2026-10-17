@@ -34,6 +34,7 @@ main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 12px
 .pill.alert { color: var(--alert); background: var(--alert-bg); }
 .pill.watch { color: var(--watch); background: var(--watch-bg); }
 .pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.urgent { color: #fff; background: var(--alert); }
 #panel { padding: 16px; min-width: 0; }
 #panel h2 { margin: 0 0 4px; font-size: 19px; }
 .ctx { color: var(--muted); font-size: 13px; }
@@ -93,7 +94,7 @@ async function loadRoster() {
   const roster = await (await fetch("/api/c3/survivors")).json();
   $("#roster").innerHTML = roster.map((r) => `
     <div class="tile" data-id="${esc(r.survivorId)}">
-      <div class="name"><span class="pill ${r.status}">${r.status}</span>${esc(r.displayName)}</div>
+      <div class="name">${r.urgent ? '<span class="pill urgent">urgent</span>' : `<span class="pill ${r.status}">${r.status}</span>`}${esc(r.displayName)}</div>
       <div class="hl">${esc(r.headline)}</div>
     </div>`).join("");
   $("#roster").onclick = (e) => { const t = e.target.closest(".tile"); if (t) show(t.dataset.id); };
@@ -105,7 +106,7 @@ async function show(id) {
   const d = await (await fetch(`/api/c3/survivors/${encodeURIComponent(id)}?demo=1`)).json();
   const c = d.charts, maxShare = Math.max(...d.evidence.map((e) => e.riskShare || 0), 0.01);
   $("#panel").innerHTML = `
-    <h2><span class="pill ${d.status}">${d.status}</span>${esc(d.displayName)}</h2>
+    <h2>${d.urgent ? '<span class="pill urgent">urgent</span>' : ""}<span class="pill ${d.status}">${d.status}</span>${esc(d.displayName)}</h2>
     <div class="ctx">${esc(d.profile.context)} · ${esc(d.profile.cancerType)} stage ${esc(d.profile.stage)} · ${esc(d.profile.device)} · ${esc(d.profile.language)}</div>
     <p>${esc(d.summary)}</p>
     <div class="sec"><h3>Why: signals behind this forecast</h3>
@@ -117,6 +118,7 @@ async function show(id) {
     <div class="sec"><h3>Last 6 weeks (dashed = dose day)</h3>
       <div class="charts">
         <div class="chart"><b>Rough-patch risk, next 7 days</b>${spark(c.risk, c.doseDays, "var(--alert)", { min: 0, lines: [[d.thresholds.alert, "var(--alert)"], [d.thresholds.watch, "var(--watch)"]] })}</div>
+        <div class="chart"><b>ER / hospital risk, next 7 days (urgent line)</b>${spark(c.urgentRisk, c.doseDays, "var(--alert)", { min: 0, lines: [[d.thresholds.urgent, "var(--alert)"]] })}</div>
         <div class="chart"><b>Steps</b>${spark(c.steps, c.doseDays, "var(--accent)", { min: 0 })}</div>
         <div class="chart"><b>Resting heart rate</b>${spark(c.restingHeartRate, c.doseDays, "var(--accent)")}</div>
         <div class="chart"><b>Sleep hours</b>${spark(c.sleepHours, c.doseDays, "var(--accent)")}</div>
@@ -142,6 +144,7 @@ async function loadMetrics() {
   }).join("");
   $("#metrics").innerHTML = `<h3 style="margin:0 0 6px;font-size:14px">How well it works on ${m.counts.test_patients} held-out patients</h3>
     <div class="wrap"><table><tr><th>Method</th><th>Week AUC</th><th>Week precision</th><th>Week recall</th><th>Patches caught 2–7 d early</th><th>ER/admissions caught</th><th>Median lead (max 7)</th><th>Alert precision</th><th>Alerts / patient / month</th></tr>${rows}</table></div>
+    ${m.urgent ? `<p style="margin:6px 0 0"><b>Urgent tier</b> (separate ER / hospital head, ${esc(m.urgent.definition)}): catches ${pct(m.urgent.methods.urgent.er_recall_2to7d)} of ER visits and admissions 2–7 days early vs ${pct(m.urgent.methods.schedule.er_recall_2to7d)} for the calendar alone; ${pct(m.urgent.methods.urgent.flag_precision)} of urgent flags are followed by one within a week (base rate ${(m.urgent.methods.urgent.base_rate*100).toFixed(1)}% of days); ${m.urgent.methods.urgent.flags_per_patient_month} flags per patient per month.</p>` : ""}
     ${m.lift_vs_schedule_ci95 ? `<p style="margin:6px 0 0"><b>Beyond the calendar</b>: 95% CI for extra patches caught +${Math.round(m.lift_vs_schedule_ci95.episode_recall_diff[0]*100)} to +${Math.round(m.lift_vs_schedule_ci95.episode_recall_diff[1]*100)} points, ER/admissions +${Math.round(m.lift_vs_schedule_ci95.er_recall_diff[0]*100)} to +${Math.round(m.lift_vs_schedule_ci95.er_recall_diff[1]*100)}. <b>Calibrated</b>: top risk decile predicted ${pct(m.calibration.model.deciles.at(-1).predicted)}, observed ${pct(m.calibration.model.deciles.at(-1).observed)}. Subgroup results in <code>/api/c3/metrics</code>.</p>` : ""}
     ${m.realDataCheck ? `<p style="margin:6px 0 0"><b>Real-data check</b> (${m.realDataCheck.people} people, fatigue study): steps drop on real bad days (${m.realDataCheck.same_day_signal_z.steps.bad_days_z} vs ${m.realDataCheck.same_day_signal_z.steps.other_days_z} SD from their own median), but a next-day forecast from wearables alone scores AUC ${m.realDataCheck.next_day_auc_wearable_only_prev2days} there. Lead time on real patients is not proven yet.</p>` : ""}
     <p style="margin:6px 0 0">Rough patch: ${esc(m.definition.rough_patch)} (rough day = ${esc(m.definition.rough_day)}). ${esc(m.definition.alert_budget)}.</p>`;
