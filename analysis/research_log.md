@@ -73,7 +73,7 @@
 
 ## 2026-10-17: making alerts useful (check-ins, surprise alerting, worklist)
 
-Script: `analysis/exp/checkin_worklist.py` (EVAL=val for selection, EVAL=test once). Outputs are in `analysis/out/exp_checkin_worklist_{val,test}.json`.
+Script: `analysis/exp/checkin_worklist.py` (EVAL=val for selection, EVAL=test once). The validation output is in `analysis/out/exp_checkin_worklist_val.json`; the test numbers below come from `train.py` (`metrics.json`).
 - **Check-in features:** ratings lagged 3 days to avoid the scoring-mask leak; skips and missed calls used up to today.
   - Validation at the 5% budget: the check-ins + wearable + calendar model has alert precision 0.165 vs 0.161 for wearable + calendar, and patch recall 0.503 vs 0.460. It also won at 12%. Adopted.
 - **Surprise alerting** (score minus calendar score): worse than plain risk at both budgets. Dropped.
