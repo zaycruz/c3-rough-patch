@@ -1,6 +1,6 @@
 {
   "base": "https://c3-rough-patch.zay-259.workers.dev",
-  "ranAt": "2026-10-17T17:28:58.878Z",
+  "ranAt": "2026-10-17T17:42:32.390Z",
   "passed": true,
   "checks": [
     {
@@ -38,7 +38,7 @@
       "name": "roster is precomputed: served as a static JSON asset with CORS and a cache header",
       "ok": true,
       "info": {
-        "ms": 213,
+        "ms": 129,
         "contentType": "application/json; charset=utf-8",
         "cacheControl": "public, max-age=60"
       }
@@ -91,6 +91,23 @@
     {
       "name": "unknown survivor returns 404 JSON",
       "ok": true
+    },
+    {
+      "name": "metrics.provenance: run ID, clean 40-hex code commit, the sponsor-data sha256 from data/README.md, a model hash",
+      "ok": true,
+      "info": {
+        "runId": "export-2026-10-17T17-42-01Z",
+        "codeCommit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
+        "codeDirty": false
+      }
+    },
+    {
+      "name": "API responses carry x-c3-run and x-c3-commit matching metrics.provenance",
+      "ok": true,
+      "info": {
+        "run": "export-2026-10-17T17-42-01Z",
+        "commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b"
+      }
     },
     {
       "name": "metrics 200 with model and baselines",
@@ -239,12 +256,12 @@
   "responses": {
     "/": {
       "status": 200,
-      "ms": 748,
+      "ms": 464,
       "bytes": 11084
     },
     "/api/c3/survivors": {
       "status": 200,
-      "ms": 213,
+      "ms": 129,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
@@ -252,14 +269,14 @@
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
         "cf-cache-status": "HIT",
-        "cf-ray": "a4c105812b783353-MIA",
+        "cf-ray": "a4c1194b7f1d745e-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:28:45 GMT",
+        "date": "Sat, 17 Oct 2026 17:42:15 GMT",
         "etag": "W/\"42d0cad39c4f488b7806018fdc47a08f\"",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=idl%2FY5RetfmZb4Kh2wIBEpaa9Ef4wpI34USfHZW17OpYebWLqpdOJVcD5wGFtcqcYqhWApQqn5oF5BUxA6VgeZWvanDgDfgReCR5kj2pDl1ZHEjJzaEDzHqtcppoSLCYvevdbLHZtY%2FCpv8f4ZYSHxe3hX2i\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=T2%2BLJt7sMFmSkmG%2FBodVIbwLeVnXDy0rZ53LayeN38W%2FwP7hzwZ1v2wiiljL1%2FW5v8B1zuRfeFJu3nzjI%2Fm%2B2RPgke6s4%2B8J%2FMGYKnMCNXhs81omhg7RgbxpAv9FUg39KkiDn9Pa7qY%2BXbvXMmDtM9MpFSQP\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
@@ -1048,22 +1065,24 @@
     },
     "/api/c3/survivors/c3-P03000": {
       "status": 200,
-      "ms": 229,
+      "ms": 179,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c105827cc13353-MIA",
+        "cf-ray": "a4c1194cd874745e-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:28:45 GMT",
+        "date": "Sat, 17 Oct 2026 17:42:15 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=GsWmEyjx%2BRehr22Jt%2B1rsLVp0TtaShFZwPZdMj%2Bdn3vEEyZdqTrFX4hp8R0tyflMnrywSnC8DOef4O8XNmlDDGiXGm3OjpBfmcdvqXmNj3PiYyNUkBRR61grQ0YbYtYZGaXLf1XZDoF4yzyDeIRf6Mj6LsJr\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=1HDzcMg20CJsY8aRkRM9v6xUSbirnJ8MP1ViV%2FvUnMfGvyO0SKdJcQnmmFOC20XmzMQ2tkiaFxO2BjU9t0kwefULQ%2FZ0YEGOPJLglJnnC9CudSff%2BouWDlKSrRbHseW%2B%2BHXrz0QybdjJLc4dNKth9jEtcluK\"}]}",
         "server": "cloudflare",
-        "transfer-encoding": "chunked"
+        "transfer-encoding": "chunked",
+        "x-c3-commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
+        "x-c3-run": "export-2026-10-17T17-42-01Z"
       },
       "body": {
         "survivorId": "c3-P03000",
@@ -1647,21 +1666,23 @@
     },
     "/api/c3/survivors/c3-nope": {
       "status": 404,
-      "ms": 44,
+      "ms": 22,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c105d67b823353-MIA",
+        "cf-ray": "a4c119b11ac2745e-MIA",
         "connection": "keep-alive",
         "content-length": "30",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:28:58 GMT",
+        "date": "Sat, 17 Oct 2026 17:42:31 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=xXNxCxl%2FKCYa%2B9srbxg086WQlfPcfL9xwRiuTmDeOFNMfiufNpqU4LlR%2BA97CAorL3COZObNiedOnopDmCkNHNwFamj6bGJgKENpEu5ZI7keHZlpcVa2Ai93WNbpzsFEOikvuhN8Ncy7TKIpgMEdmpvYwWae\"}]}",
-        "server": "cloudflare"
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=%2FwUQfsOhSwU3G6KgvsW7TkXo3vgQJkBOZB%2FzUQh%2Bbp5lHH3OMouiBsm%2BSNBMivBDePcGGgQ1XVUbmq4MXRCWUd7mHlq0DlnCuZlnTdU2cqTNtJwyGxelLxR4B7zGg20WcbulJRRomZ4FB9I2vYhsWdYdjs5v\"}]}",
+        "server": "cloudflare",
+        "x-c3-commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
+        "x-c3-run": "export-2026-10-17T17-42-01Z"
       },
       "body": {
         "error": "survivor not found"
@@ -1669,22 +1690,24 @@
     },
     "/api/c3/metrics": {
       "status": 200,
-      "ms": 208,
+      "ms": 524,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c105d7cc6bf471-MIA",
+        "cf-ray": "a4c119b3e9f12b27-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 17:28:58 GMT",
+        "date": "Sat, 17 Oct 2026 17:42:32 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=rBqrQMR8IBD%2BqfReHOQor4avNgp%2FKTd1WAcUUOrcY1Lw4JRJE2lKeHdhlaslZdE7edQQnQwxMrrsvPwFeuiiq%2BoJ3D69uVZ%2FVWugILg4TTZ0a2bCG5lhOg%2FYO3TgFdyoYDirop43dHZlENl7MatuOb8eiWcp\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=u8cbfDBo7bt1pLgYVJ%2BRADgzbn6CqNN6FFbPOpGy4RI3LSp2ugZrHSAI%2FTtro%2Fk9lepRieu6UlNBi%2FfrVbMIiaoa7cp8cMn%2Bkku2GPBmWEvR8eAn7dIUqsOaDqqR4rlVexk1NU4tb2dCF13XObEkyLYvJmxg\"}]}",
         "server": "cloudflare",
-        "transfer-encoding": "chunked"
+        "transfer-encoding": "chunked",
+        "x-c3-commit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
+        "x-c3-run": "export-2026-10-17T17-42-01Z"
       },
       "body": {
         "asOf": "2025-01-31",
@@ -3138,6 +3161,21 @@
               ]
             }
           ]
+        },
+        "provenance": {
+          "runId": "export-2026-10-17T17-42-01Z",
+          "exportedAt": "2026-10-17T17-42-01Z",
+          "codeCommit": "dba52e9ebb569a0faf18efb602d296ded08c3e5b",
+          "codeDirty": false,
+          "dataSha256": {
+            "synthetic_data/synthetic_daily.csv": "6d9b500ed5fa41ce0eb0f847351abf238623e90d20d534df0c7ea1774eb2a3b7",
+            "synthetic_data/synthetic_patients.csv": "81a65878cf4e8ff04d1986b9b874d67acae129732e3e5a700943b5a98151cc18",
+            "fatigue_study_daily.csv": "8ed37e47cf37ddbef74266f350a1112437af80bc9496e1f74be33d55ae71dc2b"
+          },
+          "modelSha256": "443ca1d3d9b0c3d6776461ec470f3764f1f4dac735fee968c5501786864fc9e9",
+          "modelNote": "gbm.pkl hash is platform-specific: the macOS arm64 and Linux x86_64 fits differ slightly (see REPRODUCE.md)",
+          "platform": "Darwin arm64, Python 3.14.7",
+          "reproduce": "scripts/reproduce.sh <sponsor folder>; data hashes in data/README.md"
         }
       }
     }

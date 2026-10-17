@@ -1,7 +1,7 @@
 # C3 Bad Week Radar: API contract
 
 Base URL (deployed): `https://c3-rough-patch.zay-259.workers.dev`. All responses are JSON with `access-control-allow-origin: *`.
-The examples below are real responses, captured by `npm run e2e` on 2026-10-17T17:17:02.430Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
+The examples below are real responses, captured by `npm run e2e` on 2026-10-17T17:42:32.390Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
 
 ## `GET /api/c3/survivors`: roster tiles
 
