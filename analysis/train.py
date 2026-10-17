@@ -204,6 +204,39 @@ def features(d):
     return f
 
 
+CHECKIN_LAG = 3
+
+
+def checkin_features(d):
+    """The person's own check-ins and coaching calls. Leakage guard: scored days exclude days inside a patch, and a
+    patch day is a rough day with another within 3 days, so a rough check-in on t..t-2 of a scored day would reveal
+    that t+1..t+3 are calm. Self-report VALUES therefore use check-ins up to t-3 only. Whether a check-in or call
+    happened (skips, missed calls) is used up to t: a skip is never a rough day."""
+    g = d.groupby("patient_id")
+    feel = d.daily_feeling_1_to_5
+    rel = feel - _personal_base(d, "daily_feeling_1_to_5", 5)
+    sym = d[SYMPTOMS].max(axis=1)
+    symb = pd.concat([_personal_base(d, c, 2, window=8) for c in SYMPTOMS], axis=1).max(axis=1)
+    lag = lambda s: s.groupby(d.patient_id).shift(CHECKIN_LAG)
+    ffill = lambda s: s.groupby(d.patient_id).ffill()
+    roll = lambda s, n, f="sum": s.astype(float).groupby(d.patient_id).transform(lambda v: getattr(v.rolling(n, min_periods=1), f)())
+    C = pd.DataFrame(index=d.index)
+    C["feel_last"] = ffill(lag(feel))
+    C["feel_rel_last"] = ffill(lag(rel))
+    C["feel_rel_mean7"] = roll(lag(rel), 7, "mean")
+    C["rough_self_14"] = roll(lag(d.rough_self), 14)
+    C["sym_max_last"] = ffill(lag(sym))
+    C["sym_rel_last"] = ffill(lag(sym - symb))
+    miss = feel.isna()
+    C["skip_run"] = np.where(miss, d.skips_before + 1, 0)
+    C["checkin_rate14"] = roll(~miss, 14, "mean")
+    C["calls_missed_28"] = roll(d.coaching_call.isin(["missed", "rescheduled"]), 28)
+    C["calls_done_14"] = roll(d.coaching_call == "completed", 14)
+    return C
+
+
+CHECKINS = ["feel_last", "feel_rel_last", "feel_rel_mean7", "rough_self_14", "sym_max_last", "sym_rel_last", "skip_run",
+            "checkin_rate14", "calls_missed_28", "calls_done_14"]
 SCHEDULE = ["on_treatment", "cyclic", "days_since_dose", "nadir_window", "dose_soon", "cycle_number",
             "radiation", "iv_chemo", "day_in_program"]
 
@@ -354,10 +387,10 @@ def _patient_hits(df, score_col, thr):
     return np.array(res, dtype=float)
 
 
-def bootstrap_lift(df, thr, reps=1000):
+def bootstrap_lift(df, thr, reps=1000, base="schedule"):
     """95% CI (resampling held-out patients) for Radar minus schedule-only, episode recall and ER recall."""
     m = _patient_hits(df, "score_model", thr["model"]["alert"])
-    s = _patient_hits(df, "score_schedule", thr["schedule"]["alert"])
+    s = _patient_hits(df, f"score_{base}", thr[base]["alert"])
     rng = np.random.default_rng(SEED)
     ep, er = [], []
     for _ in range(reps):
@@ -392,25 +425,34 @@ def main():
         for c in ("patch", "onset", "in_episode", "target"):
             d[c] = d[f"{c}_v1"]
         d["onset_source"] = ""
+    wear_feats = feats
+    if LABEL_VERSION == "v2":
+        F = pd.concat([F, checkin_features(d)], axis=1)
+        feats = list(F.columns)
     use = (d.in_episode == 0) & (d.day_in_program >= 14)
     tr, va, te = [(use & (d.split == k)).values for k in ("train", "val", "test")]
     y = d.target.values
 
-    m, mu, sd = fit_lr(F[tr], y[tr])
-    d["score_logistic"] = lr_score(m, mu, sd, F)
+    m, mu, sd = fit_lr(F.loc[tr, wear_feats], y[tr])
+    d["score_logistic"] = lr_score(m, mu, sd, F[wear_feats])
     # schedule baseline: the same learner, given only the treatment calendar (what a coach already knows)
     gs = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED)
     d["score_schedule"] = gs.fit(F.loc[tr, SCHEDULE], y[tr]).predict_proba(F[SCHEDULE])[:, 1]
     gb = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED)
     gb.fit(F[tr], y[tr])
     d["score_model"] = gb.predict_proba(F)[:, 1]
+    # ablation: the same learner without the check-ins (the model served before check-ins were added)
+    gw = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED).fit(F.loc[tr, wear_feats], y[tr])
+    d["score_wearable"] = gw.predict_proba(F[wear_feats])[:, 1]
     # naive rule a coach could eyeball: the bigger the 3-day steps drop below personal baseline, the higher the score
     d["score_steps_rule"] = (-F["steps_z3"]).fillna(0)
 
     # thresholds set on validation patients, at a matched alert budget (share of quiet days that alert)
-    ALERT_RATE, WATCH_RATE = 0.12, 0.25
+    # alert budget from coach capacity: 5% of quiet days is about one new alert per coach per day on a 60-person
+    # caseload; watch is the broader 12% line. Chosen before comparing models (selection on validation patients).
+    ALERT_RATE, WATCH_RATE = 0.05, 0.12
     thr = {}
-    for k in ("model", "schedule", "logistic", "steps_rule"):
+    for k in ("model", "schedule", "logistic", "steps_rule", "wearable"):
         s = d.loc[va, f"score_{k}"]
         thr[k] = {"alert": float(np.quantile(s, 1 - ALERT_RATE)), "watch": float(np.quantile(s, 1 - WATCH_RATE))}
 
@@ -428,7 +470,10 @@ def main():
         "rough_patch": "a rough day followed by another within 3 days, or any clinical event; onset = first patch day after 7 quiet days",
         "forecast": f"each evening, P(rough patch onset in the next {HORIZON} days); days already inside a patch are not scored",
         "early_warning": f"an alert counts only if it fires {MIN_LEAD}+ days before onset",
-        "inputs": "wearable signals vs personal baseline, wear time, known treatment schedule. No self-reports, no events.",
+        "inputs": ("the person's own check-ins vs their usual (feeling, weekly symptoms; values up to 3 days ago), skipped "
+                   "check-ins and missed coaching calls, wearable signals vs personal baseline, wear time, known treatment "
+                   "schedule. No events, no diary text.") if LABEL_VERSION == "v2" else
+                  "wearable signals vs personal baseline, wear time, known treatment schedule. No self-reports, no events.",
         "split": "by patient: 60% train, 15% validation (thresholds), 25% test (all numbers below)",
         "alert_budget": f"thresholds put {int(ALERT_RATE*100)}% of quiet validation days on alert, same budget for every method",
     }, "counts": {"patients": int(n), "test_patients": int((pd.Series(split) == 'test').sum()),
@@ -446,7 +491,8 @@ def main():
             "onsets_per_patient_mean": round(float(per.mean()), 2),
             "onsets_per_patient_by_checkin_engagement": {str(k): round(float(v), 2) for k, v in per.groupby(q).mean().items()}})
     names = {"steps_rule": "Baseline: steps drop", "schedule": "Baseline: treatment schedule only (same learner)",
-             "logistic": "Logistic, wearable + schedule (comparison)", "model": "Radar (gradient boosting, wearable + schedule)"}
+             "logistic": "Logistic, wearable + schedule (comparison)", "model": "Radar (gradient boosting, check-ins + wearable + schedule)" if LABEL_VERSION == "v2"
+             else "Radar (gradient boosting, wearable + schedule)"}
     for k, nm in names.items():
         report["methods"][k] = {"name": nm, "weeks": week_metrics(test, f"score_{k}", thr[k]["alert"]),
                                 "episodes": episode_metrics(test, f"score_{k}", thr[k]["alert"])}
@@ -479,9 +525,9 @@ def main():
     use_u = (d.er_recent == 0) & (d.day_in_program >= 14)
     tr_u, va_u = [(use_u & (d.split == k)).values for k in ("train", "val")]
     eu = d.er_ahead.values
-    gu = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED).fit(F[tr_u], eu[tr_u])
+    gu = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED).fit(F.loc[tr_u, wear_feats], eu[tr_u])
     gus = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED).fit(F.loc[tr_u, SCHEDULE], eu[tr_u])
-    d["score_urgent"] = gu.predict_proba(F)[:, 1]
+    d["score_urgent"] = gu.predict_proba(F[wear_feats])[:, 1]
     d["score_urgent_schedule"] = gus.predict_proba(F[SCHEDULE])[:, 1]
     thr_u = {k: float(np.quantile(d.loc[va_u, c], 1 - URGENT_RATE))
              for k, c in (("urgent", "score_urgent"), ("schedule", "score_urgent_schedule"), ("radar", "score_model"))}
@@ -499,6 +545,11 @@ def main():
     report["calibration"] = {k: calibration(test, f"score_{k}") for k in ("model", "schedule")}
     report["subgroups"] = subgroups(test, "score_model", thr["model"]["alert"])
     report["lift_vs_schedule_ci95"] = bootstrap_lift(test, thr)
+    if LABEL_VERSION == "v2":
+        report["ablation_without_checkins"] = {"name": "Same learner, wearable + schedule only (no check-ins)",
+                                               "weeks": week_metrics(test, "score_wearable", thr["wearable"]["alert"]),
+                                               "episodes": episode_metrics(test, "score_wearable", thr["wearable"]["alert"]),
+                                               "lift_of_checkins_ci95": bootstrap_lift(test, thr, base="wearable")}
     print(json.dumps({k: report[k] for k in ("calibration", "lift_vs_schedule_ci95")}))
 
     # global drivers: permutation importance on test patients (AUC drop)
@@ -514,7 +565,8 @@ def main():
     (OUT / "metrics.json").write_text(json.dumps(report, indent=2))
     import pickle
     (OUT / "gbm.pkl").write_bytes(pickle.dumps({"model": gb, "schedule_model": gs, "features": feats, "thresholds": thr["model"],
-                                              "urgent_model": gu, "urgent_threshold": thr_u["urgent"]}))
+                                              "urgent_model": gu, "urgent_threshold": thr_u["urgent"],
+                                              "urgent_features": wear_feats}))
     d.to_parquet(OUT / "scored.parquet")
     F.to_parquet(OUT / "features.parquet")
     print("wrote", OUT / "metrics.json")

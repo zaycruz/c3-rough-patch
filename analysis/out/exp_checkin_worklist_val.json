@@ -1,0 +1,161 @@
+{
+  "eval_split": "val",
+  "threshold": {
+    "budget_12pct": {
+      "calendar only": {
+        "week_auc": 0.802,
+        "patch_recall": 0.607,
+        "er_recall": 0.41,
+        "alert_precision": 0.081,
+        "week_precision": 0.149,
+        "alerts_per_patient_month": 0.61
+      },
+      "wearable + calendar (live)": {
+        "week_auc": 0.816,
+        "patch_recall": 0.693,
+        "er_recall": 0.56,
+        "alert_precision": 0.096,
+        "week_precision": 0.156,
+        "alerts_per_patient_month": 0.8
+      },
+      "check-ins + calendar": {
+        "week_auc": 0.805,
+        "patch_recall": 0.663,
+        "er_recall": 0.52,
+        "alert_precision": 0.082,
+        "week_precision": 0.153,
+        "alerts_per_patient_month": 0.73
+      },
+      "check-ins + wearable + calendar": {
+        "week_auc": 0.821,
+        "patch_recall": 0.701,
+        "er_recall": 0.56,
+        "alert_precision": 0.11,
+        "week_precision": 0.169,
+        "alerts_per_patient_month": 0.8
+      },
+      "surprise: wearable vs calendar": {
+        "week_auc": 0.472,
+        "patch_recall": 0.567,
+        "er_recall": 0.59,
+        "alert_precision": 0.072,
+        "week_precision": 0.089,
+        "alerts_per_patient_month": 1.25
+      },
+      "surprise: check-ins+wearable vs calendar": {
+        "week_auc": 0.52,
+        "patch_recall": 0.602,
+        "er_recall": 0.51,
+        "alert_precision": 0.083,
+        "week_precision": 0.115,
+        "alerts_per_patient_month": 1.02
+      }
+    },
+    "budget_5pct": {
+      "calendar only": {
+        "week_auc": 0.802,
+        "patch_recall": 0.412,
+        "er_recall": 0.2,
+        "alert_precision": 0.097,
+        "week_precision": 0.185,
+        "alerts_per_patient_month": 0.37
+      },
+      "wearable + calendar (live)": {
+        "week_auc": 0.816,
+        "patch_recall": 0.46,
+        "er_recall": 0.26,
+        "alert_precision": 0.161,
+        "week_precision": 0.225,
+        "alerts_per_patient_month": 0.47
+      },
+      "check-ins + calendar": {
+        "week_auc": 0.805,
+        "patch_recall": 0.447,
+        "er_recall": 0.2,
+        "alert_precision": 0.146,
+        "week_precision": 0.213,
+        "alerts_per_patient_month": 0.39
+      },
+      "check-ins + wearable + calendar": {
+        "week_auc": 0.821,
+        "patch_recall": 0.503,
+        "er_recall": 0.3,
+        "alert_precision": 0.165,
+        "week_precision": 0.229,
+        "alerts_per_patient_month": 0.47
+      },
+      "surprise: wearable vs calendar": {
+        "week_auc": 0.472,
+        "patch_recall": 0.369,
+        "er_recall": 0.35,
+        "alert_precision": 0.113,
+        "week_precision": 0.116,
+        "alerts_per_patient_month": 0.65
+      },
+      "surprise: check-ins+wearable vs calendar": {
+        "week_auc": 0.52,
+        "patch_recall": 0.433,
+        "er_recall": 0.34,
+        "alert_precision": 0.134,
+        "week_precision": 0.168,
+        "alerts_per_patient_month": 0.59
+      }
+    }
+  },
+  "worklist": {
+    "top3_of_60_per_day": {
+      "calendar only": {
+        "precision_at_k": 0.082,
+        "onsets_reached_2to7d": 0.799
+      },
+      "wearable + calendar (live)": {
+        "precision_at_k": 0.085,
+        "onsets_reached_2to7d": 0.823
+      },
+      "check-ins + calendar": {
+        "precision_at_k": 0.084,
+        "onsets_reached_2to7d": 0.804
+      },
+      "check-ins + wearable + calendar": {
+        "precision_at_k": 0.087,
+        "onsets_reached_2to7d": 0.841
+      },
+      "surprise: wearable vs calendar": {
+        "precision_at_k": 0.047,
+        "onsets_reached_2to7d": 0.693
+      },
+      "surprise: check-ins+wearable vs calendar": {
+        "precision_at_k": 0.053,
+        "onsets_reached_2to7d": 0.701
+      }
+    },
+    "top5_of_60_per_day": {
+      "calendar only": {
+        "precision_at_k": 0.065,
+        "onsets_reached_2to7d": 0.881
+      },
+      "wearable + calendar (live)": {
+        "precision_at_k": 0.066,
+        "onsets_reached_2to7d": 0.899
+      },
+      "check-ins + calendar": {
+        "precision_at_k": 0.065,
+        "onsets_reached_2to7d": 0.899
+      },
+      "check-ins + wearable + calendar": {
+        "precision_at_k": 0.066,
+        "onsets_reached_2to7d": 0.91
+      },
+      "surprise: wearable vs calendar": {
+        "precision_at_k": 0.037,
+        "onsets_reached_2to7d": 0.757
+      },
+      "surprise: check-ins+wearable vs calendar": {
+        "precision_at_k": 0.04,
+        "onsets_reached_2to7d": 0.757
+      }
+    }
+  },
+  "base_rate_scored_days": 0.0396,
+  "onsets_test": 378
+}

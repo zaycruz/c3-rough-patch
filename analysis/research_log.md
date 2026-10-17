@@ -70,3 +70,18 @@
 - ens hgb+xgb+rf v2: {"test_er_auc": 0.863, "test_er_ap": 0.0687, "test_day_recall_3pct": 0.196, "test_day_precision_3pct": 0.091, "test_er_event_recall_2to7d": 0.434, "test_er_events": 182}
 
 > Outcome (both loops): nothing merged. Model families (PyCaret with patient-grouped folds, LightGBM, XGBoost, RF, ExtraTrees, spline logistic, a 1D-CNN on 28-day windows, ensembles) did not beat HistGB on rough patches. For ER only, a HistGB+XGB+RF ensemble ranked slightly better on test (AUC 0.863 vs 0.858) but caught fewer ER events (43% vs 47%). HistGB with the main features stays for both heads. Code on branch research/model-v2 (159c6e4).
+
+## 2026-10-17: making alerts useful (check-ins, surprise alerting, worklist)
+
+Script: `analysis/exp/checkin_worklist.py` (EVAL=val for selection, EVAL=test once). Outputs are in `analysis/out/exp_checkin_worklist_{val,test}.json`.
+- **Check-in features:** ratings lagged 3 days to avoid the scoring-mask leak; skips and missed calls used up to today.
+  - Validation at the 5% budget: the check-ins + wearable + calendar model has alert precision 0.165 vs 0.161 for wearable + calendar, and patch recall 0.503 vs 0.460. It also won at 12%. Adopted.
+- **Surprise alerting** (score minus calendar score): worse than plain risk at both budgets. Dropped.
+- **Top-K worklist per 60-patient caseload:** precision@5 is about 0.08 vs a 0.047 base rate. The "reach" metric is not discriminating (the calendar alone reaches 0.88). Dropped.
+- **Alert budget:** moved to 5% from coach capacity (about one new alert per coach per day); watch is the 12% line.
+- **Test at 5%:**
+  - patch recall 0.476 vs 0.359 for the calendar (CI +0.078 to +0.152);
+  - ER recall 0.363 vs 0.220 (CI +0.085 to +0.199);
+  - alert precision 0.184 vs 0.106.
+- **Check-ins over wearable alone:** patch recall CI +0.033 to +0.092.
+- **The 25% alert precision target was not reached.**

@@ -61,7 +61,7 @@ button { font: inherit; border: 1px solid var(--line); background: var(--panel);
 <body>
 <header>
   <h1>Bad Week Radar</h1>
-  <p>Warns a coach 2 to 7 days before a survivor's rough patch, using only their wearable and treatment calendar. <span id="asof"></span></p>
+  <p>Warns a coach 2 to 7 days before a survivor's rough patch, from their own check-ins, their wearable and their treatment calendar. <span id="asof"></span></p>
 </header>
 <main>
   <section class="card" id="roster" aria-label="Caseload"></section>
@@ -110,7 +110,7 @@ async function show(id) {
     <div class="ctx">${esc(d.profile.context)} · ${esc(d.profile.cancerType)} stage ${esc(d.profile.stage)} · ${esc(d.profile.device)} · ${esc(d.profile.language)}</div>
     <p>${esc(d.summary)}</p>
     <div class="sec"><h3>Why: signals behind this forecast</h3>
-      ${d.evidence.map((e) => `<div class="ev"><div class="bar" title="${e.signal === "checkins" ? "warning sign, not in the forecast" : "share of risk"}">${e.signal === "checkins" ? "" : `<i style="width:${Math.max(4, (100 * (e.riskShare || 0)) / maxShare)}%"></i>`}</div><div><b>${esc(e.label)}</b> ${esc(e.text)}</div></div>`).join("")}
+      ${d.evidence.map((e) => `<div class="ev"><div class="bar" title="share of risk"><i style="width:${Math.max(4, (100 * (e.riskShare || 0)) / maxShare)}%"></i></div><div><b>${esc(e.label)}</b> ${esc(e.text)}</div></div>`).join("")}
     </div>
     <div class="sec"><h3>Suggested action for the coach</h3>
       ${d.recommendations.map((r) => `<div class="rec">${esc(r.action)}<small>${esc(r.urgency)} · ${esc(r.why)}</small></div>`).join("")}
@@ -146,7 +146,8 @@ async function loadMetrics() {
     <div class="wrap"><table><tr><th>Method</th><th>Week AUC</th><th>Week precision</th><th>Week recall</th><th>Patches caught 2–7 d early</th><th>ER/admissions caught</th><th>Median lead (max 7)</th><th>Alert precision</th><th>Alerts / patient / month</th></tr>${rows}</table></div>
     ${m.urgent ? `<p style="margin:6px 0 0"><b>Urgent tier</b> (separate ER / hospital head, ${esc(m.urgent.definition)}): catches ${pct(m.urgent.methods.urgent.er_recall_2to7d)} of ER visits and admissions 2–7 days early vs ${pct(m.urgent.methods.schedule.er_recall_2to7d)} for the calendar alone; ${pct(m.urgent.methods.urgent.flag_precision)} of urgent flags are followed by one within a week (base rate ${(m.urgent.methods.urgent.base_rate*100).toFixed(1)}% of days); ${m.urgent.methods.urgent.flags_per_patient_month} flags per patient per month.</p>` : ""}
     ${m.lift_vs_schedule_ci95 ? `<p style="margin:6px 0 0"><b>Beyond the calendar</b>: 95% CI for extra patches caught +${Math.round(m.lift_vs_schedule_ci95.episode_recall_diff[0]*100)} to +${Math.round(m.lift_vs_schedule_ci95.episode_recall_diff[1]*100)} points, ER/admissions +${Math.round(m.lift_vs_schedule_ci95.er_recall_diff[0]*100)} to +${Math.round(m.lift_vs_schedule_ci95.er_recall_diff[1]*100)}. <b>Calibrated</b>: top risk decile predicted ${pct(m.calibration.model.deciles.at(-1).predicted)}, observed ${pct(m.calibration.model.deciles.at(-1).observed)}. Subgroup results in <code>/api/c3/metrics</code>.</p>` : ""}
-    ${m.realDataCheck ? `<p style="margin:6px 0 0"><b>Real-data check</b> (${m.realDataCheck.people} people, fatigue study): steps drop on real bad days (${m.realDataCheck.same_day_signal_z.steps.bad_days_z} vs ${m.realDataCheck.same_day_signal_z.steps.other_days_z} SD from their own median), but a next-day forecast from wearables alone scores AUC ${m.realDataCheck.next_day_auc_wearable_only_prev2days} there. Lead time on real patients is not proven yet.</p>` : ""}
+    ${m.ablation_without_checkins ? `<p style="margin:6px 0 0"><b>What the check-ins add</b>: without them, the same model catches ${pct(m.ablation_without_checkins.episodes.episode_recall)} of patches early with ${pct(m.ablation_without_checkins.episodes.alert_precision)} alert precision (95% CI for the gain in patches caught: ${Math.round(m.ablation_without_checkins.lift_of_checkins_ci95.episode_recall_diff[0]*100)} to +${Math.round(m.ablation_without_checkins.lift_of_checkins_ci95.episode_recall_diff[1]*100)} points). Ratings are used up to 3 days back; skipped check-ins and missed calls up to today.</p>` : ""}
+    ${m.realDataCheck ? `<p style="margin:6px 0 0"><b>Real-data check</b> (${m.realDataCheck.people} people, fatigue study): steps drop on real bad days (${m.realDataCheck.same_day_signal_z.steps.bad_days_z} vs ${m.realDataCheck.same_day_signal_z.steps.other_days_z} SD from their own median), but a next-day forecast from wearables alone scores AUC ${m.realDataCheck.next_day_auc_wearable_only_prev2days} there. Yesterday's own rating scores ${m.realDataCheck.next_day_auc_yesterdays_self_rating}, which is why check-ins are inputs. Lead time on real patients is not proven yet.</p>` : ""}
     <p style="margin:6px 0 0">Rough patch: ${esc(m.definition.rough_patch)} (rough day = ${esc(m.definition.rough_day)}). ${esc(m.definition.alert_budget)}.</p>`;
 }
 

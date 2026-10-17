@@ -5,9 +5,9 @@
     "rough_patch": "a rough day followed by another within 3 days, or any clinical event; onset = first patch day after 7 quiet days",
     "forecast": "each evening, P(rough patch onset in the next 7 days); days already inside a patch are not scored",
     "early_warning": "an alert counts only if it fires 2+ days before onset",
-    "inputs": "wearable signals vs personal baseline, wear time, known treatment schedule. No self-reports, no events.",
+    "inputs": "the person's own check-ins vs their usual (feeling, weekly symptoms; values up to 3 days ago), skipped check-ins and missed coaching calls, wearable signals vs personal baseline, wear time, known treatment schedule. No events, no diary text.",
     "split": "by patient: 60% train, 15% validation (thresholds), 25% test (all numbers below)",
-    "alert_budget": "thresholds put 12% of quiet validation days on alert, same budget for every method"
+    "alert_budget": "thresholds put 5% of quiet validation days on alert, same budget for every method"
   },
   "counts": {
     "patients": 3000,
@@ -22,27 +22,27 @@
         "weeks": 14501,
         "rough_weeks": 685,
         "auc": 0.567,
-        "precision": 0.081,
-        "recall": 0.199,
-        "alert_share": 0.116
+        "precision": 0.095,
+        "recall": 0.096,
+        "alert_share": 0.048
       },
       "episodes": {
         "episodes": 721,
-        "episode_recall": 0.411,
+        "episode_recall": 0.254,
         "median_lead_days": 5.0,
         "lead_days_hist": {
-          "2": 44,
-          "3": 30,
-          "4": 39,
-          "5": 47,
-          "6": 35,
-          "7": 101
+          "2": 34,
+          "3": 24,
+          "4": 29,
+          "5": 33,
+          "6": 21,
+          "7": 42
         },
         "er_admissions": 182,
-        "er_recall": 0.516,
-        "alert_runs": 4828,
-        "alert_precision": 0.068,
-        "alerts_per_patient_month": 1.26
+        "er_recall": 0.269,
+        "alert_runs": 2527,
+        "alert_precision": 0.083,
+        "alerts_per_patient_month": 0.66
       }
     },
     "schedule": {
@@ -51,27 +51,27 @@
         "weeks": 14501,
         "rough_weeks": 685,
         "auc": 0.808,
-        "precision": 0.161,
-        "recall": 0.422,
-        "alert_share": 0.124
+        "precision": 0.197,
+        "recall": 0.257,
+        "alert_share": 0.062
       },
       "episodes": {
         "episodes": 721,
-        "episode_recall": 0.617,
+        "episode_recall": 0.359,
         "median_lead_days": 7.0,
         "lead_days_hist": {
-          "2": 32,
-          "3": 32,
-          "4": 42,
-          "5": 39,
-          "6": 45,
-          "7": 255
+          "2": 18,
+          "3": 27,
+          "4": 16,
+          "5": 16,
+          "6": 26,
+          "7": 156
         },
         "er_admissions": 182,
-        "er_recall": 0.434,
-        "alert_runs": 2334,
-        "alert_precision": 0.102,
-        "alerts_per_patient_month": 0.61
+        "er_recall": 0.22,
+        "alert_runs": 1368,
+        "alert_precision": 0.106,
+        "alerts_per_patient_month": 0.36
       }
     },
     "logistic": {
@@ -80,56 +80,56 @@
         "weeks": 14501,
         "rough_weeks": 685,
         "auc": 0.768,
-        "precision": 0.12,
-        "recall": 0.269,
-        "alert_share": 0.106
+        "precision": 0.162,
+        "recall": 0.142,
+        "alert_share": 0.041
       },
       "episodes": {
         "episodes": 721,
-        "episode_recall": 0.534,
+        "episode_recall": 0.25,
         "median_lead_days": 6.0,
         "lead_days_hist": {
-          "2": 52,
-          "3": 41,
-          "4": 44,
-          "5": 43,
-          "6": 47,
-          "7": 158
+          "2": 28,
+          "3": 18,
+          "4": 27,
+          "5": 14,
+          "6": 12,
+          "7": 81
         },
         "er_admissions": 182,
-        "er_recall": 0.643,
-        "alert_runs": 2670,
-        "alert_precision": 0.131,
-        "alerts_per_patient_month": 0.7
+        "er_recall": 0.33,
+        "alert_runs": 1266,
+        "alert_precision": 0.132,
+        "alerts_per_patient_month": 0.33
       }
     },
     "model": {
-      "name": "Radar (gradient boosting, wearable + schedule)",
+      "name": "Radar (gradient boosting, check-ins + wearable + schedule)",
       "weeks": {
         "weeks": 14501,
         "rough_weeks": 685,
-        "auc": 0.819,
-        "precision": 0.169,
-        "recall": 0.439,
-        "alert_share": 0.123
+        "auc": 0.827,
+        "precision": 0.231,
+        "recall": 0.276,
+        "alert_share": 0.056
       },
       "episodes": {
         "episodes": 721,
-        "episode_recall": 0.664,
-        "median_lead_days": 7.0,
+        "episode_recall": 0.476,
+        "median_lead_days": 6.0,
         "lead_days_hist": {
-          "2": 46,
-          "3": 39,
-          "4": 33,
-          "5": 50,
-          "6": 67,
-          "7": 244
+          "2": 50,
+          "3": 33,
+          "4": 34,
+          "5": 43,
+          "6": 51,
+          "7": 132
         },
         "er_admissions": 182,
-        "er_recall": 0.549,
-        "alert_runs": 2993,
-        "alert_precision": 0.116,
-        "alerts_per_patient_month": 0.78
+        "er_recall": 0.363,
+        "alert_runs": 1838,
+        "alert_precision": 0.184,
+        "alerts_per_patient_month": 0.48
       }
     }
   },
@@ -161,37 +161,37 @@
       "v1_onsets": {
         "trained_on_v2": {
           "episodes": 867,
-          "episode_recall": 0.607,
-          "median_lead_days": 6.0,
-          "er_recall": 0.533,
-          "alert_precision": 0.14
+          "episode_recall": 0.415,
+          "median_lead_days": 5.0,
+          "er_recall": 0.357,
+          "alert_precision": 0.198
         },
         "trained_on_v1": {
           "episodes": 867,
-          "episode_recall": 0.642,
+          "episode_recall": 0.453,
           "median_lead_days": 6.0,
-          "er_recall": 0.544,
-          "alert_precision": 0.147
+          "er_recall": 0.286,
+          "alert_precision": 0.271
         },
         "week_auc": {
-          "trained_on_v2": 0.799,
-          "trained_on_v1": 0.804
+          "trained_on_v2": 0.803,
+          "trained_on_v1": 0.854
         }
       },
       "self_report_and_clinical_onsets": {
         "trained_on_v2": {
           "episodes": 721,
-          "episode_recall": 0.664,
-          "median_lead_days": 7.0,
-          "er_recall": 0.549,
-          "alert_precision": 0.116
+          "episode_recall": 0.476,
+          "median_lead_days": 6.0,
+          "er_recall": 0.363,
+          "alert_precision": 0.184
         },
         "trained_on_v1": {
           "episodes": 721,
-          "episode_recall": 0.695,
+          "episode_recall": 0.344,
           "median_lead_days": 6.0,
-          "er_recall": 0.56,
-          "alert_precision": 0.123
+          "er_recall": 0.319,
+          "alert_precision": 0.156
         }
       }
     }
@@ -221,12 +221,12 @@
       },
       "radar": {
         "er_events": 182,
-        "er_recall_2to7d": 0.275,
-        "median_lead_days": 6.0,
-        "flag_precision": 0.075,
-        "flags_per_patient_month": 0.24,
-        "auc": 0.791,
-        "average_precision": 0.0373,
+        "er_recall_2to7d": 0.286,
+        "median_lead_days": 5.5,
+        "flag_precision": 0.061,
+        "flags_per_patient_month": 0.27,
+        "auc": 0.788,
+        "average_precision": 0.0362,
         "base_rate": 0.0119
       }
     },
@@ -295,58 +295,58 @@
   },
   "calibration": {
     "model": {
-      "brier": 0.0411,
+      "brier": 0.0407,
       "base_rate": 0.0466,
       "brier_if_base_rate": 0.0445,
       "deciles": [
         {
-          "predicted": 0.0008,
-          "observed": 0.0002,
+          "predicted": 0.0006,
+          "observed": 0.0004,
           "days": 9927
         },
         {
-          "predicted": 0.0015,
-          "observed": 0.0019,
+          "predicted": 0.0014,
+          "observed": 0.0017,
           "days": 9926
         },
         {
-          "predicted": 0.006,
-          "observed": 0.0075,
+          "predicted": 0.0053,
+          "observed": 0.0025,
           "days": 9927
         },
         {
-          "predicted": 0.0107,
-          "observed": 0.0091,
+          "predicted": 0.0105,
+          "observed": 0.011,
           "days": 9926
         },
         {
-          "predicted": 0.0156,
-          "observed": 0.0161,
+          "predicted": 0.0154,
+          "observed": 0.0174,
           "days": 9926
         },
         {
-          "predicted": 0.023,
-          "observed": 0.0245,
+          "predicted": 0.0226,
+          "observed": 0.0235,
           "days": 9927
         },
         {
-          "predicted": 0.0456,
-          "observed": 0.0545,
+          "predicted": 0.0413,
+          "observed": 0.0475,
           "days": 9926
         },
         {
-          "predicted": 0.0674,
-          "observed": 0.0706,
+          "predicted": 0.0643,
+          "observed": 0.0708,
           "days": 9927
         },
         {
-          "predicted": 0.0942,
-          "observed": 0.1066,
+          "predicted": 0.0954,
+          "observed": 0.1016,
           "days": 9926
         },
         {
-          "predicted": 0.1824,
-          "observed": 0.1754,
+          "predicted": 0.1914,
+          "observed": 0.19,
           "days": 9927
         }
       ]
@@ -415,25 +415,25 @@
         "group": "50-64",
         "patients": 327,
         "rough_weeks": 291,
-        "auc": 0.797,
-        "recall": 0.388,
-        "precision": 0.154
+        "auc": 0.803,
+        "recall": 0.251,
+        "precision": 0.215
       },
       {
         "group": "65+",
         "patients": 262,
         "rough_weeks": 252,
-        "auc": 0.841,
-        "recall": 0.472,
-        "precision": 0.205
+        "auc": 0.85,
+        "recall": 0.298,
+        "precision": 0.273
       },
       {
         "group": "under 50",
         "patients": 161,
         "rough_weeks": 142,
-        "auc": 0.828,
-        "recall": 0.486,
-        "precision": 0.147
+        "auc": 0.837,
+        "recall": 0.289,
+        "precision": 0.203
       }
     ],
     "sex": [
@@ -441,17 +441,17 @@
         "group": "female",
         "patients": 436,
         "rough_weeks": 437,
-        "auc": 0.805,
-        "recall": 0.43,
-        "precision": 0.153
+        "auc": 0.817,
+        "recall": 0.291,
+        "precision": 0.229
       },
       {
         "group": "male",
         "patients": 314,
         "rough_weeks": 248,
-        "auc": 0.833,
-        "recall": 0.456,
-        "precision": 0.202
+        "auc": 0.838,
+        "recall": 0.25,
+        "precision": 0.237
       }
     ],
     "race_ethnicity": [
@@ -465,17 +465,17 @@
         "group": "Black",
         "patients": 154,
         "rough_weeks": 149,
-        "auc": 0.822,
-        "recall": 0.443,
-        "precision": 0.192
+        "auc": 0.827,
+        "recall": 0.255,
+        "precision": 0.247
       },
       {
         "group": "Hispanic or Latino",
         "patients": 396,
         "rough_weeks": 354,
-        "auc": 0.83,
-        "recall": 0.449,
-        "precision": 0.169
+        "auc": 0.838,
+        "recall": 0.291,
+        "precision": 0.25
       },
       {
         "group": "Other or more than one",
@@ -487,9 +487,9 @@
         "group": "White",
         "patients": 144,
         "rough_weeks": 133,
-        "auc": 0.782,
-        "recall": 0.376,
-        "precision": 0.137
+        "auc": 0.798,
+        "recall": 0.278,
+        "precision": 0.2
       }
     ],
     "preferred_language": [
@@ -497,25 +497,25 @@
         "group": "English",
         "patients": 445,
         "rough_weeks": 409,
-        "auc": 0.811,
-        "recall": 0.443,
-        "precision": 0.17
+        "auc": 0.818,
+        "recall": 0.267,
+        "precision": 0.218
       },
       {
         "group": "Haitian Creole",
         "patients": 60,
         "rough_weeks": 60,
         "auc": 0.828,
-        "recall": 0.417,
-        "precision": 0.198
+        "recall": 0.217,
+        "precision": 0.22
       },
       {
         "group": "Spanish",
         "patients": 245,
         "rough_weeks": 216,
-        "auc": 0.835,
-        "recall": 0.44,
-        "precision": 0.159
+        "auc": 0.845,
+        "recall": 0.31,
+        "precision": 0.261
       }
     ],
     "cancer_type": [
@@ -529,9 +529,9 @@
         "group": "breast",
         "patients": 158,
         "rough_weeks": 150,
-        "auc": 0.77,
-        "recall": 0.367,
-        "precision": 0.123
+        "auc": 0.782,
+        "recall": 0.207,
+        "precision": 0.163
       },
       {
         "group": "cervical",
@@ -543,17 +543,17 @@
         "group": "colorectal",
         "patients": 68,
         "rough_weeks": 105,
-        "auc": 0.764,
-        "recall": 0.352,
-        "precision": 0.228
+        "auc": 0.775,
+        "recall": 0.276,
+        "precision": 0.284
       },
       {
         "group": "endometrial",
         "patients": 43,
         "rough_weeks": 41,
-        "auc": 0.817,
-        "recall": 0.561,
-        "precision": 0.167
+        "auc": 0.854,
+        "recall": 0.366,
+        "precision": 0.246
       },
       {
         "group": "head and neck",
@@ -577,17 +577,17 @@
         "group": "lung",
         "patients": 62,
         "rough_weeks": 57,
-        "auc": 0.841,
-        "recall": 0.544,
-        "precision": 0.194
+        "auc": 0.852,
+        "recall": 0.404,
+        "precision": 0.267
       },
       {
         "group": "lymphoma",
         "patients": 61,
         "rough_weeks": 68,
         "auc": 0.826,
-        "recall": 0.559,
-        "precision": 0.167
+        "recall": 0.309,
+        "precision": 0.219
       },
       {
         "group": "melanoma",
@@ -605,9 +605,9 @@
         "group": "ovarian",
         "patients": 53,
         "rough_weeks": 72,
-        "auc": 0.749,
-        "recall": 0.389,
-        "precision": 0.144
+        "auc": 0.76,
+        "recall": 0.25,
+        "precision": 0.257
       },
       {
         "group": "pancreatic",
@@ -625,9 +625,9 @@
         "group": "sarcoma",
         "patients": 23,
         "rough_weeks": 30,
-        "auc": 0.791,
-        "recall": 0.633,
-        "precision": 0.204
+        "auc": 0.777,
+        "recall": 0.133,
+        "precision": 0.129
       },
       {
         "group": "stomach",
@@ -641,17 +641,17 @@
         "group": "Fitbit smartwatch",
         "patients": 423,
         "rough_weeks": 409,
-        "auc": 0.812,
-        "recall": 0.43,
-        "precision": 0.169
+        "auc": 0.814,
+        "recall": 0.249,
+        "precision": 0.219
       },
       {
         "group": "Fitbit tracker",
         "patients": 327,
         "rough_weeks": 276,
-        "auc": 0.83,
-        "recall": 0.453,
-        "precision": 0.168
+        "auc": 0.844,
+        "recall": 0.315,
+        "precision": 0.248
       }
     ],
     "lives_alone": [
@@ -659,47 +659,88 @@
         "group": "no",
         "patients": 566,
         "rough_weeks": 498,
-        "auc": 0.816,
-        "recall": 0.436,
-        "precision": 0.165
+        "auc": 0.822,
+        "recall": 0.279,
+        "precision": 0.224
       },
       {
         "group": "yes",
         "patients": 184,
         "rough_weeks": 187,
-        "auc": 0.828,
-        "recall": 0.449,
-        "precision": 0.178
+        "auc": 0.841,
+        "recall": 0.267,
+        "precision": 0.254
       }
     ]
   },
   "lift_vs_schedule_ci95": {
     "episode_recall_diff": [
-      0.013,
-      0.078
+      0.078,
+      0.152
     ],
     "er_recall_diff": [
-      0.048,
-      0.175
+      0.085,
+      0.199
     ],
     "reps": 1000,
     "unit": "patients"
   },
+  "ablation_without_checkins": {
+    "name": "Same learner, wearable + schedule only (no check-ins)",
+    "weeks": {
+      "weeks": 14501,
+      "rough_weeks": 685,
+      "auc": 0.819,
+      "precision": 0.224,
+      "recall": 0.239,
+      "alert_share": 0.05
+    },
+    "episodes": {
+      "episodes": 721,
+      "episode_recall": 0.413,
+      "median_lead_days": 5.0,
+      "lead_days_hist": {
+        "2": 41,
+        "3": 36,
+        "4": 32,
+        "5": 41,
+        "6": 37,
+        "7": 111
+      },
+      "er_admissions": 182,
+      "er_recall": 0.302,
+      "alert_runs": 1730,
+      "alert_precision": 0.174,
+      "alerts_per_patient_month": 0.45
+    },
+    "lift_of_checkins_ci95": {
+      "episode_recall_diff": [
+        0.033,
+        0.092
+      ],
+      "er_recall_diff": [
+        0.006,
+        0.118
+      ],
+      "reps": 1000,
+      "unit": "patients"
+    }
+  },
   "feature_importance_auc_drop": {
-    "on_treatment": 0.1343,
-    "iv_chemo": 0.1217,
-    "days_since_dose": 0.0379,
-    "day_in_program": 0.02,
-    "dose_soon": 0.0194,
-    "radiation": 0.0131,
-    "sleep_efficiency_pct_z3": 0.007,
-    "cycle_number": 0.0065,
-    "resting_heart_rate_z3": 0.0036,
-    "watch_worn_z7": 0.0028,
-    "sleep_efficiency_pct_z7": 0.0023,
-    "resting_heart_rate_z7": 0.002,
-    "cyclic": 0.0014,
-    "times_woke_up_z3": 0.0012,
-    "hrv_rmssd_ms_z7": 0.001
+    "on_treatment": 0.1246,
+    "iv_chemo": 0.1094,
+    "days_since_dose": 0.0339,
+    "dose_soon": 0.0171,
+    "day_in_program": 0.0169,
+    "radiation": 0.0114,
+    "rough_self_14": 0.0094,
+    "sleep_efficiency_pct_z3": 0.008,
+    "cycle_number": 0.005,
+    "sym_max_last": 0.0037,
+    "resting_heart_rate_z3": 0.0037,
+    "skip_run": 0.003,
+    "feel_rel_mean7": 0.0029,
+    "resting_heart_rate_z7": 0.0015,
+    "skin_temp_change_c_max3": 0.0013
   }
 }
