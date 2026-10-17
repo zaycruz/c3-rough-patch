@@ -65,6 +65,7 @@ step "real-data check" "${PY[@]}" analysis/real_check.py "$DATA"
 step "diary-note red-flag scan (self-test + eval)" "${PY[@]}" analysis/notes_scan.py
 step "urgent tier + note scan CIs" "${PY[@]}" analysis/urgent_ci.py
 step "model-free escalation (note, ideation, check-in rules)" "${PY[@]}" analysis/escalation.py
+step "temporal holdout (experiment)" "${PY[@]}" analysis/exp/temporal_holdout.py
 step "notes as model inputs (experiment)" "${PY[@]}" analysis/exp/notes_features.py
 step "export to src/data + static roster" env C3_DATA="$DATA" C3_RUN_ID="reproduce-$STAMP" "${PY[@]}" analysis/export.py
 step "ER pre-signal" "${PY[@]}" analysis/exp/er_presignal.py "$DATA"

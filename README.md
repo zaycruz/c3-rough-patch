@@ -66,6 +66,7 @@ How to read it:
 - **At a budget a coach can act on, the Radar clearly beats the calendar.**
   - Patches caught early: 48% vs 36% (95% CI +8 to +15 points over patients).
   - Alert precision: 18% vs 11%.
+  - **Temporal holdout (later dates, unseen patients):** trained on dates before July 2025 and tested from October 2025 on (244 test patients, 147 patches). Patches caught early: 44% vs 36% for the calendar. The 95% CI is -1 to +17 points, so the lift points the same way but is not significant on this smaller, later sample. Week AUC 0.852 vs 0.843 (`analysis/exp/temporal_holdout.py`).
   - **This lead time is shown on synthetic data only.** On real people the wearable did not predict the next day (AUC 0.482; see the real-data check below).
 - **What the check-ins add over wearable + calendar:** +3 to +9 points of patches caught (CI).
 - **It is still a nudge, not a diagnosis.**
@@ -181,6 +182,7 @@ Asked for by the judges panel. Not built:
 - Spanish and Haitian Creole coach and patient text, at a 6th-grade level, marked machine-translated and reviewed by native speakers.
 - A mitigation for the weaker groups (Haitian Creole speakers, sarcoma): per-group alert lines, a pooled fallback or care-team review, with a monitoring rule.
 - A table comparing the cohort's make-up with Miami-Dade.
+- Repeated patient-split seeds and a drift monitor. Only one temporal holdout was run (see Results).
 
 ## Files
 

@@ -162,7 +162,15 @@
     ["Urgent + escalation: English", "analysis/out/escalation.json", "test.by_language.English.urgent_or_escalation_er_caught_2to7d", "64%", "pct0", "served"],
     ["Urgent + escalation: Creole", "analysis/out/escalation.json", "test.by_language.Haitian Creole.urgent_or_escalation_er_caught_2to7d", "50%", "pct0", "served"],
     ["Urgent + escalation: Spanish", "analysis/out/escalation.json", "test.by_language.Spanish.urgent_or_escalation_er_caught_2to7d", "60%", "pct0", "served"],
-    ["Escalation: ideation notes in data", "analysis/out/escalation.json", "test.ideation_notes_in_data", "0", "int", "served"]
+    ["Escalation: ideation notes in data", "analysis/out/escalation.json", "test.ideation_notes_in_data", "0", "int", "served"],
+    ["Temporal holdout: test patients", "analysis/out/exp_temporal_holdout.json", "test_patients", "244", "int", "served"],
+    ["Temporal holdout: patches", "analysis/out/exp_temporal_holdout.json", "model.episodes.episodes", "147", "int", "served"],
+    ["Temporal holdout: Radar caught", "analysis/out/exp_temporal_holdout.json", "model.episodes.episode_recall", "44%", "pct0", "served"],
+    ["Temporal holdout: calendar caught", "analysis/out/exp_temporal_holdout.json", "schedule.episodes.episode_recall", "36%", "pct0", "served"],
+    ["Temporal holdout: CI low", "analysis/out/exp_temporal_holdout.json", "lift_vs_calendar_ci95.episode_recall_diff.0", "-1", "pp0", "served"],
+    ["Temporal holdout: CI high", "analysis/out/exp_temporal_holdout.json", "lift_vs_calendar_ci95.episode_recall_diff.1", "+17", "pp0", "served"],
+    ["Temporal holdout: Radar week AUC", "analysis/out/exp_temporal_holdout.json", "model.weeks.auc", "0.852", "f3", "served"],
+    ["Temporal holdout: calendar week AUC", "analysis/out/exp_temporal_holdout.json", "schedule.weeks.auc", "0.843", "f3", "served"]
   ],
   "platform_tolerance": {
     "_doc": "Cross-platform tolerance (decided 2026-10-17). README numbers were made on macOS arm64. On Linux x86_64 (Cloudflare fresh clone, runs/reproduce-2026-10-17T17-18-10Z.md) the urgent ER head and the proxy-label run come out slightly different; the rough-patch model reproduces exactly. Only these rows get a tolerance; every other row must match exactly. pts: within 2 percentage points, or 2 ER events in the group (events_key, file of the row), whichever is larger. abs: within the stated absolute amount.",

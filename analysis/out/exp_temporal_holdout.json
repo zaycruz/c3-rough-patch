@@ -1,0 +1,63 @@
+{
+  "design": {
+    "train": "train+val patients, dates < 2025-06-24",
+    "alert_line": "val patients, 2025-07-01 .. 2025-09-24, 5% of quiet days",
+    "test": "test patients, dates >= 2025-10-01"
+  },
+  "train_rows": 178625,
+  "test_patients": 244,
+  "test_days": 26638,
+  "model": {
+    "weeks": {
+      "weeks": 3444,
+      "rough_weeks": 151,
+      "auc": 0.852,
+      "precision": 0.225,
+      "recall": 0.252,
+      "alert_share": 0.049
+    },
+    "episodes": {
+      "episodes": 147,
+      "episode_recall": 0.442,
+      "median_lead_days": 6.0,
+      "er_admissions": 34,
+      "er_recall": 0.206,
+      "alert_runs": 373,
+      "alert_precision": 0.18,
+      "alerts_per_patient_month": 0.43
+    }
+  },
+  "schedule": {
+    "weeks": {
+      "weeks": 3444,
+      "rough_weeks": 151,
+      "auc": 0.843,
+      "precision": 0.217,
+      "recall": 0.225,
+      "alert_share": 0.046
+    },
+    "episodes": {
+      "episodes": 147,
+      "episode_recall": 0.361,
+      "median_lead_days": 6.0,
+      "er_admissions": 34,
+      "er_recall": 0.147,
+      "alert_runs": 256,
+      "alert_precision": 0.184,
+      "alerts_per_patient_month": 0.29
+    }
+  },
+  "lift_vs_calendar_ci95": {
+    "episode_recall_diff": [
+      -0.014,
+      0.169
+    ],
+    "er_recall_diff": [
+      -0.083,
+      0.2
+    ],
+    "reps": 1000,
+    "unit": "patients"
+  },
+  "random_split_reference": 0.476
+}

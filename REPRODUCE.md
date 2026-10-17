@@ -32,6 +32,7 @@ It runs these steps in order. Each one has a fixed seed (`SEED` in `analysis/tra
 | Diary-note red-flag scan (English, Spanish, Haitian Creole): 35 written-first cases, then held-out evaluation | `analysis/notes_scan.py` | `analysis/out/notes_scan.json` |
 | Urgent tier vs the calendar-only ER model, and the note-scan gain: patient-bootstrap CIs, by language | `analysis/urgent_ci.py` | `analysis/out/urgent_ci.json` |
 | Model-free same-day escalation (note red flag, passive ideation, check-in rule picked on val): 32 written-first cases, workload per coach | `analysis/escalation.py` | `analysis/out/escalation.json` |
+| Temporal holdout: train on dates before 2025-07, alert line on val patients 2025-07..09, test on test patients from 2025-10 | `analysis/exp/temporal_holdout.py` | `analysis/out/exp_temporal_holdout.json` |
 | Notes as rough-patch model inputs (decision rule fixed beforehand) | `analysis/exp/notes_features.py` | `analysis/out/exp_notes_features.json` |
 | Caseload, explanations, actions, headline and fairness blocks served by the API; the precomputed roster | `analysis/export.py` | `src/data/survivors.json`, `src/data/metrics.json`, `public/api/c3/survivors` |
 | Wearable signals before an ER visit | `analysis/exp/er_presignal.py` | `analysis/out/er_presignal.json` |
@@ -251,3 +252,11 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | Urgent + escalation: Creole | `analysis/out/escalation.json` | `test.by_language.Haitian Creole.urgent_or_escalation_er_caught_2to7d` | 50% | current pipeline |
 | Urgent + escalation: Spanish | `analysis/out/escalation.json` | `test.by_language.Spanish.urgent_or_escalation_er_caught_2to7d` | 60% | current pipeline |
 | Escalation: ideation notes in data | `analysis/out/escalation.json` | `test.ideation_notes_in_data` | 0 | current pipeline |
+| Temporal holdout: test patients | `analysis/out/exp_temporal_holdout.json` | `test_patients` | 244 | current pipeline |
+| Temporal holdout: patches | `analysis/out/exp_temporal_holdout.json` | `model.episodes.episodes` | 147 | current pipeline |
+| Temporal holdout: Radar caught | `analysis/out/exp_temporal_holdout.json` | `model.episodes.episode_recall` | 44% | current pipeline |
+| Temporal holdout: calendar caught | `analysis/out/exp_temporal_holdout.json` | `schedule.episodes.episode_recall` | 36% | current pipeline |
+| Temporal holdout: CI low | `analysis/out/exp_temporal_holdout.json` | `lift_vs_calendar_ci95.episode_recall_diff.0` | -1 | current pipeline |
+| Temporal holdout: CI high | `analysis/out/exp_temporal_holdout.json` | `lift_vs_calendar_ci95.episode_recall_diff.1` | +17 | current pipeline |
+| Temporal holdout: Radar week AUC | `analysis/out/exp_temporal_holdout.json` | `model.weeks.auc` | 0.852 | current pipeline |
+| Temporal holdout: calendar week AUC | `analysis/out/exp_temporal_holdout.json` | `schedule.weeks.auc` | 0.843 | current pipeline |
