@@ -2,7 +2,8 @@
 
 Usage: .venv/bin/python -I analysis/export.py   (after train.py)
 Picks held-out (test) patients active on AS_OF, scores them as of that evening, explains each score,
-and writes src/data/survivors.json and src/data/metrics.json.
+and writes src/data/survivors.json, src/data/metrics.json and the precomputed roster public/api/c3/survivors
+(served as a static asset, so the roster never waits on a Worker cold start).
 """
 import json
 import pickle
@@ -19,7 +20,9 @@ AS_OF = pd.Timestamp("2025-01-31")
 CASELOAD = 60
 WINDOW = 42  # days of history in the charts
 SEED = 7
-ER_BASE = 0.0119  # share of scored test days followed by an ER visit / admission within 7 days (metrics.json urgent.base_rate)
+NOTE_LABEL = {"fever_infection": "fever or chills", "cant_keep_fluids": "can't keep fluids down",
+              "called_care_team": "called the care team", "breathing_chest": "breathing or chest pain",
+              "bleeding": "bleeding", "fall": "a fall", "distress": "distress or hopelessness"}
 
 # wearable signal groups the explanation can name; each maps to the model features it owns
 GROUPS = {
@@ -168,37 +171,65 @@ def social_needs(row, status):
 
 
 def headline_block(m):
-    """Ready-to-show headline numbers for the console and the MCP server (all from held-out test patients)."""
+    """Ready-to-show headline numbers for the console and the MCP server (all from held-out test patients).
+    One named baseline per outcome: rough patches vs the calendar-only rough-patch model (5% alert budget);
+    ER visits / admissions vs the calendar-only ER model (3% urgent budget)."""
     M, U = m["methods"], m["urgent"]["methods"]
     mo, ca = M["model"]["episodes"], M["schedule"]["episodes"]
-    ci, eci = m["lift_vs_schedule_ci95"]["episode_recall_diff"], m["lift_vs_schedule_ci95"]["er_recall_diff"]
+    ci = m["lift_vs_schedule_ci95"]["episode_recall_diff"]
+    uc = json.loads((OUT / "urgent_ci.json").read_text())
+    ns = json.loads((OUT / "notes_scan.json").read_text())["evaluation"]["test"]["flags"]
+    uci, nci = uc["urgent_minus_calendar_ci95"], uc["note_scan_gain_ci95"]
     pts = lambda v: f"{v * 100:+.0f}"
+    pc = lambda v: [round(v[0] * 100, 1), round(v[1] * 100, 1)]
     rc = m.get("realDataCheck", {})
+    auc_real = rc.get("next_day_auc_wearable_only_prev2days", "?")
+    u = U["urgent"]
     return {
         "urgent": {
-            "text": (f"Urgent ER tier: catches {U['urgent']['er_recall_2to7d']:.0%} of ER visits and hospital admissions 2-7 days "
-                     f"early vs {U['schedule']['er_recall_2to7d']:.0%} from the treatment calendar; when it flags, an ER visit "
-                     f"follows {U['urgent']['flag_precision']:.1%} of the time vs a {U['urgent']['base_rate']:.1%} base rate."),
-            "erCaught": U["urgent"]["er_recall_2to7d"], "erCaughtCalendar": U["schedule"]["er_recall_2to7d"],
-            "flagPrecision": U["urgent"]["flag_precision"], "baseRate": U["urgent"]["base_rate"],
-            "flagsPerPatientMonth": U["urgent"]["flags_per_patient_month"]},
+            "baseline": uc["baseline"],
+            "text": (f"Urgent ER tier: catches {u['er_recall_2to7d']:.0%} of ER visits and hospital admissions 2-7 days early "
+                     f"vs {U['schedule']['er_recall_2to7d']:.0%} for the calendar-only ER model at the same 3% budget "
+                     f"(95% CI {pts(uci[0])} to {pts(uci[1])} points). An urgent flag means about "
+                     f"{u['flag_precision'] / u['base_rate']:.0f}x the usual risk, not a prediction: about 1 in "
+                     f"{round(1 / u['flag_precision'])} is followed by an ER visit or admission within 7 days."),
+            "erCaught": u["er_recall_2to7d"], "erCaughtCalendar": U["schedule"]["er_recall_2to7d"], "liftCi95Points": pc(uci),
+            "flagPrecision": u["flag_precision"], "baseRate": u["base_rate"],
+            "timesUsualRisk": round(u["flag_precision"] / u["base_rate"], 1),
+            "flagsPerPatientMonth": u["flags_per_patient_month"]},
+        "noteScan": {
+            "baseline": "Urgent ER tier alone",
+            "text": (f"Diary-note safety scan (English, Spanish, Haitian Creole word list): a red-flag note (fever or chills, "
+                     f"can't keep fluids down, called the nurse) is followed by an ER visit or admission "
+                     f"{ns['note_scan']['er_within_7d_when_flagged']:.0%} of the time, about "
+                     f"{ns['note_scan']['times_base_rate']:.0f}x the usual. With the urgent tier it catches "
+                     f"{uc['er_caught_2to7d']['urgent_or_note']:.0%} of ER visits 2-7 days early vs "
+                     f"{uc['er_caught_2to7d']['urgent']:.0%} for the tier alone (95% CI {pts(nci[0])} to {pts(nci[1])} points), "
+                     f"for {ns['urgent_or_note']['flag_days'] / ns['urgent_tier']['flag_days'] - 1:.0%} more flags. "
+                     f"No gain yet for Haitian Creole speakers: in this data their Creole notes never describe a red flag."),
+            "erCaught": uc["er_caught_2to7d"]["urgent_or_note"], "erCaughtUrgentOnly": uc["er_caught_2to7d"]["urgent"],
+            "gainCi95Points": pc(nci), "flagPrecision": ns["note_scan"]["er_within_7d_when_flagged"],
+            "timesUsualRisk": ns["note_scan"]["times_base_rate"], "byLanguage": uc["by_language"],
+            "examples": json.loads((OUT / "notes_scan.json").read_text())["examples_test"]},
         "roughPatch": {
-            "text": (f"Catches {mo['episode_recall']:.0%} of rough patches 2-7 days early vs {ca['episode_recall']:.0%} from the "
-                     f"treatment calendar (95% CI {pts(ci[0])} to {pts(ci[1])} points), at the same alert budget of about one "
-                     f"new alert per coach per day; ER visits and admissions {mo['er_recall']:.0%} vs {ca['er_recall']:.0%} "
-                     f"(CI {pts(eci[0])} to {pts(eci[1])})."),
-            "caught": mo["episode_recall"], "caughtCalendar": ca["episode_recall"], "liftCi95Points": [round(ci[0] * 100, 1), round(ci[1] * 100, 1)],
-            "erCaught": mo["er_recall"], "erCaughtCalendar": ca["er_recall"], "erLiftCi95Points": [round(eci[0] * 100, 1), round(eci[1] * 100, 1)],
+            "baseline": "Calendar-only rough-patch model (treatment calendar only, same 5% alert budget)",
+            "text": (f"Catches {mo['episode_recall']:.0%} of rough patches 2-7 days early vs {ca['episode_recall']:.0%} for the "
+                     f"calendar-only rough-patch model (95% CI {pts(ci[0])} to {pts(ci[1])} points), at the same alert budget of "
+                     f"about one new alert per coach per day. This lead time is shown on synthetic data only: on real people "
+                     f"the wearable did not predict the next day (AUC {auc_real})."),
+            "caught": mo["episode_recall"], "caughtCalendar": ca["episode_recall"], "liftCi95Points": pc(ci),
             "alertPrecision": mo["alert_precision"], "alertPrecisionCalendar": ca["alert_precision"],
             "alertsPerPatientMonth": mo["alerts_per_patient_month"], "medianLeadDays": mo["median_lead_days"],
-            "alertBudget": m["definition"]["alert_budget"]},
+            "alertBudget": m["definition"]["alert_budget"], "syntheticOnly": True, "realDataNextDayAuc": auc_real},
         "realData": {
-            "text": (f"On real data (fatigue study, {rc.get('people', '?')} people), wearables confirm a bad day but do not yet "
-                     f"predict one (next-day AUC {rc.get('next_day_auc_wearable_only_prev2days', '?')}); the person's own "
-                     f"rating does better ({rc.get('next_day_auc_yesterdays_self_rating', '?')}). Lead times are shown on synthetic data."),
+            "text": (f"On real data (fatigue study, {rc.get('people', '?')} people), wearables confirm a bad day but do not "
+                     f"predict one (next-day AUC {auc_real}); the person's own rating does better "
+                     f"({rc.get('next_day_auc_yesterdays_self_rating', '?')}). Proving lead time on real people needs the wearable, "
+                     f"daily check-ins and dated ER visits and admissions for a few hundred survivors on treatment over several "
+                     f"months; the public studies we found have the wearable and ratings but no clinical events."),
             "nextDayAucWearable": rc.get("next_day_auc_wearable_only_prev2days"),
             "nextDayAucSelfRating": rc.get("next_day_auc_yesterdays_self_rating")},
-        "order": ["urgent", "roughPatch", "realData"],
+        "order": ["urgent", "noteScan", "roughPatch", "realData"],
     }
 
 
@@ -256,7 +287,7 @@ def actions(status, top, skin_hot, rhr_up, urgent=False):
     recs = []
     if urgent:
         recs.append({"action": "Call today. Ask how they feel, about fever, fluids and anything new. If anything is off, have them call their care team now.",
-                     "why": "Their wearable pattern matches the days before an ER visit or hospital stay. The coach does not diagnose; the care team decides.",
+                     "why": f"Their wearable pattern looks like the days before an ER visit or hospital stay (about {U_TIMES:.0f}x the usual risk; about 1 in {U_ONE_IN} such flags is followed by one). The coach does not diagnose; the care team decides.",
                      "urgency": "today"})
     if skin_hot and rhr_up:
         recs.append({"action": "Call today and ask them to contact their care team about a possible fever or infection.",
@@ -290,8 +321,18 @@ def actions(status, top, skin_hot, rhr_up, urgent=False):
     return recs
 
 
+ROSTER = ROOT / "public" / "api" / "c3" / "survivors"
+ROSTER_KEYS = ["survivorId", "displayName", "status", "headline", "updatedAt", "urgent", "tier", "priority", "risk",
+               "urgentRisk", "reviewToday"]
+
+
 def main():
-    global SKIP_RATE, NOWCAST_BASE
+    global SKIP_RATE, NOWCAST_BASE, U_TIMES, U_ONE_IN, NOTE_BASIS
+    mu = json.loads((OUT / "metrics.json").read_text())["urgent"]["methods"]["urgent"]
+    U_TIMES, U_ONE_IN = mu["flag_precision"] / mu["base_rate"], round(1 / mu["flag_precision"])
+    ns = json.loads((OUT / "notes_scan.json").read_text())["evaluation"]["test"]["flags"]["note_scan"]
+    NOTE_BASIS = (f"On held-out patients a red-flag note was followed by an ER visit or admission "
+                  f"{ns['er_within_7d_when_flagged']:.0%} of the time (about {ns['times_base_rate']:.0f}x the usual).")
     lv2 = json.loads((OUT / "metrics.json").read_text())["label_v2"]
     SKIP_RATE, NOWCAST_BASE = lv2["rough_rate_after_skips"], lv2["missed_day_expected_rough_share"]
     art = pickle.loads((OUT / "gbm.pkl").read_bytes())
@@ -300,6 +341,8 @@ def main():
     ufeats = art.get("urgent_features", feats)
     sys.path.insert(0, str(ROOT / "analysis"))
     from train import SCHEDULE
+    global categories, RED_FLAGS
+    from notes_scan import RED_FLAGS, categories
     d = pd.read_parquet(OUT / "scored.parquet")
     F = pd.read_parquet(OUT / "features.parquet")
     today = d[(d.date == AS_OF) & (d.split == "test") & (d.day_in_program >= 28)]
@@ -330,6 +373,10 @@ def main():
         run = int(x["skip_run"].iloc[0]) if "skip_run" in x.columns else 0
         evidence.append({"signal": "schedule", "label": "Treatment calendar", "riskShare": round(sched, 3),
                          "text": f"{schedule_context(row)}. The calendar alone predicts {sched:.0%} risk of a rough patch this week."})
+        cats = sorted(categories(row.diary_note) & set(RED_FLAGS))
+        note_flag = ({"categories": cats, "note": row.diary_note, "date": AS_OF.strftime("%Y-%m-%d"),
+                      "text": f"Today's diary note mentions {', '.join(NOTE_LABEL[c] for c in cats)}. Read it and call today.",
+                      "basis": NOTE_BASIS} if cats else None)
         last3 = hist.iloc[-3:]
         skin_hot = bool((last3.skin_temp_change_c > 0.5).any())
         rhr_up = bool(last3.resting_heart_rate.mean() - hist.iloc[-35:-7].resting_heart_rate.median() > 3)
@@ -338,7 +385,7 @@ def main():
         ck = float(contrib.get("checkins", 0.0))
         wear_part = score - sched - ck
         if urgent:
-            headline = f"Urgent: ER or hospital risk {urgent_risk:.0%} in the next 7 days, about {urgent_risk / ER_BASE:.0f}x usual"
+            headline = f"Urgent review: about {U_TIMES:.0f}x the usual ER or hospital risk this week. A prompt to check in, not a prediction"
         elif status == "ok":
             headline = "Steady. Check-ins and wearable near their usual."
         elif top == "schedule" and score - sched > 0.03:
@@ -349,8 +396,9 @@ def main():
             what = ("going quiet (skipped check-ins)" if top == "checkins" and ck_kind == "quiet"
                     else LABEL.get(top, "the treatment calendar").lower())
             headline = f"Rough patch risk {score:.0%} in the next 7 days, driven by {what}"
-        summary = ((f"Urgent: risk of an ER visit or hospital admission in the next 7 days is {urgent_risk:.0%} "
-                    f"(urgent line {thr_u:.0%}, typical day {ER_BASE:.1%}). ") if urgent else "") + (f"Risk of a rough patch in the next 7 days: {score:.0%} (alert line {thr['alert']:.0%}). "
+        summary = ((f"Urgent review: their wearable and calendar pattern puts them in the top 3% for ER or hospital risk. "
+                    f"Flags like this carry about {U_TIMES:.0f}x the usual risk, but most are false alarms: about 1 in "
+                    f"{U_ONE_IN} is followed by an ER visit or admission within 7 days. ") if urgent else "") + (f"Risk of a rough patch in the next 7 days: {score:.0%} (alert line {thr['alert']:.0%}). "
                    f"The treatment calendar alone gives {sched:.0%}; their check-ins move it {int(round(ck * 100)):+d} points and "
                    f"wearable signals {int(round(wear_part * 100)):+d}. "
                    + ("Biggest driver: " + wev[0]["text"] + "." if top != "schedule"
@@ -368,17 +416,22 @@ def main():
         name = f"{pid} · {int(row.age)}{row.sex[0].upper()} · {row.cancer_type}"
         survivors.append({"survivorId": sid, "displayName": name, "status": status, "headline": headline,
                           "updatedAt": AS_OF.strftime("%Y-%m-%dT20:00:00Z"), "urgent": bool(urgent), "risk": round(score, 3),
-                          "urgentRisk": round(urgent_risk, 3), "tier": "urgent" if urgent else status})
+                          "urgentRisk": round(urgent_risk, 3), "tier": "urgent" if urgent else status,
+                          "reviewToday": note_flag is not None})
         details[sid] = {
             "survivorId": sid, "displayName": name, "status": status, "headline": headline, "summary": summary,
             "urgent": bool(urgent), "urgentRisk": round(urgent_risk, 3),
+            "reviewToday": note_flag is not None, "noteFlag": note_flag,
             "risk": round(score, 3), "scheduleRisk": round(sched, 3),
             "thresholds": {**{k: round(v, 3) for k, v in thr.items()}, "urgent": round(thr_u, 3)},
             "profile": {"age": int(row.age), "sex": row.sex, "cancerType": row.cancer_type, "stage": row.stage,
                         "treatmentPlan": row.treatment_plan, "device": row.device, "language": row.preferred_language,
                         "livesAlone": row.lives_alone, "context": schedule_context(row)},
             "evidence": evidence,
-            "recommendations": actions(status, "checkins_quiet" if top == "checkins" and ck_kind == "quiet" else top,
+            "recommendations": ([{"action": "Read today's diary note and call today. If they describe fever, can't keep fluids down, "
+                                           "chest pain, trouble breathing, bleeding or a fall, have them call their care team now.",
+                                 "why": note_flag["text"].split(". ")[0] + ". " + NOTE_BASIS, "urgency": "today", "kind": "note"}]
+                                if note_flag else []) + actions(status, "checkins_quiet" if top == "checkins" and ck_kind == "quiet" else top,
                                        skin_hot, rhr_up, urgent) + ([{
                 "action": "Send a short, no-pressure message asking how the week is going; offer a 2-minute call instead of the form.",
                 "why": f"{run} daily check-ins skipped in a row; rough days are more common after a run of skips.",
@@ -402,12 +455,16 @@ def main():
                      "events": [f"{t:%Y-%m-%d}: {e}" for t, e in zip(nxt.date, nxt.events) if isinstance(e, str)]},
         }
     order = {"alert": 0, "watch": 1, "ok": 2}
-    survivors.sort(key=lambda s: (not s["urgent"], -s["urgentRisk"] if s["urgent"] else 0, order[s["status"]], -s["risk"]))
+    survivors.sort(key=lambda s: (not s["urgent"], -s["urgentRisk"] if s["urgent"] else 0, not s["reviewToday"],
+                                  order[s["status"]], -s["risk"]))
     for i, s in enumerate(survivors):
         s["priority"] = i + 1
         details[s["survivorId"]].update(tier=s["tier"], priority=i + 1)
     DATA.mkdir(parents=True, exist_ok=True)
     (DATA / "survivors.json").write_text(json.dumps({"asOf": AS_OF.strftime("%Y-%m-%d"), "roster": survivors, "details": details}))
+    # precomputed roster, byte-for-byte what GET /api/c3/survivors returns (served as a static asset; see public/_headers)
+    ROSTER.parent.mkdir(parents=True, exist_ok=True)
+    ROSTER.write_text(json.dumps([{k: s[k] for k in ROSTER_KEYS} for s in survivors]))
     m = json.loads((OUT / "metrics.json").read_text())
     rc = OUT / "real_check.json"
     if rc.exists():

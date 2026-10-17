@@ -65,6 +65,7 @@ async function handle(req: Request, env: Env): Promise<Response> {
         "echo \">>> tools: $(command -v python3 git curl || true)\"",
         "command -v git >/dev/null || { apt-get update -qq && apt-get install -y -qq git >/dev/null; }",
         "python3 -m pip install --quiet uv==0.12.15 || python3 -m pip install --quiet --break-system-packages uv==0.12.15",
+        "export PATH=\"$(dirname \"$(python3 -c 'import uv; print(uv.find_uv_bin())')\"):$PATH\"",
         "echo \">>> $(uv --version) $(git --version)\"",
         `git clone --quiet ${sh(repo)} repo`,
         "cd repo",

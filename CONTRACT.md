@@ -1,7 +1,7 @@
 # C3 Bad Week Radar: API contract
 
 Base URL (deployed): `https://c3-rough-patch.zay-259.workers.dev`. All responses are JSON with `access-control-allow-origin: *`.
-The examples below are real responses, captured by `npm run e2e` on 2026-10-17T16:35:50.093Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
+The examples below are real responses, captured by `npm run e2e` on 2026-10-17T17:17:02.430Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
 
 ## `GET /api/c3/survivors`: roster tiles
 
@@ -24,25 +24,27 @@ The original contract keys (`survivorId, displayName, status, headline, updatedA
     "survivorId": "c3-P03000",
     "displayName": "P03000 · 49M · kidney",
     "status": "alert",
-    "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
+    "headline": "Urgent review: about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction",
     "updatedAt": "2025-01-31T20:00:00Z",
     "urgent": true,
     "tier": "urgent",
     "priority": 1,
     "risk": 0.078,
-    "urgentRisk": 0.104
+    "urgentRisk": 0.104,
+    "reviewToday": false
   },
   {
     "survivorId": "c3-P02185",
     "displayName": "P02185 · 42M · lymphoma",
     "status": "alert",
-    "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+    "headline": "Urgent review: about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction",
     "updatedAt": "2025-01-31T20:00:00Z",
     "urgent": true,
     "tier": "urgent",
     "priority": 2,
     "risk": 0.221,
-    "urgentRisk": 0.06
+    "urgentRisk": 0.06,
+    "reviewToday": false
   },
   {
     "survivorId": "c3-P02465",
@@ -54,7 +56,8 @@ The original contract keys (`survivorId, displayName, status, headline, updatedA
     "tier": "alert",
     "priority": 3,
     "risk": 0.507,
-    "urgentRisk": 0.001
+    "urgentRisk": 0.001,
+    "reviewToday": false
   }
 ]
 ```
@@ -72,10 +75,12 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
   "survivorId": "c3-P03000",
   "displayName": "P03000 · 49M · kidney",
   "status": "alert",
-  "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
-  "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 10% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 8% (alert line 16%). The treatment calendar alone gives 2%; their check-ins move it +0 points and wearable signals +6. Biggest driver: Sleep efficiency 82% vs usual 88%, waking 3.0x a night vs 2.0x, 6.4 h asleep vs 6.9 h.",
+  "headline": "Urgent review: about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction",
+  "summary": "Urgent review: their wearable and calendar pattern puts them in the top 3% for ER or hospital risk. Flags like this carry about 6x the usual risk, but most are false alarms: about 1 in 14 is followed by an ER visit or admission within 7 days. Risk of a rough patch in the next 7 days: 8% (alert line 16%). The treatment calendar alone gives 2%; their check-ins move it +0 points and wearable signals +6. Biggest driver: Sleep efficiency 82% vs usual 88%, waking 3.0x a night vs 2.0x, 6.4 h asleep vs 6.9 h.",
   "urgent": true,
   "urgentRisk": 0.104,
+  "reviewToday": false,
+  "noteFlag": null,
   "risk": 0.078,
   "scheduleRisk": 0.021,
   "thresholds": {
@@ -125,7 +130,7 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
   "recommendations": [
     {
       "action": "Call today. Ask how they feel, about fever, fluids and anything new. If anything is off, have them call their care team now.",
-      "why": "Their wearable pattern matches the days before an ER visit or hospital stay. The coach does not diagnose; the care team decides.",
+      "why": "Their wearable pattern looks like the days before an ER visit or hospital stay (about 6x the usual risk; about 1 in 14 such flags is followed by one). The coach does not diagnose; the care team decides.",
       "urgency": "today"
     },
     {
@@ -255,40 +260,137 @@ All numbers are from held-out test patients (750 patients the model never saw).
 ```json
 {
   "urgent": {
-    "text": "Urgent ER tier: catches 47% of ER visits and hospital admissions 2-7 days early vs 36% from the treatment calendar; when it flags, an ER visit follows 7.4% of the time vs a 1.2% base rate.",
+    "baseline": "Calendar-only ER model (treatment calendar only, same 3% urgent budget)",
+    "text": "Urgent ER tier: catches 47% of ER visits and hospital admissions 2-7 days early vs 36% for the calendar-only ER model at the same 3% budget (95% CI +2 to +19 points). An urgent flag means about 6x the usual risk, not a prediction: about 1 in 14 is followed by an ER visit or admission within 7 days.",
     "erCaught": 0.467,
     "erCaughtCalendar": 0.363,
+    "liftCi95Points": [
+      2,
+      19
+    ],
     "flagPrecision": 0.074,
     "baseRate": 0.0119,
+    "timesUsualRisk": 6.2,
     "flagsPerPatientMonth": 0.38
   },
+  "noteScan": {
+    "baseline": "Urgent ER tier alone",
+    "text": "Diary-note safety scan (English, Spanish, Haitian Creole word list): a red-flag note (fever or chills, can't keep fluids down, called the nurse) is followed by an ER visit or admission 27% of the time, about 23x the usual. With the urgent tier it catches 57% of ER visits 2-7 days early vs 47% for the tier alone (95% CI +6 to +15 points), for 5% more flags. No gain yet for Haitian Creole speakers: in this data their Creole notes never describe a red flag.",
+    "erCaught": 0.566,
+    "erCaughtUrgentOnly": 0.467,
+    "gainCi95Points": [
+      5.5,
+      14.9
+    ],
+    "flagPrecision": 0.273,
+    "timesUsualRisk": 23,
+    "byLanguage": {
+      "English": {
+        "patients": 445,
+        "er_events": 107,
+        "calendar": 0.364,
+        "urgent": 0.505,
+        "urgent_or_note": 0.598
+      },
+      "Haitian Creole": {
+        "patients": 60,
+        "er_events": 18,
+        "calendar": 0.5,
+        "urgent": 0.444,
+        "urgent_or_note": 0.444
+      },
+      "Spanish": {
+        "patients": 245,
+        "er_events": 57,
+        "calendar": 0.316,
+        "urgent": 0.404,
+        "urgent_or_note": 0.544
+      }
+    },
+    "examples": [
+      {
+        "noteLanguage": "English",
+        "category": "called_care_team",
+        "note": "Called the nurse line, they said come in if it goes over 100.4",
+        "patientId": "P00034",
+        "erOrAdmissionWithin7Days": true
+      },
+      {
+        "noteLanguage": "English",
+        "category": "cant_keep_fluids",
+        "note": "Threw up twice, couldn't keep water down",
+        "patientId": "P00080",
+        "erOrAdmissionWithin7Days": false
+      },
+      {
+        "noteLanguage": "English",
+        "category": "distress",
+        "note": "Worst day so far.",
+        "patientId": "P00034",
+        "erOrAdmissionWithin7Days": false
+      },
+      {
+        "noteLanguage": "English",
+        "category": "fever_infection",
+        "note": "Chills tonight, took my temp 100.8",
+        "patientId": "P00034",
+        "erOrAdmissionWithin7Days": true
+      },
+      {
+        "noteLanguage": "Spanish",
+        "category": "called_care_team",
+        "note": "Llamé a la enfermera, dijo que vaya si pasa de 38. Gracias a Dios por mis vecinos.",
+        "patientId": "P02634",
+        "erOrAdmissionWithin7Days": false
+      },
+      {
+        "noteLanguage": "Spanish",
+        "category": "cant_keep_fluids",
+        "note": "Vomité dos veces.",
+        "patientId": "P00054",
+        "erOrAdmissionWithin7Days": false
+      },
+      {
+        "noteLanguage": "Spanish",
+        "category": "distress",
+        "note": "El peor día hasta ahora.",
+        "patientId": "P00228",
+        "erOrAdmissionWithin7Days": false
+      },
+      {
+        "noteLanguage": "Spanish",
+        "category": "fever_infection",
+        "note": "Me duele todo el cuerpo como gripe",
+        "patientId": "P00054",
+        "erOrAdmissionWithin7Days": false
+      }
+    ]
+  },
   "roughPatch": {
-    "text": "Catches 48% of rough patches 2-7 days early vs 36% from the treatment calendar (95% CI +8 to +15 points), at the same alert budget of about one new alert per coach per day; ER visits and admissions 36% vs 22% (CI +8 to +20).",
+    "baseline": "Calendar-only rough-patch model (treatment calendar only, same 5% alert budget)",
+    "text": "Catches 48% of rough patches 2-7 days early vs 36% for the calendar-only rough-patch model (95% CI +8 to +15 points), at the same alert budget of about one new alert per coach per day. This lead time is shown on synthetic data only: on real people the wearable did not predict the next day (AUC 0.482).",
     "caught": 0.476,
     "caughtCalendar": 0.359,
     "liftCi95Points": [
       7.8,
       15.2
     ],
-    "erCaught": 0.363,
-    "erCaughtCalendar": 0.22,
-    "erLiftCi95Points": [
-      8.5,
-      19.9
-    ],
     "alertPrecision": 0.184,
     "alertPrecisionCalendar": 0.106,
     "alertsPerPatientMonth": 0.48,
     "medianLeadDays": 6,
-    "alertBudget": "thresholds put 5% of quiet validation days on alert, same budget for every method"
+    "alertBudget": "thresholds put 5% of quiet validation days on alert, same budget for every method",
+    "syntheticOnly": true,
+    "realDataNextDayAuc": 0.482
   },
   "realData": {
-    "text": "On real data (fatigue study, 204 people), wearables confirm a bad day but do not yet predict one (next-day AUC 0.482); the person's own rating does better (0.64). Lead times are shown on synthetic data.",
+    "text": "On real data (fatigue study, 204 people), wearables confirm a bad day but do not predict one (next-day AUC 0.482); the person's own rating does better (0.64). Proving lead time on real people needs the wearable, daily check-ins and dated ER visits and admissions for a few hundred survivors on treatment over several months; the public studies we found have the wearable and ratings but no clinical events.",
     "nextDayAucWearable": 0.482,
     "nextDayAucSelfRating": 0.64
   },
   "order": [
     "urgent",
+    "noteScan",
     "roughPatch",
     "realData"
   ]

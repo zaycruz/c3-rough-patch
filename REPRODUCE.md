@@ -29,7 +29,10 @@ It runs these steps in order. Each one has a fixed seed (`SEED` in `analysis/tra
 |---|---|---|
 | Label, features, models, held-out evaluation, calibration, subgroups, bootstrap CIs, urgent tier | `analysis/train.py` | `analysis/out/metrics.json` (+ `gbm.pkl`, parquet files, git-ignored) |
 | Real-data check (fatigue study) | `analysis/real_check.py` | `analysis/out/real_check.json` |
-| Caseload, explanations, actions, headline and fairness blocks served by the API | `analysis/export.py` | `src/data/survivors.json`, `src/data/metrics.json` |
+| Diary-note red-flag scan (English, Spanish, Haitian Creole): 35 written-first cases, then held-out evaluation | `analysis/notes_scan.py` | `analysis/out/notes_scan.json` |
+| Urgent tier vs the calendar-only ER model, and the note-scan gain: patient-bootstrap CIs, by language | `analysis/urgent_ci.py` | `analysis/out/urgent_ci.json` |
+| Notes as rough-patch model inputs (decision rule fixed beforehand) | `analysis/exp/notes_features.py` | `analysis/out/exp_notes_features.json` |
+| Caseload, explanations, actions, headline and fairness blocks served by the API; the precomputed roster | `analysis/export.py` | `src/data/survivors.json`, `src/data/metrics.json`, `public/api/c3/survivors` |
 | Wearable signals before an ER visit | `analysis/exp/er_presignal.py` | `analysis/out/er_presignal.json` |
 | Check-in / surprise / worklist experiment (picked on val, scored once on test) | `analysis/exp/checkin_worklist.py` | `analysis/out/exp_checkin_worklist_{val,test}.json` |
 | *full only:* label v2 before check-ins, the proxy-label variant (`C3_PROXY=1`) and the matched-budget label cross-check | `train.py` from commit `d72545d`, `analysis/exp/label_crosscheck.py` | `analysis/out/historical/*.json` |
@@ -86,7 +89,6 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | Steps drop: week precision | `analysis/out/metrics.json` | `methods.steps_rule.weeks.precision` | 10% | current pipeline |
 | Steps drop: week recall | `analysis/out/metrics.json` | `methods.steps_rule.weeks.recall` | 10% | current pipeline |
 | Steps drop: patches caught | `analysis/out/metrics.json` | `methods.steps_rule.episodes.episode_recall` | 25% | current pipeline |
-| Steps drop: ER caught | `analysis/out/metrics.json` | `methods.steps_rule.episodes.er_recall` | 27% | current pipeline |
 | Steps drop: median lead | `analysis/out/metrics.json` | `methods.steps_rule.episodes.median_lead_days` | 5 | current pipeline |
 | Steps drop: alert precision | `analysis/out/metrics.json` | `methods.steps_rule.episodes.alert_precision` | 8% | current pipeline |
 | Steps drop: alerts/patient/month | `analysis/out/metrics.json` | `methods.steps_rule.episodes.alerts_per_patient_month` | 0.66 | current pipeline |
@@ -94,7 +96,6 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | Calendar: week precision | `analysis/out/metrics.json` | `methods.schedule.weeks.precision` | 20% | current pipeline |
 | Calendar: week recall | `analysis/out/metrics.json` | `methods.schedule.weeks.recall` | 26% | current pipeline |
 | Calendar: patches caught | `analysis/out/metrics.json` | `methods.schedule.episodes.episode_recall` | 36% | current pipeline |
-| Calendar: ER caught | `analysis/out/metrics.json` | `methods.schedule.episodes.er_recall` | 22% | current pipeline |
 | Calendar: median lead | `analysis/out/metrics.json` | `methods.schedule.episodes.median_lead_days` | 7 | current pipeline |
 | Calendar: alert precision | `analysis/out/metrics.json` | `methods.schedule.episodes.alert_precision` | 11% | current pipeline |
 | Calendar: alerts/patient/month | `analysis/out/metrics.json` | `methods.schedule.episodes.alerts_per_patient_month` | 0.36 | current pipeline |
@@ -102,7 +103,6 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | Logistic: week precision | `analysis/out/metrics.json` | `methods.logistic.weeks.precision` | 16% | current pipeline |
 | Logistic: week recall | `analysis/out/metrics.json` | `methods.logistic.weeks.recall` | 14% | current pipeline |
 | Logistic: patches caught | `analysis/out/metrics.json` | `methods.logistic.episodes.episode_recall` | 25% | current pipeline |
-| Logistic: ER caught | `analysis/out/metrics.json` | `methods.logistic.episodes.er_recall` | 33% | current pipeline |
 | Logistic: median lead | `analysis/out/metrics.json` | `methods.logistic.episodes.median_lead_days` | 6 | current pipeline |
 | Logistic: alert precision | `analysis/out/metrics.json` | `methods.logistic.episodes.alert_precision` | 13% | current pipeline |
 | Logistic: alerts/patient/month | `analysis/out/metrics.json` | `methods.logistic.episodes.alerts_per_patient_month` | 0.33 | current pipeline |
@@ -110,7 +110,6 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | No check-ins: week precision | `analysis/out/metrics.json` | `ablation_without_checkins.weeks.precision` | 22% | current pipeline |
 | No check-ins: week recall | `analysis/out/metrics.json` | `ablation_without_checkins.weeks.recall` | 24% | current pipeline |
 | No check-ins: patches caught | `analysis/out/metrics.json` | `ablation_without_checkins.episodes.episode_recall` | 41% | current pipeline |
-| No check-ins: ER caught | `analysis/out/metrics.json` | `ablation_without_checkins.episodes.er_recall` | 30% | current pipeline |
 | No check-ins: median lead | `analysis/out/metrics.json` | `ablation_without_checkins.episodes.median_lead_days` | 5 | current pipeline |
 | No check-ins: alert precision | `analysis/out/metrics.json` | `ablation_without_checkins.episodes.alert_precision` | 17% | current pipeline |
 | No check-ins: alerts/patient/month | `analysis/out/metrics.json` | `ablation_without_checkins.episodes.alerts_per_patient_month` | 0.45 | current pipeline |
@@ -118,18 +117,13 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | Radar: week precision | `analysis/out/metrics.json` | `methods.model.weeks.precision` | 23% | current pipeline |
 | Radar: week recall | `analysis/out/metrics.json` | `methods.model.weeks.recall` | 28% | current pipeline |
 | Radar: patches caught | `analysis/out/metrics.json` | `methods.model.episodes.episode_recall` | 48% | current pipeline |
-| Radar: ER caught | `analysis/out/metrics.json` | `methods.model.episodes.er_recall` | 36% | current pipeline |
 | Radar: median lead | `analysis/out/metrics.json` | `methods.model.episodes.median_lead_days` | 6 | current pipeline |
 | Radar: alert precision | `analysis/out/metrics.json` | `methods.model.episodes.alert_precision` | 18% | current pipeline |
 | Radar: alerts/patient/month | `analysis/out/metrics.json` | `methods.model.episodes.alerts_per_patient_month` | 0.48 | current pipeline |
 | Lift vs calendar, patches, CI low | `analysis/out/metrics.json` | `lift_vs_schedule_ci95.episode_recall_diff.0` | +8 | current pipeline |
 | Lift vs calendar, patches, CI high | `analysis/out/metrics.json` | `lift_vs_schedule_ci95.episode_recall_diff.1` | +15 | current pipeline |
-| Lift vs calendar, ER, CI low | `analysis/out/metrics.json` | `lift_vs_schedule_ci95.er_recall_diff.0` | +9 | current pipeline |
-| Lift vs calendar, ER, CI high | `analysis/out/metrics.json` | `lift_vs_schedule_ci95.er_recall_diff.1` | +20 | current pipeline |
 | Check-ins lift, patches, CI low | `analysis/out/metrics.json` | `ablation_without_checkins.lift_of_checkins_ci95.episode_recall_diff.0` | +3 | current pipeline |
 | Check-ins lift, patches, CI high | `analysis/out/metrics.json` | `ablation_without_checkins.lift_of_checkins_ci95.episode_recall_diff.1` | +9 | current pipeline |
-| Check-ins lift, ER, CI low | `analysis/out/metrics.json` | `ablation_without_checkins.lift_of_checkins_ci95.er_recall_diff.0` | +1 | current pipeline |
-| Check-ins lift, ER, CI high | `analysis/out/metrics.json` | `ablation_without_checkins.lift_of_checkins_ci95.er_recall_diff.1` | +12 | current pipeline |
 | Calibration: top decile predicted | `analysis/out/metrics.json` | `calibration.model.deciles.-1.predicted` | 19% | current pipeline |
 | Calibration: top decile observed | `analysis/out/metrics.json` | `calibration.model.deciles.-1.observed` | 19% | current pipeline |
 | Brier, model | `analysis/out/metrics.json` | `calibration.model.brier` | 0.0407 | current pipeline |
@@ -142,18 +136,47 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | Urgent head: AUC | `analysis/out/metrics.json` | `urgent.methods.urgent.auc` | 0.859 | current pipeline |
 | Urgent head: avg precision | `analysis/out/metrics.json` | `urgent.methods.urgent.average_precision` | 0.064 | current pipeline |
 | Urgent base rate | `analysis/out/metrics.json` | `urgent.methods.urgent.base_rate` | 1.2% | current pipeline |
-| Urgent schedule-only: ER caught | `analysis/out/metrics.json` | `urgent.methods.schedule.er_recall_2to7d` | 36% | current pipeline |
-| Urgent schedule-only: median lead | `analysis/out/metrics.json` | `urgent.methods.schedule.median_lead_days` | 5 | current pipeline |
-| Urgent schedule-only: flag precision | `analysis/out/metrics.json` | `urgent.methods.schedule.flag_precision` | 6.9% | current pipeline |
-| Urgent schedule-only: flags/patient/month | `analysis/out/metrics.json` | `urgent.methods.schedule.flags_per_patient_month` | 0.23 | current pipeline |
-| Urgent schedule-only: AUC | `analysis/out/metrics.json` | `urgent.methods.schedule.auc` | 0.845 | current pipeline |
-| Urgent schedule-only: avg precision | `analysis/out/metrics.json` | `urgent.methods.schedule.average_precision` | 0.0486 | current pipeline |
+| Calendar-only ER model: ER caught | `analysis/out/metrics.json` | `urgent.methods.schedule.er_recall_2to7d` | 36% | current pipeline |
+| Calendar-only ER model: median lead | `analysis/out/metrics.json` | `urgent.methods.schedule.median_lead_days` | 5 | current pipeline |
+| Calendar-only ER model: flag precision | `analysis/out/metrics.json` | `urgent.methods.schedule.flag_precision` | 6.9% | current pipeline |
+| Calendar-only ER model: flags/patient/month | `analysis/out/metrics.json` | `urgent.methods.schedule.flags_per_patient_month` | 0.23 | current pipeline |
+| Calendar-only ER model: AUC | `analysis/out/metrics.json` | `urgent.methods.schedule.auc` | 0.845 | current pipeline |
+| Calendar-only ER model: avg precision | `analysis/out/metrics.json` | `urgent.methods.schedule.average_precision` | 0.0486 | current pipeline |
 | Radar at 3%: ER caught | `analysis/out/metrics.json` | `urgent.methods.radar.er_recall_2to7d` | 29% | current pipeline |
 | Radar at 3%: median lead | `analysis/out/metrics.json` | `urgent.methods.radar.median_lead_days` | 6 | current pipeline |
 | Radar at 3%: flag precision | `analysis/out/metrics.json` | `urgent.methods.radar.flag_precision` | 6.1% | current pipeline |
 | Radar at 3%: flags/patient/month | `analysis/out/metrics.json` | `urgent.methods.radar.flags_per_patient_month` | 0.27 | current pipeline |
 | Radar at 3%: AUC | `analysis/out/metrics.json` | `urgent.methods.radar.auc` | 0.788 | current pipeline |
 | Radar at 3%: avg precision | `analysis/out/metrics.json` | `urgent.methods.radar.average_precision` | 0.0362 | current pipeline |
+| Urgent vs calendar-only ER model, CI low | `analysis/out/urgent_ci.json` | `urgent_minus_calendar_ci95.0` | +2 | current pipeline |
+| Urgent vs calendar-only ER model, CI high | `analysis/out/urgent_ci.json` | `urgent_minus_calendar_ci95.1` | +19 | current pipeline |
+| Urgent flag: times the usual risk | `src/data/metrics.json` | `headline.urgent.timesUsualRisk` | 6 | current pipeline |
+| Note scan: written-first cases | `analysis/out/notes_scan.json` | `self_test.cases` | 35 | current pipeline |
+| Note scan + urgent: ER caught | `analysis/out/urgent_ci.json` | `er_caught_2to7d.urgent_or_note` | 57% | current pipeline |
+| Note scan gain, CI low | `analysis/out/urgent_ci.json` | `note_scan_gain_ci95.0` | +6 | current pipeline |
+| Note scan gain, CI high | `analysis/out/urgent_ci.json` | `note_scan_gain_ci95.1` | +15 | current pipeline |
+| Note scan alone: ER caught | `analysis/out/notes_scan.json` | `evaluation.test.flags.note_scan.er_caught_2to7d` | 18% | current pipeline |
+| Note scan alone: ER within 7 d when flagged | `analysis/out/notes_scan.json` | `evaluation.test.flags.note_scan.er_within_7d_when_flagged` | 27% | current pipeline |
+| Note scan alone: times the usual | `analysis/out/notes_scan.json` | `evaluation.test.flags.note_scan.times_base_rate` | 23 | current pipeline |
+| Note scan alone: flags/patient/month | `analysis/out/notes_scan.json` | `evaluation.test.flags.note_scan.flag_days_per_patient_month` | 0.05 | current pipeline |
+| Urgent tier alone: ER within 7 d when flagged (days) | `analysis/out/notes_scan.json` | `evaluation.test.flags.urgent_tier.er_within_7d_when_flagged` | 7.7% | current pipeline |
+| Urgent + notes: ER within 7 d when flagged (days) | `analysis/out/notes_scan.json` | `evaluation.test.flags.urgent_or_note.er_within_7d_when_flagged` | 8.6% | current pipeline |
+| Urgent tier alone: flag days/patient/month | `analysis/out/notes_scan.json` | `evaluation.test.flags.urgent_tier.flag_days_per_patient_month` | 0.80 | current pipeline |
+| Urgent + notes: flag days/patient/month | `analysis/out/notes_scan.json` | `evaluation.test.flags.urgent_or_note.flag_days_per_patient_month` | 0.84 | current pipeline |
+| Fever notes: ER within 7 d | `analysis/out/notes_scan.json` | `evaluation.test.by_category.fever_infection.er_within_7d` | 49% | current pipeline |
+| Nurse-call notes: ER within 7 d | `analysis/out/notes_scan.json` | `evaluation.test.by_category.called_care_team.er_within_7d` | 44% | current pipeline |
+| By language: English, calendar | `analysis/out/urgent_ci.json` | `by_language.English.calendar` | 36% | current pipeline |
+| By language: English, urgent | `analysis/out/urgent_ci.json` | `by_language.English.urgent` | 51% | current pipeline |
+| By language: English, urgent + notes | `analysis/out/urgent_ci.json` | `by_language.English.urgent_or_note` | 60% | current pipeline |
+| By language: Spanish, calendar | `analysis/out/urgent_ci.json` | `by_language.Spanish.calendar` | 32% | current pipeline |
+| By language: Spanish, urgent | `analysis/out/urgent_ci.json` | `by_language.Spanish.urgent` | 40% | current pipeline |
+| By language: Spanish, urgent + notes | `analysis/out/urgent_ci.json` | `by_language.Spanish.urgent_or_note` | 54% | current pipeline |
+| By language: Creole, calendar | `analysis/out/urgent_ci.json` | `by_language.Haitian Creole.calendar` | 50% | current pipeline |
+| By language: Creole, urgent | `analysis/out/urgent_ci.json` | `by_language.Haitian Creole.urgent` | 44% | current pipeline |
+| By language: Creole, urgent + notes | `analysis/out/urgent_ci.json` | `by_language.Haitian Creole.urgent_or_note` | 44% | current pipeline |
+| By language: Creole ER events | `analysis/out/urgent_ci.json` | `by_language.Haitian Creole.er_events` | 18 | current pipeline |
+| Notes as inputs: val week AUC change | `analysis/out/exp_notes_features.json` | `val_change.week_auc` | -0.004 | current pipeline |
+| Notes as inputs: val recall change | `analysis/out/exp_notes_features.json` | `val_change.episode_recall` | 0 | current pipeline |
 | Fairness: overall week recall | `src/data/metrics.json` | `fairness.overallRecall` | 28% | current pipeline |
 | Fairness: sarcoma recall | `src/data/metrics.json` | `fairness.@cancer_type.sarcoma.recall` | 13% | current pipeline |
 | Fairness: sarcoma CI high | `src/data/metrics.json` | `fairness.@cancer_type.sarcoma.recallCi95.1` | 26% | current pipeline |

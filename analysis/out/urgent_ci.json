@@ -1,0 +1,46 @@
+{
+  "baseline": "Calendar-only ER model (treatment calendar only, same 3% urgent budget)",
+  "er_events": 182,
+  "er_caught_2to7d": {
+    "urgent": 0.467,
+    "calendar": 0.363,
+    "urgent_or_note": 0.566
+  },
+  "urgent_minus_calendar_ci95": [
+    0.02,
+    0.19
+  ],
+  "note_scan_gain_ci95": [
+    0.055,
+    0.149
+  ],
+  "urgent_or_note_minus_calendar_ci95": [
+    0.12,
+    0.283
+  ],
+  "reps": 1000,
+  "unit": "patients",
+  "by_language": {
+    "English": {
+      "patients": 445,
+      "er_events": 107,
+      "calendar": 0.364,
+      "urgent": 0.505,
+      "urgent_or_note": 0.598
+    },
+    "Haitian Creole": {
+      "patients": 60,
+      "er_events": 18,
+      "calendar": 0.5,
+      "urgent": 0.444,
+      "urgent_or_note": 0.444
+    },
+    "Spanish": {
+      "patients": 245,
+      "er_events": 57,
+      "calendar": 0.316,
+      "urgent": 0.404,
+      "urgent_or_note": 0.544
+    }
+  }
+}

@@ -1,6 +1,8 @@
 /**
  * C3 Bad Week Radar API (Coach Console module).
- *   GET /api/c3/survivors       roster tiles in priority order: urgent (by ER risk), then alert > watch > ok, then by risk
+ *   GET /api/c3/survivors       roster tiles in priority order: urgent (by ER risk), then review-today (red-flag diary note),
+ *                               then alert > watch > ok, then by risk. Precomputed: served as the static asset
+ *                               public/api/c3/survivors (see public/_headers); this route is the same data as a fallback
  *   GET /api/c3/survivors/:id   survivor panel: status, evidence, recommendations, chart series
  *   GET /api/c3/metrics         held-out evaluation: headline (with CIs), model vs baselines, fairness by group
  *   GET /                       standalone demo page (public/index.html)
@@ -44,8 +46,8 @@ export default {
     if (req.method !== "GET") return json({ error: "method not allowed" }, 405);
 
     if (path === "/api/c3/survivors") {
-      return json(S.roster.map(({ survivorId, displayName, status, headline, updatedAt, urgent, tier, priority, risk, urgentRisk }) =>
-        ({ survivorId, displayName, status, headline, updatedAt, urgent, tier, priority, risk, urgentRisk })));
+      return json(S.roster.map(({ survivorId, displayName, status, headline, updatedAt, urgent, tier, priority, risk, urgentRisk, reviewToday }) =>
+        ({ survivorId, displayName, status, headline, updatedAt, urgent, tier, priority, risk, urgentRisk, reviewToday })));
     }
     const m = path.match(/^\/api\/c3\/survivors\/([^/]+)$/);
     if (m) {

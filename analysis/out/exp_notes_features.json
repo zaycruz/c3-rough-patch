@@ -1,0 +1,45 @@
+{
+  "refit_matches_served_model_max_abs_diff": 0.0,
+  "note_features": [
+    "note_fever_infection_7",
+    "note_cant_keep_fluids_7",
+    "note_called_care_team_7",
+    "note_breathing_chest_7",
+    "note_bleeding_7",
+    "note_fall_7",
+    "note_distress_7",
+    "note_already_in_care_7",
+    "note_red_flag_7",
+    "note_rate14"
+  ],
+  "base": {
+    "val": {
+      "week_auc": 0.821,
+      "episode_recall": 0.503,
+      "alert_precision": 0.165
+    },
+    "test": {
+      "week_auc": 0.827,
+      "episode_recall": 0.476,
+      "alert_precision": 0.184
+    }
+  },
+  "notes": {
+    "val": {
+      "week_auc": 0.817,
+      "episode_recall": 0.503,
+      "alert_precision": 0.171
+    },
+    "test": {
+      "week_auc": 0.829,
+      "episode_recall": 0.469,
+      "alert_precision": 0.177
+    }
+  },
+  "val_change": {
+    "week_auc": -0.004,
+    "episode_recall": 0.0,
+    "alert_precision": 0.006
+  },
+  "decision": "keep notes out of the model; use them as the same-day safety flag"
+}

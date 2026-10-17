@@ -30,12 +30,17 @@ responses["/api/c3/survivors"] = roster;
 const list = Array.isArray(roster.body) ? roster.body : [];
 check("roster 200 and non-empty array", roster.status === 200 && list.length > 0, { count: list.length });
 check("roster CORS header", roster.headers["access-control-allow-origin"] === "*");
-const keys = ["survivorId", "displayName", "status", "headline", "updatedAt", "urgent", "tier", "priority", "risk", "urgentRisk"];
+const keys = ["survivorId", "displayName", "status", "headline", "updatedAt", "urgent", "tier", "priority", "risk", "urgentRisk", "reviewToday"];
 check("roster tiles have exactly the contract keys", list.every((r) => JSON.stringify(Object.keys(r).sort()) === JSON.stringify([...keys].sort())));
 check("roster ids are c3-prefixed", list.every((r) => /^c3-P\d{5}$/.test(r.survivorId)));
 check("roster status in ok|watch|alert", list.every((r) => STATUSES.includes(r.status)));
-const rank = (r) => (r.urgent ? -1 : STATUSES.indexOf(r.status));
-check("roster sorted urgent > alert > watch > ok", list.every((r, i) => i === 0 || rank(list[i - 1]) <= rank(r)));
+const rank = (r) => (r.urgent ? -2 : r.reviewToday ? -1 : STATUSES.indexOf(r.status));
+check("roster sorted urgent > review today (red-flag note) > alert > watch > ok", list.every((r, i) => i === 0 || rank(list[i - 1]) <= rank(r)));
+check("roster is precomputed: served as a static JSON asset with CORS and a cache header",
+  /application\/json/.test(roster.headers["content-type"] || "") && /max-age=\d+/.test(roster.headers["cache-control"] || ""),
+  { ms: roster.ms, contentType: roster.headers["content-type"], cacheControl: roster.headers["cache-control"] });
+check("urgent headlines say relative risk, not a prediction",
+  list.filter((r) => r.urgent).every((r) => /x the usual/.test(r.headline) && /not a prediction/.test(r.headline) && !/risk \d+%/.test(r.headline)));
 check("urgent survivors are always status alert", list.every((r) => !r.urgent || r.status === "alert"));
 check("tier and priority are first-class: tier = urgent|alert|watch|ok, priority = 1..n in list order",
   list.every((r, i) => r.priority === i + 1 && r.tier === (r.urgent ? "urgent" : r.status) && typeof r.urgentRisk === "number"));
@@ -53,7 +58,9 @@ for (const r of list) {
     typeof b.summary === "string" && Array.isArray(b.evidence) && b.evidence.length > 0 &&
     Array.isArray(b.recommendations) && b.recommendations.length > 0 && b.charts && n > 0 &&
     ["risk", "urgentRisk", "steps", "restingHeartRate", "hrv", "sleepHours", "doseDays"].every((k) => Array.isArray(b.charts[k]) && b.charts[k].length === n) &&
-    typeof b.urgent === "boolean" && b.urgent === r.urgent && typeof b.urgentRisk === "number" && !("demo" in b);
+    typeof b.urgent === "boolean" && b.urgent === r.urgent && typeof b.urgentRisk === "number" && !("demo" in b) &&
+    b.reviewToday === r.reviewToday && (b.noteFlag === null ? !r.reviewToday :
+      Array.isArray(b.noteFlag.categories) && b.noteFlag.categories.length > 0 && b.recommendations[0].kind === "note");
   if (ok) detailOk++; else failures.push(r.survivorId);
   const needsSocial = r.status !== "ok" && (b.profile?.language !== "English" || b.profile?.livesAlone === "yes");
   if (needsSocial) { socialFlagged++; if (b.recommendations.some((x) => x.kind === "social")) socialOk++; }
@@ -85,9 +92,22 @@ if (M.model && M.schedule && M.steps_rule) {
     s.model.episodeRecall > s.schedule.episodeRecall && s.model.episodeRecall > s.steps_rule.episodeRecall, s);
   check("median lead time >= 2 days", s.model.medianLeadDays >= 2, { medianLeadDays: s.model.medianLeadDays });
   const H = met.body?.headline;
-  check("metrics.headline: urgent, roughPatch (lift CI), realData, each with text",
-    H && ["urgent", "roughPatch", "realData"].every((k) => typeof H[k]?.text === "string") &&
-    H.roughPatch.liftCi95Points?.length === 2 && H.roughPatch.liftCi95Points[0] > 0 && H.order?.[0] === "urgent", H?.roughPatch);
+  check("metrics.headline: urgent, noteScan, roughPatch, realData, each with text, a named baseline and a lift CI",
+    H && ["urgent", "noteScan", "roughPatch", "realData"].every((k) => typeof H[k]?.text === "string") && H.order?.[0] === "urgent" &&
+    ["urgent", "noteScan", "roughPatch"].every((k) => typeof H[k].baseline === "string") &&
+    H.roughPatch.liftCi95Points?.length === 2 && H.roughPatch.liftCi95Points[0] > 0 &&
+    H.urgent.liftCi95Points?.length === 2 && H.noteScan.gainCi95Points?.length === 2, H && { urgent: H.urgent.liftCi95Points, roughPatch: H.roughPatch.liftCi95Points, noteScan: H.noteScan.gainCi95Points });
+  check("one baseline per outcome: the rough-patch headline carries no ER numbers (ER is compared only in the urgent tier)",
+    H && !("erCaught" in H.roughPatch) && !("erLiftCi95Points" in H.roughPatch) && !/ER visits/.test(H.roughPatch.text));
+  check("real-data AUC sits next to the lead-time claim, and the real-data line says what data would be needed",
+    H && H.roughPatch.syntheticOnly === true && typeof H.roughPatch.realDataNextDayAuc === "number" &&
+    H.roughPatch.text.includes(String(H.roughPatch.realDataNextDayAuc)) && /needs/.test(H.realData.text));
+  check("urgent headline gives relative risk and says it is not a prediction", H && /not a prediction/.test(H.urgent.text) && H.urgent.timesUsualRisk > 1);
+  const NS = H?.noteScan;
+  check("diary-note scan: worked examples from held-out patients in English and Spanish, gain and per-language results served",
+    NS && ["English", "Spanish"].every((l) => NS.examples?.some((e) => e.noteLanguage === l)) &&
+    ["English", "Spanish", "Haitian Creole"].every((l) => typeof NS.byLanguage?.[l]?.urgent_or_note === "number"),
+    NS && { gainCi95Points: NS.gainCi95Points, byLanguage: NS.byLanguage });
   const FA = met.body?.fairness;
   const dims = (FA?.dimensions || []).map((x) => x.dimension);
   check("metrics.fairness: language, race, cancer type; each row has recall + CI or a too-few flag",

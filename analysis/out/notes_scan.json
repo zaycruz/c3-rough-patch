@@ -1,0 +1,265 @@
+{
+  "what": "Same-day human-review flag from the diary note (English, Spanish, Haitian Creole word list). Not a model input; does not change the rough-patch or urgent scores.",
+  "self_test": {
+    "cases": 35,
+    "failed": 0
+  },
+  "categories": {
+    "fever_infection": {
+      "en": 7,
+      "es": 5,
+      "ht": 4
+    },
+    "cant_keep_fluids": {
+      "en": 5,
+      "es": 3,
+      "ht": 3
+    },
+    "called_care_team": {
+      "en": 2,
+      "es": 2,
+      "ht": 1
+    },
+    "breathing_chest": {
+      "en": 3,
+      "es": 3,
+      "ht": 3
+    },
+    "bleeding": {
+      "en": 3,
+      "es": 2,
+      "ht": 2
+    },
+    "fall": {
+      "en": 3,
+      "es": 3,
+      "ht": 1
+    },
+    "distress": {
+      "en": 7,
+      "es": 6,
+      "ht": 4
+    },
+    "already_in_care": {
+      "en": 4,
+      "es": 3,
+      "ht": 2
+    }
+  },
+  "coverage_by_language": {
+    "English": {
+      "notes": 20781,
+      "red_flag_notes": 580,
+      "red_flag_share": 0.0279,
+      "already_in_care_notes": 345
+    },
+    "Haitian Creole": {
+      "notes": 2777,
+      "red_flag_notes": 54,
+      "red_flag_share": 0.0194,
+      "already_in_care_notes": 36
+    },
+    "Spanish": {
+      "notes": 12136,
+      "red_flag_notes": 311,
+      "red_flag_share": 0.0256,
+      "already_in_care_notes": 197
+    }
+  },
+  "evaluation": {
+    "val": {
+      "patients": 450,
+      "scored_days": 63141,
+      "er_base_rate_7d": 0.0109,
+      "by_category": {
+        "fever_infection": {
+          "days": 59,
+          "er_within_7d": 0.458
+        },
+        "cant_keep_fluids": {
+          "days": 22,
+          "er_within_7d": 0.136
+        },
+        "called_care_team": {
+          "days": 19,
+          "er_within_7d": 0.368
+        },
+        "breathing_chest": {
+          "days": 0,
+          "er_within_7d": null
+        },
+        "bleeding": {
+          "days": 0,
+          "er_within_7d": null
+        },
+        "fall": {
+          "days": 0,
+          "er_within_7d": null
+        },
+        "distress": {
+          "days": 45,
+          "er_within_7d": 0.022
+        },
+        "already_in_care": {
+          "days": 0,
+          "er_within_7d": null
+        }
+      },
+      "flags": {
+        "note_scan": {
+          "flag_days": 126,
+          "flag_days_per_patient_month": 0.05,
+          "er_within_7d_when_flagged": 0.246,
+          "times_base_rate": 22.6,
+          "er_events": 100,
+          "er_caught_2to7d": 0.16,
+          "er_caught_1to7d": 0.22
+        },
+        "urgent_tier": {
+          "flag_days": 1895,
+          "flag_days_per_patient_month": 0.83,
+          "er_within_7d_when_flagged": 0.068,
+          "times_base_rate": 6.2,
+          "er_events": 100,
+          "er_caught_2to7d": 0.47,
+          "er_caught_1to7d": 0.61
+        },
+        "urgent_or_note": {
+          "flag_days": 1987,
+          "flag_days_per_patient_month": 0.87,
+          "er_within_7d_when_flagged": 0.076,
+          "times_base_rate": 7.0,
+          "er_events": 100,
+          "er_caught_2to7d": 0.54,
+          "er_caught_1to7d": 0.69
+        }
+      }
+    },
+    "test": {
+      "patients": 750,
+      "scored_days": 105058,
+      "er_base_rate_7d": 0.0119,
+      "by_category": {
+        "fever_infection": {
+          "days": 88,
+          "er_within_7d": 0.489
+        },
+        "cant_keep_fluids": {
+          "days": 34,
+          "er_within_7d": 0.147
+        },
+        "called_care_team": {
+          "days": 25,
+          "er_within_7d": 0.44
+        },
+        "breathing_chest": {
+          "days": 0,
+          "er_within_7d": null
+        },
+        "bleeding": {
+          "days": 0,
+          "er_within_7d": null
+        },
+        "fall": {
+          "days": 0,
+          "er_within_7d": null
+        },
+        "distress": {
+          "days": 65,
+          "er_within_7d": 0.046
+        },
+        "already_in_care": {
+          "days": 0,
+          "er_within_7d": null
+        }
+      },
+      "flags": {
+        "note_scan": {
+          "flag_days": 187,
+          "flag_days_per_patient_month": 0.05,
+          "er_within_7d_when_flagged": 0.273,
+          "times_base_rate": 23.0,
+          "er_events": 182,
+          "er_caught_2to7d": 0.176,
+          "er_caught_1to7d": 0.225
+        },
+        "urgent_tier": {
+          "flag_days": 3060,
+          "flag_days_per_patient_month": 0.8,
+          "er_within_7d_when_flagged": 0.077,
+          "times_base_rate": 6.5,
+          "er_events": 182,
+          "er_caught_2to7d": 0.467,
+          "er_caught_1to7d": 0.599
+        },
+        "urgent_or_note": {
+          "flag_days": 3202,
+          "flag_days_per_patient_month": 0.84,
+          "er_within_7d_when_flagged": 0.086,
+          "times_base_rate": 7.2,
+          "er_events": 182,
+          "er_caught_2to7d": 0.566,
+          "er_caught_1to7d": 0.698
+        }
+      }
+    }
+  },
+  "examples_test": [
+    {
+      "noteLanguage": "English",
+      "category": "called_care_team",
+      "note": "Called the nurse line, they said come in if it goes over 100.4",
+      "patientId": "P00034",
+      "erOrAdmissionWithin7Days": true
+    },
+    {
+      "noteLanguage": "English",
+      "category": "cant_keep_fluids",
+      "note": "Threw up twice, couldn't keep water down",
+      "patientId": "P00080",
+      "erOrAdmissionWithin7Days": false
+    },
+    {
+      "noteLanguage": "English",
+      "category": "distress",
+      "note": "Worst day so far.",
+      "patientId": "P00034",
+      "erOrAdmissionWithin7Days": false
+    },
+    {
+      "noteLanguage": "English",
+      "category": "fever_infection",
+      "note": "Chills tonight, took my temp 100.8",
+      "patientId": "P00034",
+      "erOrAdmissionWithin7Days": true
+    },
+    {
+      "noteLanguage": "Spanish",
+      "category": "called_care_team",
+      "note": "Llam\u00e9 a la enfermera, dijo que vaya si pasa de 38. Gracias a Dios por mis vecinos.",
+      "patientId": "P02634",
+      "erOrAdmissionWithin7Days": false
+    },
+    {
+      "noteLanguage": "Spanish",
+      "category": "cant_keep_fluids",
+      "note": "Vomit\u00e9 dos veces.",
+      "patientId": "P00054",
+      "erOrAdmissionWithin7Days": false
+    },
+    {
+      "noteLanguage": "Spanish",
+      "category": "distress",
+      "note": "El peor d\u00eda hasta ahora.",
+      "patientId": "P00228",
+      "erOrAdmissionWithin7Days": false
+    },
+    {
+      "noteLanguage": "Spanish",
+      "category": "fever_infection",
+      "note": "Me duele todo el cuerpo como gripe",
+      "patientId": "P00054",
+      "erOrAdmissionWithin7Days": false
+    }
+  ]
+}

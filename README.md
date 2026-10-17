@@ -3,7 +3,7 @@
 Coach Console module for challenge "The Bad Week Radar" (eMerge hackathon, Healthcare track, Sylvester).
 It watches a survivor's own check-ins, their wearable and their treatment calendar. Every evening it forecasts whether a rough patch will start in the next 7 days, explains which signals drove the forecast, and gives the coach a suggested action.
 
-- Live: https://c3-rough-patch.zay-259.workers.dev (demo page) · API under `/api/c3`. See [CONTRACT.md](CONTRACT.md). For a UI or agent, `GET /api/c3/metrics` → `headline` has the ready-made headline numbers (urgent tier first, rough-patch lift with its CI, real-data caveat), and the roster comes in `priority` order with a `tier` field.
+- Live: https://c3-rough-patch.zay-259.workers.dev (demo page) · API under `/api/c3`. See [CONTRACT.md](CONTRACT.md). For a UI or agent, `GET /api/c3/metrics` → `headline` has the ready-made headline numbers (urgent tier first, then the diary-note safety scan, the rough-patch lift with its CI and the real-data AUC beside it), each with its one named baseline. The roster comes in `priority` order with a `tier` field and a `reviewToday` flag, precomputed as a static asset.
 - Stack: TypeScript Cloudflare Worker (no LLM step needed). The model is trained offline in Python and its outputs are baked into `src/data/*.json`.
 
 ## What counts as a rough patch (and why)
@@ -39,7 +39,7 @@ So the two are at parity. The new label is served because it is the better defin
 - **Wearable**: steps, active minutes, resting heart rate, HRV, sleep, night wakings, skin temperature, watch wear time and gaps, each against the person's own baseline (days t-35 to t-8).
 - **The known treatment schedule.**
 
-Events and diary text are never inputs.
+Events and diary text are never model inputs (diary text drives only the same-day safety scan; tested as an input, it did not help).
 
 **Why ratings lag 3 days.** Scored days exclude days already inside a patch, and a patch day is a rough day with another within 3 days. On a scored day, a rough rating in the last 3 days would therefore reveal that the next 3 days are calm. That is a leak, so ratings are used only up to t-3. Skips are used up to today, because a skip is never a rough day. A deployed version with a causal scoring mask could use yesterday's rating, which on the real fatigue study is the strongest next-day signal (AUC 0.64 vs 0.48 for the wearable).
 
@@ -51,22 +51,23 @@ Events and diary text are never inputs.
 - **Week metrics**: the forecast made on the last day of each week; the target is a patch onset in the next 7 days.
 - **"Caught" and lead time**: an alert counts only if it fires 2 to 7 days before onset.
 
-| Method | Week AUC | Week precision | Week recall | Patches caught 2–7 d early | ER/admissions caught | Median lead (capped at 7) | Alert precision | Alerts / patient / month |
-|---|---|---|---|---|---|---|---|---|
-| Baseline: steps drop | 0.567 | 10% | 10% | 25% | 27% | 5 d | 8% | 0.66 |
-| Baseline: treatment schedule only (same learner) | 0.808 | 20% | 26% | 36% | 22% | 7 d | 11% | 0.36 |
-| Logistic, wearable + schedule (comparison) | 0.768 | 16% | 14% | 25% | 33% | 6 d | 13% | 0.33 |
-| Same learner, wearable + schedule (no check-ins) | 0.819 | 22% | 24% | 41% | 30% | 5 d | 17% | 0.45 |
-| **Radar (gradient boosting, check-ins + wearable + schedule)** | **0.827** | **23%** | **28%** | **48%** | **36%** | **6 d** | **18%** | **0.48** |
+| Method | Week AUC | Week precision | Week recall | Patches caught 2–7 d early | Median lead (capped at 7) | Alert precision | Alerts / patient / month |
+|---|---|---|---|---|---|---|---|
+| Baseline: steps drop | 0.567 | 10% | 10% | 25% | 5 d | 8% | 0.66 |
+| **Baseline: calendar-only rough-patch model** (same learner, treatment calendar only) | 0.808 | 20% | 26% | 36% | 7 d | 11% | 0.36 |
+| Logistic, wearable + schedule (comparison) | 0.768 | 16% | 14% | 25% | 6 d | 13% | 0.33 |
+| Same learner, wearable + schedule (no check-ins) | 0.819 | 22% | 24% | 41% | 5 d | 17% | 0.45 |
+| **Radar (gradient boosting, check-ins + wearable + schedule)** | **0.827** | **23%** | **28%** | **48%** | **6 d** | **18%** | **0.48** |
 
 How to read it:
 
+- **One baseline per outcome.** For rough patches it is the calendar-only rough-patch model above. For ER visits and admissions it is the calendar-only ER model in the urgent tier below (36%), at the urgent budget. This table does not compare ER visits.
 - **The treatment calendar is the honest baseline.** Most rough patches fall in the days after a dose, so a model given only the calendar already does well on AUC.
 - **At a budget a coach can act on, the Radar clearly beats the calendar.**
   - Patches caught early: 48% vs 36% (95% CI +8 to +15 points over patients).
-  - ER/admissions caught early: 36% vs 22% (CI +9 to +20).
   - Alert precision: 18% vs 11%.
-- **What the check-ins add over wearable + calendar:** +3 to +9 points of patches caught (CI), and +1 to +12 points of ER/admissions.
+  - **This lead time is shown on synthetic data only.** On real people the wearable did not predict the next day (AUC 0.482; see the real-data check below).
+- **What the check-ins add over wearable + calendar:** +3 to +9 points of patches caught (CI).
 - **It is still a nudge, not a diagnosis.**
   - About 1 alert in 5.5 is followed by a rough patch within a week, against a base rate of about 1 in 21 weeks.
   - At this budget it catches about half of rough patches. The watch line (12%) catches 70%, at lower precision.
@@ -86,16 +87,32 @@ A separate model predicts an ER visit or hospital admission in the next 7 days. 
 | On held-out patients (182 ER/admissions) | ER caught 2–7 d early | Median lead | Flag precision | Flags / patient / month | AUC | Avg precision |
 |---|---|---|---|---|---|---|
 | Urgent head (wearable + schedule) | 47% | 4 d | 7.4% | 0.38 | 0.859 | 0.064 |
-| Urgent head, schedule only | 36% | 5 d | 6.9% | 0.23 | 0.845 | 0.0486 |
-| Rough-patch Radar, same 3% budget | 29% | 6 d | 6.1% | 0.27 | 0.788 | 0.0362 |
+| **Baseline: calendar-only ER model** (same learner, treatment calendar only) | 36% | 5 d | 6.9% | 0.23 | 0.845 | 0.0486 |
+| Rough-patch Radar at the same 3% budget (for comparison) | 29% | 6 d | 6.1% | 0.27 | 0.788 | 0.0362 |
 
-The base rate is 1.2% of days, so an urgent flag carries about 6x the usual risk. That is enough for a "call today" check-in, and not enough for anything clinical.
+- **Lift over the calendar-only ER model:** 47% vs 36% of ER visits caught 2–7 days early (95% CI +2 to +19 points over patients; `analysis/urgent_ci.py`).
+- **What an urgent flag means:** the base rate is 1.2% of days, so an urgent flag carries about 6x the usual risk. It is not a prediction: about 1 in 14 urgent flags is followed by an ER visit or admission within 7 days. The coach sees "about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction". That is enough for a "call today" check-in, and not for anything clinical.
+
+### Diary-note safety scan (English, Spanish, Haitian Creole)
+
+`analysis/notes_scan.py` reads the day's diary note against a fixed word list per red flag and language: fever or chills, can't keep fluids down, called the care team, breathing or chest pain, bleeding, a fall, and distress. A hit sets `reviewToday` on the survivor and adds "Read today's diary note and call today" as the first action. It does not change the rough-patch or urgent scores. Notes about an ER visit or hospital stay that already happened are their own category and never count as a warning. The word list was written from the note templates before looking at outcomes. 35 written-first cases (including false alarms such as "too hot to walk" and "hot flashes") must pass, or the script stops.
+
+| On held-out patients (182 ER/admissions) | ER caught 2–7 d early | ER within 7 d when flagged | Flag days / patient / month |
+|---|---|---|---|
+| Urgent tier alone (the baseline here) | 47% | 7.7% | 0.80 |
+| **Urgent tier + note scan** | **57%** | 8.6% | 0.84 |
+| Note scan alone | 18% | 27% (about 23x the usual) | 0.05 |
+
+- **Gain from the notes:** +10 points of ER visits caught (95% CI +6 to +15 points over patients) for 5% more flags. Fever notes are followed by an ER visit or admission 49% of the time, and calls to the nurse 44%.
+- **By language** (ER caught 2–7 d, calendar → urgent → urgent + notes): English 36% → 51% → 60%, Spanish 32% → 40% → 54%, Haitian Creole 50% → 44% → 44% (18 events). **Creole speakers gain nothing yet.** About a quarter of their notes are in Creole, and in this data those notes only ever mention tiredness, nausea, appetite or sleep. The Creole word list is in place and passes its cases, but no real Creole red-flag notes exist here to test it on.
+- **Why the notes are not model inputs:** `analysis/exp/notes_features.py` added them to the rough-patch model under the same 3-day lag as the check-ins. Validation week AUC moved by -0.004 and recall by 0, which fails the rule fixed beforehand (+0.005 AUC and no recall loss), so they stay out of the model.
 
 ### Real-data check (fatigue study, 204 people with a Fitbit)
 
 - On real bad days, steps are lower than the person's own normal: -0.235 SD on bad days vs 0.073 SD on other days, a same-day AUC of about 0.59.
 - But a next-day forecast from the previous 2 days of wearable data alone scores **AUC 0.482** (chance). Yesterday's own rating scores 0.64.
 - So the lead time is shown on the synthetic data only. On real people the wearable confirms a bad day but does not yet predict one. The deck should say so.
+- **What real data would settle it:** the wearable, daily check-ins and dated ER visits and admissions, for a few hundred survivors on treatment over several months. The public studies we found have the wearable and the ratings, but no clinical events.
 
 ## Self-check against a judging guide
 
@@ -103,10 +120,10 @@ Challenge 3 ships without judging criteria, so we scored ourselves against the C
 
 | Aspect | What we did | Where it is weak |
 |---|---|---|
-| Scientific soundness | The outcome is relative to the person: feeling against their own median, 8 weekly symptoms against their own usual, plus clinical events (ER, admission, pause). One bad day is not a patch. A cross-check against the old label shows the new one does not grade itself. Inputs are only data known by the evening of the forecast: the person's check-ins (ratings lagged 3 days to avoid a leak through the scoring mask), skips and missed calls, the wearable vs their own baseline, and the treatment calendar. Events and diary text are never inputs. | 55% of daily check-ins are missing. Skips predict rough days (1.8x after 5), but filling them in from the wearable made the label track disengagement, so missed days stay unlabelled and the label still under-counts. |
-| Validation | Patients the model never saw (750). Thresholds set on separate validation patients. Every method gets the same alert budget. **Lift over the schedule-only model, 95% CI over patients:** patches caught +8 to +15 points; ER/admissions caught +9 to +20 points, at a 5% alert budget. **Calibrated:** predicted vs observed 7-day risk agrees in every decile (top decile 19% predicted vs 19% observed). Brier score 0.0407 vs 0.0445 for always guessing the base rate. | The lift over the calendar is real but small. Lead time is capped at the 7-day window: the "7" bucket means 7 or more. The calendar baseline has the same median, so lead time is not the wearable's win; the extra patches and ER visits caught are. |
+| Scientific soundness | The outcome is relative to the person: feeling against their own median, 8 weekly symptoms against their own usual, plus clinical events (ER, admission, pause). One bad day is not a patch. A cross-check against the old label shows the new one does not grade itself. Inputs are only data known by the evening of the forecast: the person's check-ins (ratings lagged 3 days to avoid a leak through the scoring mask), skips and missed calls, the wearable vs their own baseline, and the treatment calendar. Events and diary text are never model inputs (diary text drives only the same-day safety scan; tested as an input, it did not help). | 55% of daily check-ins are missing. Skips predict rough days (1.8x after 5), but filling them in from the wearable made the label track disengagement, so missed days stay unlabelled and the label still under-counts. |
+| Validation | Patients the model never saw (750). Thresholds set on separate validation patients. Every method gets the same alert budget. **Lift over the calendar-only model, 95% CI over patients:** patches caught +8 to +15 points at a 5% alert budget; ER visits caught +2 to +19 points (urgent tier vs the calendar-only ER model, 3% budget). **Calibrated:** predicted vs observed 7-day risk agrees in every decile (top decile 19% predicted vs 19% observed). Brier score 0.0407 vs 0.0445 for always guessing the base rate. | The lift over the calendar is real but small. Lead time is capped at the 7-day window: the "7" bucket means 7 or more. The calendar baseline has the same median, so lead time is not the wearable's win; the extra patches and ER visits caught are. Lead time is shown on synthetic data only (real-data next-day AUC 0.482). |
 | Clinical insight | Risk peaks in the days after a dose (the chemo low point), climbs with cycle number, and is higher for IV chemo and chemoradiation. Wearable signals add risk on top: broken sleep, rising resting heart rate, lower HRV, fewer steps, rising skin temperature, watch left off. Before an ER visit, resting heart rate starts rising and steps start falling about 8 days out (last week: +1.9 bpm, -670 steps a day; the day before: +4.2 bpm, -2,300 steps). These are associations, not causes. | All of this is from made-up data whose patterns were designed in. On the real fatigue study, the wearable confirms a bad day on the day itself but does not predict the next day (AUC 0.482). |
-| Fairness | Week-level AUC, recall and precision by age, sex, race and ethnicity, language, cancer type, device and living alone. AUC is 0.76 to 0.85 in every cancer type and group with enough data. Groups with fewer than 30 rough weeks are marked "too few to judge" rather than reported. | `GET /api/c3/metrics` → `fairness` gives recall at the alert line per group with a 95% CI (patient bootstrap) and a plain-language summary. Only sarcoma is clearly below the overall 28% (13%, CI 0–26%). Haitian Creole speakers (22%, CI 10–36%) and breast cancer (21%, CI 14–28%) are lower, but their CIs still reach the overall: too few patients to be sure. Flagged survivors who prefer Spanish or Haitian Creole, or who live alone, get a social-needs coach action (`kind: "social"`). Asian patients, 10 cancer types and "other" race are too small to judge. |
+| Fairness | Week-level AUC, recall and precision by age, sex, race and ethnicity, language, cancer type, device and living alone. AUC is 0.76 to 0.85 in every cancer type and group with enough data. Groups with fewer than 30 rough weeks are marked "too few to judge" rather than reported. | `GET /api/c3/metrics` → `fairness` gives recall at the alert line per group with a 95% CI (patient bootstrap) and a plain-language summary. Only sarcoma is clearly below the overall 28% (13%, CI 0–26%). Haitian Creole speakers (22%, CI 10–36%) and breast cancer (21%, CI 14–28%) are lower, but their CIs still reach the overall: too few patients to be sure. Flagged survivors who prefer Spanish or Haitian Creole, or who live alone, get a social-needs coach action (`kind: "social"`). The diary-note scan reads English, Spanish and Creole and lifts ER catch for English and Spanish speakers; it adds nothing yet for Creole speakers (see the scan section). Asian patients, 10 cancer types and "other" race are too small to judge. |
 | Reproducibility | A fixed seed, a split by patient, pinned dependencies (`uv.lock`), and one command (`scripts/reproduce.sh`, see [REPRODUCE.md](REPRODUCE.md)) from the sponsor download to every README number, checked against this README. `npm run e2e` re-checks the live API and saves `runs/e2e-*.json`; `npm run contract` rebuilds CONTRACT.md from that run. | Training takes about 3 minutes on a laptop (it also trains the v1 cross-check model and the check-in nowcast). |
 
 ## Run it
@@ -128,7 +145,7 @@ Verified by deploying to workers.dev and running the E2E check against it. No de
 3. **Open P02836** (52M, lung cancer, alert) (45 s). Risk 34% against an alert line of 16%. The calendar alone says 25% (mid-chemoradiation), and the headline says why it is higher: **they have gone quiet**. Their last rating was their usual 5/5, then they skipped the last 3 check-ins. Their check-ins add 10 points of risk, and steps are 34% below their usual. Suggested action: a short, no-pressure message, and move the coaching call earlier.
 4. **Reveal (15 s).** Click "what happened next". The rough patch started 7 days later, with an ER visit and hospital admission on day 8. The coach had a week's head start.
 5. **Contrast (15 s).** Open P02465. The calendar alone says 2%, the Radar says 51%: sleep is broken up (8 wakings a night vs 1), steps are down 64%, and the watch was off 2 of the last 7 days. This is a rough patch the schedule cannot see. It started the next day.
-6. **Urgent (15 s).** The two red "urgent" survivors at the top have an ER-level risk 5 to 9 times the usual. For P03000, treatment was paused 6 days later. Neither went to the ER in the next 7 days, though: urgent flags are right about 1 time in 13. It is a reason to call, not a diagnosis.
+6. **Urgent (15 s).** The two red "urgent" survivors at the top read "about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction". For P03000, treatment was paused 6 days later. Neither went to the ER in the next 7 days, though: about 1 urgent flag in 14 is followed by an ER visit. It is a reason to call, not a diagnosis.
 7. **Honesty (15 s).** The metrics table: model vs calendar vs steps rule, same alert budget. Then the real-data caveat.
 
 ## Files

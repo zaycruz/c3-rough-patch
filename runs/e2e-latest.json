@@ -1,6 +1,6 @@
 {
   "base": "https://c3-rough-patch.zay-259.workers.dev",
-  "ranAt": "2026-10-17T16:35:50.093Z",
+  "ranAt": "2026-10-17T17:17:02.430Z",
   "passed": true,
   "checks": [
     {
@@ -31,7 +31,20 @@
       "ok": true
     },
     {
-      "name": "roster sorted urgent > alert > watch > ok",
+      "name": "roster sorted urgent > review today (red-flag note) > alert > watch > ok",
+      "ok": true
+    },
+    {
+      "name": "roster is precomputed: served as a static JSON asset with CORS and a cache header",
+      "ok": true,
+      "info": {
+        "ms": 125,
+        "contentType": "application/json; charset=utf-8",
+        "cacheControl": "public, max-age=60"
+      }
+    },
+    {
+      "name": "urgent headlines say relative risk, not a prediction",
       "ok": true
     },
     {
@@ -127,27 +140,66 @@
       }
     },
     {
-      "name": "metrics.headline: urgent, roughPatch (lift CI), realData, each with text",
+      "name": "metrics.headline: urgent, noteScan, roughPatch, realData, each with text, a named baseline and a lift CI",
       "ok": true,
       "info": {
-        "text": "Catches 48% of rough patches 2-7 days early vs 36% from the treatment calendar (95% CI +8 to +15 points), at the same alert budget of about one new alert per coach per day; ER visits and admissions 36% vs 22% (CI +8 to +20).",
-        "caught": 0.476,
-        "caughtCalendar": 0.359,
-        "liftCi95Points": [
+        "urgent": [
+          2,
+          19
+        ],
+        "roughPatch": [
           7.8,
           15.2
         ],
-        "erCaught": 0.363,
-        "erCaughtCalendar": 0.22,
-        "erLiftCi95Points": [
-          8.5,
-          19.9
+        "noteScan": [
+          5.5,
+          14.9
+        ]
+      }
+    },
+    {
+      "name": "one baseline per outcome: the rough-patch headline carries no ER numbers (ER is compared only in the urgent tier)",
+      "ok": true
+    },
+    {
+      "name": "real-data AUC sits next to the lead-time claim, and the real-data line says what data would be needed",
+      "ok": true
+    },
+    {
+      "name": "urgent headline gives relative risk and says it is not a prediction",
+      "ok": true
+    },
+    {
+      "name": "diary-note scan: worked examples from held-out patients in English and Spanish, gain and per-language results served",
+      "ok": true,
+      "info": {
+        "gainCi95Points": [
+          5.5,
+          14.9
         ],
-        "alertPrecision": 0.184,
-        "alertPrecisionCalendar": 0.106,
-        "alertsPerPatientMonth": 0.48,
-        "medianLeadDays": 6,
-        "alertBudget": "thresholds put 5% of quiet validation days on alert, same budget for every method"
+        "byLanguage": {
+          "English": {
+            "patients": 445,
+            "er_events": 107,
+            "calendar": 0.364,
+            "urgent": 0.505,
+            "urgent_or_note": 0.598
+          },
+          "Haitian Creole": {
+            "patients": 60,
+            "er_events": 18,
+            "calendar": 0.5,
+            "urgent": 0.444,
+            "urgent_or_note": 0.444
+          },
+          "Spanish": {
+            "patients": 245,
+            "er_events": 57,
+            "calendar": 0.316,
+            "urgent": 0.404,
+            "urgent_or_note": 0.544
+          }
+        }
       }
     },
     {
@@ -187,25 +239,27 @@
   "responses": {
     "/": {
       "status": 200,
-      "ms": 781,
+      "ms": 262,
       "bytes": 13086
     },
     "/api/c3/survivors": {
       "status": 200,
-      "ms": 370,
+      "ms": 125,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c0b6f35adc7d75-MIA",
+        "cf-cache-status": "HIT",
+        "cf-ray": "a4c0f41f09880838-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 16:35:07 GMT",
+        "date": "Sat, 17 Oct 2026 17:16:53 GMT",
+        "etag": "W/\"42d0cad39c4f488b7806018fdc47a08f\"",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=honL%2FqcgfAdwwJJBWd0umCfXQEH9uD0nbzDFYA3zCMYM4lCL0RWRkF4Bfp7C4%2BYQrfqXCAY1G2Qn0si3y4LbOI2bS%2FsblztU7LtHk33jp3gVY2J52aN8EOtPNkTbOFmRei16y8QQKRvqoX4N%2FIyU00uFEn2p\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=u3rrtG5BzOVoyho2Szr0gdTbYYmv6K6uYp2VyhTgb9yyBJ0tErODY4%2FONZ1DjpC1DyKG0zCYpcGR0VOQnbVB1T5sfCXkPoh8%2FUo0sI5p3wtCgZJKmyX2sjzvrFMLvbLm3smT%2BH7gb9oghP4DHIZ92G5JFAa0\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
@@ -214,25 +268,27 @@
           "survivorId": "c3-P03000",
           "displayName": "P03000 · 49M · kidney",
           "status": "alert",
-          "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
+          "headline": "Urgent review: about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction",
           "updatedAt": "2025-01-31T20:00:00Z",
           "urgent": true,
           "tier": "urgent",
           "priority": 1,
           "risk": 0.078,
-          "urgentRisk": 0.104
+          "urgentRisk": 0.104,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02185",
           "displayName": "P02185 · 42M · lymphoma",
           "status": "alert",
-          "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+          "headline": "Urgent review: about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction",
           "updatedAt": "2025-01-31T20:00:00Z",
           "urgent": true,
           "tier": "urgent",
           "priority": 2,
           "risk": 0.221,
-          "urgentRisk": 0.06
+          "urgentRisk": 0.06,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02465",
@@ -244,7 +300,8 @@
           "tier": "alert",
           "priority": 3,
           "risk": 0.507,
-          "urgentRisk": 0.001
+          "urgentRisk": 0.001,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02836",
@@ -256,7 +313,8 @@
           "tier": "alert",
           "priority": 4,
           "risk": 0.339,
-          "urgentRisk": 0.009
+          "urgentRisk": 0.009,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01289",
@@ -268,7 +326,8 @@
           "tier": "alert",
           "priority": 5,
           "risk": 0.168,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00454",
@@ -280,7 +339,8 @@
           "tier": "watch",
           "priority": 6,
           "risk": 0.145,
-          "urgentRisk": 0.014
+          "urgentRisk": 0.014,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01652",
@@ -292,7 +352,8 @@
           "tier": "watch",
           "priority": 7,
           "risk": 0.141,
-          "urgentRisk": 0.007
+          "urgentRisk": 0.007,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02859",
@@ -304,7 +365,8 @@
           "tier": "watch",
           "priority": 8,
           "risk": 0.125,
-          "urgentRisk": 0.009
+          "urgentRisk": 0.009,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01560",
@@ -316,7 +378,8 @@
           "tier": "watch",
           "priority": 9,
           "risk": 0.121,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02078",
@@ -328,7 +391,8 @@
           "tier": "ok",
           "priority": 10,
           "risk": 0.092,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02009",
@@ -340,7 +404,8 @@
           "tier": "ok",
           "priority": 11,
           "risk": 0.083,
-          "urgentRisk": 0.03
+          "urgentRisk": 0.03,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01389",
@@ -352,7 +417,8 @@
           "tier": "ok",
           "priority": 12,
           "risk": 0.082,
-          "urgentRisk": 0.001
+          "urgentRisk": 0.001,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00235",
@@ -364,7 +430,8 @@
           "tier": "ok",
           "priority": 13,
           "risk": 0.068,
-          "urgentRisk": 0.005
+          "urgentRisk": 0.005,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02402",
@@ -376,7 +443,8 @@
           "tier": "ok",
           "priority": 14,
           "risk": 0.068,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02538",
@@ -388,7 +456,8 @@
           "tier": "ok",
           "priority": 15,
           "risk": 0.067,
-          "urgentRisk": 0.003
+          "urgentRisk": 0.003,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02604",
@@ -400,7 +469,8 @@
           "tier": "ok",
           "priority": 16,
           "risk": 0.066,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02312",
@@ -412,7 +482,8 @@
           "tier": "ok",
           "priority": 17,
           "risk": 0.064,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02498",
@@ -424,7 +495,8 @@
           "tier": "ok",
           "priority": 18,
           "risk": 0.061,
-          "urgentRisk": 0.016
+          "urgentRisk": 0.016,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02942",
@@ -436,7 +508,8 @@
           "tier": "ok",
           "priority": 19,
           "risk": 0.054,
-          "urgentRisk": 0.026
+          "urgentRisk": 0.026,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02529",
@@ -448,7 +521,8 @@
           "tier": "ok",
           "priority": 20,
           "risk": 0.051,
-          "urgentRisk": 0.012
+          "urgentRisk": 0.012,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00145",
@@ -460,7 +534,8 @@
           "tier": "ok",
           "priority": 21,
           "risk": 0.047,
-          "urgentRisk": 0.028
+          "urgentRisk": 0.028,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00557",
@@ -472,7 +547,8 @@
           "tier": "ok",
           "priority": 22,
           "risk": 0.043,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01758",
@@ -484,7 +560,8 @@
           "tier": "ok",
           "priority": 23,
           "risk": 0.042,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00761",
@@ -496,7 +573,8 @@
           "tier": "ok",
           "priority": 24,
           "risk": 0.034,
-          "urgentRisk": 0.007
+          "urgentRisk": 0.007,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02202",
@@ -508,7 +586,8 @@
           "tier": "ok",
           "priority": 25,
           "risk": 0.029,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02440",
@@ -520,7 +599,8 @@
           "tier": "ok",
           "priority": 26,
           "risk": 0.024,
-          "urgentRisk": 0.008
+          "urgentRisk": 0.008,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00393",
@@ -532,7 +612,8 @@
           "tier": "ok",
           "priority": 27,
           "risk": 0.023,
-          "urgentRisk": 0.006
+          "urgentRisk": 0.006,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01743",
@@ -544,7 +625,8 @@
           "tier": "ok",
           "priority": 28,
           "risk": 0.023,
-          "urgentRisk": 0.004
+          "urgentRisk": 0.004,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00297",
@@ -556,7 +638,8 @@
           "tier": "ok",
           "priority": 29,
           "risk": 0.021,
-          "urgentRisk": 0.001
+          "urgentRisk": 0.001,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00439",
@@ -568,7 +651,8 @@
           "tier": "ok",
           "priority": 30,
           "risk": 0.019,
-          "urgentRisk": 0.012
+          "urgentRisk": 0.012,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02891",
@@ -580,7 +664,8 @@
           "tier": "ok",
           "priority": 31,
           "risk": 0.018,
-          "urgentRisk": 0.005
+          "urgentRisk": 0.005,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02720",
@@ -592,7 +677,8 @@
           "tier": "ok",
           "priority": 32,
           "risk": 0.018,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00386",
@@ -604,7 +690,8 @@
           "tier": "ok",
           "priority": 33,
           "risk": 0.016,
-          "urgentRisk": 0.003
+          "urgentRisk": 0.003,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02710",
@@ -616,7 +703,8 @@
           "tier": "ok",
           "priority": 34,
           "risk": 0.015,
-          "urgentRisk": 0.002
+          "urgentRisk": 0.002,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01011",
@@ -628,7 +716,8 @@
           "tier": "ok",
           "priority": 35,
           "risk": 0.015,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00718",
@@ -640,7 +729,8 @@
           "tier": "ok",
           "priority": 36,
           "risk": 0.014,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00855",
@@ -652,7 +742,8 @@
           "tier": "ok",
           "priority": 37,
           "risk": 0.013,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00963",
@@ -664,7 +755,8 @@
           "tier": "ok",
           "priority": 38,
           "risk": 0.008,
-          "urgentRisk": 0.001
+          "urgentRisk": 0.001,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01802",
@@ -676,7 +768,8 @@
           "tier": "ok",
           "priority": 39,
           "risk": 0.007,
-          "urgentRisk": 0.001
+          "urgentRisk": 0.001,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01173",
@@ -688,7 +781,8 @@
           "tier": "ok",
           "priority": 40,
           "risk": 0.007,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00823",
@@ -700,7 +794,8 @@
           "tier": "ok",
           "priority": 41,
           "risk": 0.006,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01543",
@@ -712,7 +807,8 @@
           "tier": "ok",
           "priority": 42,
           "risk": 0.006,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01128",
@@ -724,7 +820,8 @@
           "tier": "ok",
           "priority": 43,
           "risk": 0.005,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00153",
@@ -736,7 +833,8 @@
           "tier": "ok",
           "priority": 44,
           "risk": 0.005,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00691",
@@ -748,7 +846,8 @@
           "tier": "ok",
           "priority": 45,
           "risk": 0.002,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00938",
@@ -760,7 +859,8 @@
           "tier": "ok",
           "priority": 46,
           "risk": 0.002,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02770",
@@ -772,7 +872,8 @@
           "tier": "ok",
           "priority": 47,
           "risk": 0.002,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01699",
@@ -784,7 +885,8 @@
           "tier": "ok",
           "priority": 48,
           "risk": 0.002,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01769",
@@ -796,7 +898,8 @@
           "tier": "ok",
           "priority": 49,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02523",
@@ -808,7 +911,8 @@
           "tier": "ok",
           "priority": 50,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02287",
@@ -820,7 +924,8 @@
           "tier": "ok",
           "priority": 51,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01265",
@@ -832,7 +937,8 @@
           "tier": "ok",
           "priority": 52,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00751",
@@ -844,7 +950,8 @@
           "tier": "ok",
           "priority": 53,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00602",
@@ -856,7 +963,8 @@
           "tier": "ok",
           "priority": 54,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02033",
@@ -868,7 +976,8 @@
           "tier": "ok",
           "priority": 55,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P02422",
@@ -880,7 +989,8 @@
           "tier": "ok",
           "priority": 56,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00253",
@@ -892,7 +1002,8 @@
           "tier": "ok",
           "priority": 57,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01208",
@@ -904,7 +1015,8 @@
           "tier": "ok",
           "priority": 58,
           "risk": 0.001,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P01749",
@@ -916,7 +1028,8 @@
           "tier": "ok",
           "priority": 59,
           "risk": 0,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         },
         {
           "survivorId": "c3-P00949",
@@ -928,26 +1041,27 @@
           "tier": "ok",
           "priority": 60,
           "risk": 0,
-          "urgentRisk": 0
+          "urgentRisk": 0,
+          "reviewToday": false
         }
       ]
     },
     "/api/c3/survivors/c3-P03000": {
       "status": 200,
-      "ms": 660,
+      "ms": 133,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c0b6f6aba07d75-MIA",
+        "cf-ray": "a4c0f41fabdd0838-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 16:35:07 GMT",
+        "date": "Sat, 17 Oct 2026 17:16:53 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=I1If1qpqUzztuDI3XfbsnLaOxRiejkqcb9GRBY9RWLCoEw70%2FPfZelIf4AveArOCrGILDzbQtHYNo0J2%2Bp5IlK3i8oPNbTbFB5x4708mM72OhTJ5pyw6uhpVpBThhta0hFSz8IctIBsqX4XQs4CA3jzPglsI\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=EIapmM0zRR863eKXCbang0f7gHhBSR2joAHZrk90UZ%2FVRvmSgSYKo5VUPY%2B%2Fe9DVdiZzbaAbG%2F43lFAe3DNwDc7GQ5ZNqGCD%2Fu8rR0ORhbLpmI0%2BETFhlej62S01Ri7McWRlpYKIZt6xDGUwGW%2B63sD9ZwO5\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
@@ -955,10 +1069,12 @@
         "survivorId": "c3-P03000",
         "displayName": "P03000 · 49M · kidney",
         "status": "alert",
-        "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
-        "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 10% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 8% (alert line 16%). The treatment calendar alone gives 2%; their check-ins move it +0 points and wearable signals +6. Biggest driver: Sleep efficiency 82% vs usual 88%, waking 3.0x a night vs 2.0x, 6.4 h asleep vs 6.9 h.",
+        "headline": "Urgent review: about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction",
+        "summary": "Urgent review: their wearable and calendar pattern puts them in the top 3% for ER or hospital risk. Flags like this carry about 6x the usual risk, but most are false alarms: about 1 in 14 is followed by an ER visit or admission within 7 days. Risk of a rough patch in the next 7 days: 8% (alert line 16%). The treatment calendar alone gives 2%; their check-ins move it +0 points and wearable signals +6. Biggest driver: Sleep efficiency 82% vs usual 88%, waking 3.0x a night vs 2.0x, 6.4 h asleep vs 6.9 h.",
         "urgent": true,
         "urgentRisk": 0.104,
+        "reviewToday": false,
+        "noteFlag": null,
         "risk": 0.078,
         "scheduleRisk": 0.021,
         "thresholds": {
@@ -1008,7 +1124,7 @@
         "recommendations": [
           {
             "action": "Call today. Ask how they feel, about fever, fluids and anything new. If anything is off, have them call their care team now.",
-            "why": "Their wearable pattern matches the days before an ER visit or hospital stay. The coach does not diagnose; the care team decides.",
+            "why": "Their wearable pattern looks like the days before an ER visit or hospital stay (about 6x the usual risk; about 1 in 14 such flags is followed by one). The coach does not diagnose; the care team decides.",
             "urgency": "today"
           },
           {
@@ -1531,20 +1647,20 @@
     },
     "/api/c3/survivors/c3-nope": {
       "status": 404,
-      "ms": 121,
+      "ms": 143,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c0b7f63af47d75-MIA",
+        "cf-ray": "a4c0f456c9f20838-MIA",
         "connection": "keep-alive",
         "content-length": "30",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 16:35:48 GMT",
+        "date": "Sat, 17 Oct 2026 17:17:01 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=1yRFhj1qdrdYe370wg58UrhQnf1LhNollJpvMfUA52uG5icivO%2FConLLvbe%2Btc9kvmxg069xMbCpmO93QgbF7VRwrIvdztp2o758S3sjnAKPNijAbVBzcfS9BzYisOz1mUbNR5fQixOqyGFac2atbTooBPY9\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=3g9fDbOvq%2FRd2g1gepZLbLBRuNz794r0ANRgxWYTgGlcLaGYdZ%2BM8tCvWrguZ92%2FipWaDQ1Wh1PKd2MLTxb4spk99RjWxVhaGtsvw0g84DlQmoCHKXk1idNrSyp9FU4a4nL8ayxgqU2ASReoqFoQwEmWqJkq\"}]}",
         "server": "cloudflare"
       },
       "body": {
@@ -1553,20 +1669,20 @@
     },
     "/api/c3/metrics": {
       "status": 200,
-      "ms": 1189,
+      "ms": 408,
       "headers": {
         "access-control-allow-headers": "content-type",
         "access-control-allow-methods": "GET, OPTIONS",
         "access-control-allow-origin": "*",
         "alt-svc": "h3=\":443\"; ma=86400",
         "cache-control": "public, max-age=60",
-        "cf-ray": "a4c0b7fd28efc0ce-MIA",
+        "cf-ray": "a4c0f4598c6cc731-MIA",
         "connection": "keep-alive",
         "content-encoding": "br",
         "content-type": "application/json; charset=utf-8",
-        "date": "Sat, 17 Oct 2026 16:35:49 GMT",
+        "date": "Sat, 17 Oct 2026 17:17:02 GMT",
         "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=D03%2Bdp5kUuufdApHh%2FgXNAoE1PBt2T7UvTWx1o%2FpPj3matC%2BCWHBB30wG393UI0eSugJlxmw4a%2BZKRhUp1WsROJEVtl24cnVSsx34cFm6K7RZpAAk8mT2gK7pRB8K1p%2BR%2BcnTeXuPhM0pqLmI2l7QFHm7luZ\"}]}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=YKmzKnbDL3muJPx%2FEad8jXYDozHy33kFSxqUgUbUcrgJ34GgCqcolBBxMdapo1wTkMkR3s7ztliREO7tn861Zq%2FpsDVoMZvfvrJMjjTHWM7wAX1ihasBSX4Vd7gCLPqY8EAZfaod8djWKp9nDHa3513wKFQV\"}]}",
         "server": "cloudflare",
         "transfer-encoding": "chunked"
       },
@@ -2445,40 +2561,137 @@
         },
         "headline": {
           "urgent": {
-            "text": "Urgent ER tier: catches 47% of ER visits and hospital admissions 2-7 days early vs 36% from the treatment calendar; when it flags, an ER visit follows 7.4% of the time vs a 1.2% base rate.",
+            "baseline": "Calendar-only ER model (treatment calendar only, same 3% urgent budget)",
+            "text": "Urgent ER tier: catches 47% of ER visits and hospital admissions 2-7 days early vs 36% for the calendar-only ER model at the same 3% budget (95% CI +2 to +19 points). An urgent flag means about 6x the usual risk, not a prediction: about 1 in 14 is followed by an ER visit or admission within 7 days.",
             "erCaught": 0.467,
             "erCaughtCalendar": 0.363,
+            "liftCi95Points": [
+              2,
+              19
+            ],
             "flagPrecision": 0.074,
             "baseRate": 0.0119,
+            "timesUsualRisk": 6.2,
             "flagsPerPatientMonth": 0.38
           },
+          "noteScan": {
+            "baseline": "Urgent ER tier alone",
+            "text": "Diary-note safety scan (English, Spanish, Haitian Creole word list): a red-flag note (fever or chills, can't keep fluids down, called the nurse) is followed by an ER visit or admission 27% of the time, about 23x the usual. With the urgent tier it catches 57% of ER visits 2-7 days early vs 47% for the tier alone (95% CI +6 to +15 points), for 5% more flags. No gain yet for Haitian Creole speakers: in this data their Creole notes never describe a red flag.",
+            "erCaught": 0.566,
+            "erCaughtUrgentOnly": 0.467,
+            "gainCi95Points": [
+              5.5,
+              14.9
+            ],
+            "flagPrecision": 0.273,
+            "timesUsualRisk": 23,
+            "byLanguage": {
+              "English": {
+                "patients": 445,
+                "er_events": 107,
+                "calendar": 0.364,
+                "urgent": 0.505,
+                "urgent_or_note": 0.598
+              },
+              "Haitian Creole": {
+                "patients": 60,
+                "er_events": 18,
+                "calendar": 0.5,
+                "urgent": 0.444,
+                "urgent_or_note": 0.444
+              },
+              "Spanish": {
+                "patients": 245,
+                "er_events": 57,
+                "calendar": 0.316,
+                "urgent": 0.404,
+                "urgent_or_note": 0.544
+              }
+            },
+            "examples": [
+              {
+                "noteLanguage": "English",
+                "category": "called_care_team",
+                "note": "Called the nurse line, they said come in if it goes over 100.4",
+                "patientId": "P00034",
+                "erOrAdmissionWithin7Days": true
+              },
+              {
+                "noteLanguage": "English",
+                "category": "cant_keep_fluids",
+                "note": "Threw up twice, couldn't keep water down",
+                "patientId": "P00080",
+                "erOrAdmissionWithin7Days": false
+              },
+              {
+                "noteLanguage": "English",
+                "category": "distress",
+                "note": "Worst day so far.",
+                "patientId": "P00034",
+                "erOrAdmissionWithin7Days": false
+              },
+              {
+                "noteLanguage": "English",
+                "category": "fever_infection",
+                "note": "Chills tonight, took my temp 100.8",
+                "patientId": "P00034",
+                "erOrAdmissionWithin7Days": true
+              },
+              {
+                "noteLanguage": "Spanish",
+                "category": "called_care_team",
+                "note": "Llamé a la enfermera, dijo que vaya si pasa de 38. Gracias a Dios por mis vecinos.",
+                "patientId": "P02634",
+                "erOrAdmissionWithin7Days": false
+              },
+              {
+                "noteLanguage": "Spanish",
+                "category": "cant_keep_fluids",
+                "note": "Vomité dos veces.",
+                "patientId": "P00054",
+                "erOrAdmissionWithin7Days": false
+              },
+              {
+                "noteLanguage": "Spanish",
+                "category": "distress",
+                "note": "El peor día hasta ahora.",
+                "patientId": "P00228",
+                "erOrAdmissionWithin7Days": false
+              },
+              {
+                "noteLanguage": "Spanish",
+                "category": "fever_infection",
+                "note": "Me duele todo el cuerpo como gripe",
+                "patientId": "P00054",
+                "erOrAdmissionWithin7Days": false
+              }
+            ]
+          },
           "roughPatch": {
-            "text": "Catches 48% of rough patches 2-7 days early vs 36% from the treatment calendar (95% CI +8 to +15 points), at the same alert budget of about one new alert per coach per day; ER visits and admissions 36% vs 22% (CI +8 to +20).",
+            "baseline": "Calendar-only rough-patch model (treatment calendar only, same 5% alert budget)",
+            "text": "Catches 48% of rough patches 2-7 days early vs 36% for the calendar-only rough-patch model (95% CI +8 to +15 points), at the same alert budget of about one new alert per coach per day. This lead time is shown on synthetic data only: on real people the wearable did not predict the next day (AUC 0.482).",
             "caught": 0.476,
             "caughtCalendar": 0.359,
             "liftCi95Points": [
               7.8,
               15.2
             ],
-            "erCaught": 0.363,
-            "erCaughtCalendar": 0.22,
-            "erLiftCi95Points": [
-              8.5,
-              19.9
-            ],
             "alertPrecision": 0.184,
             "alertPrecisionCalendar": 0.106,
             "alertsPerPatientMonth": 0.48,
             "medianLeadDays": 6,
-            "alertBudget": "thresholds put 5% of quiet validation days on alert, same budget for every method"
+            "alertBudget": "thresholds put 5% of quiet validation days on alert, same budget for every method",
+            "syntheticOnly": true,
+            "realDataNextDayAuc": 0.482
           },
           "realData": {
-            "text": "On real data (fatigue study, 204 people), wearables confirm a bad day but do not yet predict one (next-day AUC 0.482); the person's own rating does better (0.64). Lead times are shown on synthetic data.",
+            "text": "On real data (fatigue study, 204 people), wearables confirm a bad day but do not predict one (next-day AUC 0.482); the person's own rating does better (0.64). Proving lead time on real people needs the wearable, daily check-ins and dated ER visits and admissions for a few hundred survivors on treatment over several months; the public studies we found have the wearable and ratings but no clinical events.",
             "nextDayAucWearable": 0.482,
             "nextDayAucSelfRating": 0.64
           },
           "order": [
             "urgent",
+            "noteScan",
             "roughPatch",
             "realData"
           ]
