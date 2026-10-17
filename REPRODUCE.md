@@ -48,7 +48,9 @@ Those 18 rows are listed under `platform_tolerance` in `analysis/expected.json`.
 - **percentages and CI points:** the printed value is within 2 points, or, for a language group, within 2 ER events of that group (Creole has 18 test ER events, so 1 event is 6 points);
 - **rates and AUCs:** within the stated amount (0.03 flags/patient/month, 0.005 AUC, 0.05 patches/patient).
 
-Every other row must match exactly. What changes on Linux: urgent ER caught 49% (README 47%), CI +4 to +21 (README +2 to +19); urgent + notes 58% (57%); Creole urgent 50% (44%), so on Linux the urgent tier does not lose ground for Creole speakers, and the notes still add nothing for them.
+Every other row must match exactly. What changes on Linux: urgent ER caught 49% (README 47%), CI +4 to +21 (README +2 to +19); urgent + notes 58% (57%); Creole urgent 50% (44%). The Creole rows rest on 18 test ER events, and one event moves them 6 points, so neither the macOS drop (50 → 44) nor the Linux parity (50 → 50) is a finding. On both platforms the notes add nothing for Creole speakers.
+
+The 2-event rule is wider than ±2 points for small groups. Three rows pass only because of it: Spanish urgent (4 points = 2 of 57 events), Creole urgent and Creole urgent + notes (6 points = 1 of 18 events each). Every other tolerated row is within ±2 points or the stated amount.
 
 ## 3. The proof: fresh clone on Cloudflare
 

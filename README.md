@@ -104,7 +104,7 @@ A separate model predicts an ER visit or hospital admission in the next 7 days. 
 | Note scan alone | 18% | 27% (about 23x the usual) | 0.05 |
 
 - **Gain from the notes:** +10 points of ER visits caught (95% CI +6 to +15 points over patients) for 5% more flags. Fever notes are followed by an ER visit or admission 49% of the time, and calls to the nurse 44%.
-- **By language** (ER caught 2–7 d, calendar → urgent → urgent + notes): English 36% → 51% → 60%, Spanish 32% → 40% → 54%, Haitian Creole 50% → 44% → 44% (18 events). **Creole speakers gain nothing yet.** About a quarter of their notes are in Creole, and in this data those notes only ever mention tiredness, nausea, appetite or sleep. The Creole word list is in place and passes its cases, but no real Creole red-flag notes exist here to test it on.
+- **By language** (ER caught 2–7 d, calendar → urgent → urgent + notes): English 36% → 51% → 60%, Spanish 32% → 40% → 54%, Haitian Creole 50% → 44% → 44% (18 ER events; one event moves these 6 points, so the urgent-tier dip is noise, not a finding). **Creole speakers gain nothing from the notes yet.** About a quarter of their notes are in Creole, and in this data those notes only ever mention tiredness, nausea, appetite or sleep. The Creole word list is in place and passes its cases, but no real Creole red-flag notes exist here to test it on.
 - **Why the notes are not model inputs:** `analysis/exp/notes_features.py` added them to the rough-patch model under the same 3-day lag as the check-ins. Validation week AUC moved by -0.004 and recall by 0, which fails the rule fixed beforehand (+0.005 AUC and no recall loss), so they stay out of the model.
 
 ### Real-data check (fatigue study, 204 people with a Fitbit)
