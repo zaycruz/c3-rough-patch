@@ -41,6 +41,24 @@ GROUPS = {
     "checkins": ["feel_last", "feel_rel_last", "feel_rel_mean7", "rough_self_14", "sym_max_last", "sym_rel_last",
                  "skip_run", "calls_missed_28"],
 }
+# same-day escalation reasons (analysis/escalation.py): one coach verb per reason
+ESCALATION_TEXT = {
+    "ideation": "Call today and follow the program's suicide-risk protocol: the note reads like they wish they were not alive.",
+    "note": "Call today: their diary note names a warning sign.",
+    "checkin": "Call today: they rated today 1 of 5.",
+    "mood": "Call this week to talk: they rated sadness or worry 4 of 4.",
+}
+ESC_ORDER = ["ideation", "note", "checkin", "mood"]
+
+
+def escalation_today(row, esc_rules, passive_ideation, pick):
+    """Today's model-free escalation reasons for one person (same rules as analysis/escalation.py)."""
+    r = esc_rules(pd.DataFrame([row])).iloc[0]
+    hit = {"ideation": passive_ideation(row.diary_note), "note": bool(categories(row.diary_note) & set(RED_FLAGS)),
+           "checkin": bool(r[pick]), "mood": bool(r["mood"])}
+    return [{"rule": k, "coachText": ESCALATION_TEXT[k]} for k in ESC_ORDER if hit[k]]
+
+
 INPUTS = ["synthetic_data/synthetic_daily.csv", "synthetic_data/synthetic_patients.csv", "fatigue_study_daily.csv"]
 
 
@@ -197,6 +215,40 @@ def social_needs(row, status):
     return out
 
 
+def escalation_block():
+    e = json.loads((OUT / "escalation.json").read_text())
+    T, L = e["test"], e["test"]["by_language"]
+    es, ue, u = T["escalation"], T["urgent_or_escalation"], T["urgent"]
+    g = e["test"]["escalation_gain_over_urgent_ci95"]
+    return {
+        "baseline": "Urgent ER tier alone",
+        "text": (f"Model-free escalation (no model; English, Spanish and Haitian Creole): call today when the diary note "
+                 f"names a warning sign or reads like passive suicidal thinking, or the person rates the day 1 of 5. "
+                 f"Alone it catches {es['er_caught_2to7d']:.0%} of ER visits and admissions 2-7 days early for about "
+                 f"{es['calls_per_coach_week']:.0f} calls per coach per week (caseload {e['caseload_per_coach']}); about 1 in "
+                 f"{es['calls_per_er_or_admission_followed']:.0f} calls is followed by an ER visit or admission within 7 days. "
+                 f"With the urgent tier: {ue['er_caught_2to7d']:.0%} vs {u['er_caught_2to7d']:.0%} for the tier alone "
+                 f"(95% CI {g[0] * 100:+.0f} to {g[1] * 100:+.0f} points), {ue['calls_per_coach_week']:.0f} calls per coach per week, "
+                 f"1 in {ue['calls_per_er_or_admission_followed']:.0f} followed by an ER visit. Flag rates are within "
+                 f"{max(v['escalation_flag_days_per_patient_month'] for v in L.values()) - min(v['escalation_flag_days_per_patient_month'] for v in L.values()):.2f} "
+                 f"flags per patient-month across languages. Passive-ideation phrases never occur in this synthetic data, so that "
+                 f"rule is tested only on written cases, with no outcome."),
+        "rules": {"ideation": "diary note reads like passive suicidal thinking (word list in 3 languages)",
+                  "note": "diary note names a red flag (analysis/notes_scan.py)",
+                  "checkin": e["candidates"][e["picked_rule"]], "mood": "weekly sadness or anxiety 4 of 4 (counted, not validated)"},
+        "pickedRule": e["picked_rule"], "selectionRule": e["selection_rule"],
+        "erCaught": es["er_caught_2to7d"], "erCaughtWithUrgent": ue["er_caught_2to7d"], "erCaughtUrgentOnly": u["er_caught_2to7d"],
+        "gainCi95Points": [round(g[0] * 100, 1), round(g[1] * 100, 1)],
+        "workload": {"caseloadPerCoach": e["caseload_per_coach"], "caseloadNote": e["caseload_note"],
+                     **{k: {"callsPerCoachWeek": T[k]["calls_per_coach_week"],
+                            "callsPerErOrAdmission": T[k]["calls_per_er_or_admission_followed"],
+                            "flagDaysPerPatientMonth": T[k]["flag_days_per_patient_month"]}
+                        for k in ("escalation", "urgent", "urgent_or_escalation")}},
+        "byLanguage": L, "ideationNotesInData": T["ideation_notes_in_data"], "modelFree": True,
+        "reproducesAcrossPlatforms": "escalation-only numbers: exactly; numbers combined with the urgent tier: within the platform tolerance",
+        "language": "rules read English, Spanish and Haitian Creole notes; coach text is English only"}
+
+
 def headline_block(m):
     """Ready-to-show headline numbers for the console and the MCP server (all from held-out test patients).
     One named baseline per outcome: rough patches vs the calendar-only rough-patch model (5% alert budget);
@@ -256,7 +308,8 @@ def headline_block(m):
                      f"months; the public studies we found have the wearable and ratings but no clinical events."),
             "nextDayAucWearable": rc.get("next_day_auc_wearable_only_prev2days"),
             "nextDayAucSelfRating": rc.get("next_day_auc_yesterdays_self_rating")},
-        "order": ["urgent", "noteScan", "roughPatch", "realData"],
+        "escalation": escalation_block(),
+        "order": ["urgent", "escalation", "noteScan", "roughPatch", "realData"],
     }
 
 
@@ -370,6 +423,8 @@ def main():
     from train import SCHEDULE
     global categories, RED_FLAGS
     from notes_scan import RED_FLAGS, categories
+    from escalation import passive_ideation, rules as esc_rules
+    esc_pick = json.loads((OUT / "escalation.json").read_text())["picked_rule"]
     d = pd.read_parquet(OUT / "scored.parquet")
     F = pd.read_parquet(OUT / "features.parquet")
     today = d[(d.date == AS_OF) & (d.split == "test") & (d.day_in_program >= 28)]
@@ -404,6 +459,8 @@ def main():
         note_flag = ({"categories": cats, "note": row.diary_note, "date": AS_OF.strftime("%Y-%m-%d"),
                       "text": f"Today's diary note mentions {', '.join(NOTE_LABEL[c] for c in cats)}. Read it and call today.",
                       "basis": NOTE_BASIS} if cats else None)
+        esc = escalation_today(row, esc_rules, passive_ideation, esc_pick)
+        review_today = bool(esc)
         last3 = hist.iloc[-3:]
         skin_hot = bool((last3.skin_temp_change_c > 0.5).any())
         rhr_up = bool(last3.resting_heart_rate.mean() - hist.iloc[-35:-7].resting_heart_rate.median() > 3)
@@ -444,21 +501,26 @@ def main():
         survivors.append({"survivorId": sid, "displayName": name, "status": status, "headline": headline,
                           "updatedAt": AS_OF.strftime("%Y-%m-%dT20:00:00Z"), "urgent": bool(urgent), "risk": round(score, 3),
                           "urgentRisk": round(urgent_risk, 3), "tier": "urgent" if urgent else status,
-                          "reviewToday": note_flag is not None})
+                          "reviewToday": review_today})
         details[sid] = {
             "survivorId": sid, "displayName": name, "status": status, "headline": headline, "summary": summary,
             "urgent": bool(urgent), "urgentRisk": round(urgent_risk, 3),
-            "reviewToday": note_flag is not None, "noteFlag": note_flag,
+            "reviewToday": review_today, "noteFlag": note_flag,
+            "escalation": {"reasons": esc,
+                           "basis": "Model-free same-day rules (analysis/escalation.py); see headline.escalation"},
             "risk": round(score, 3), "scheduleRisk": round(sched, 3),
             "thresholds": {**{k: round(v, 3) for k, v in thr.items()}, "urgent": round(thr_u, 3)},
             "profile": {"age": int(row.age), "sex": row.sex, "cancerType": row.cancer_type, "stage": row.stage,
                         "treatmentPlan": row.treatment_plan, "device": row.device, "language": row.preferred_language,
                         "livesAlone": row.lives_alone, "context": schedule_context(row)},
             "evidence": evidence,
-            "recommendations": ([{"action": "Read today's diary note and call today. If they describe fever, can't keep fluids down, "
+            "recommendations": ([{"action": e["coachText"], "why": "Same-day escalation rule; see headline.escalation.",
+                                  "urgency": "this week" if e["rule"] == "mood" else "today", "kind": "escalation"}
+                                 for e in esc if e["rule"] in ("ideation",)] if esc else []) + ([{"action": "Read today's diary note and call today. If they describe fever, can't keep fluids down, "
                                            "chest pain, trouble breathing, bleeding or a fall, have them call their care team now.",
                                  "why": note_flag["text"].split(". ")[0] + ". " + NOTE_BASIS, "urgency": "today", "kind": "note"}]
-                                if note_flag else []) + actions(status, "checkins_quiet" if top == "checkins" and ck_kind == "quiet" else top,
+                                if note_flag else []) + [{"action": e["coachText"], "why": "Same-day escalation rule; see headline.escalation.",
+                                  "urgency": "this week" if e["rule"] == "mood" else "today", "kind": "escalation"} for e in esc if e["rule"] in ("checkin", "mood")] + actions(status, "checkins_quiet" if top == "checkins" and ck_kind == "quiet" else top,
                                        skin_hot, rhr_up, urgent) + ([{
                 "action": "Send a short, no-pressure message asking how the week is going; offer a 2-minute call instead of the form.",
                 "why": f"{run} daily check-ins skipped in a row; rough days are more common after a run of skips.",

@@ -31,6 +31,7 @@ It runs these steps in order. Each one has a fixed seed (`SEED` in `analysis/tra
 | Real-data check (fatigue study) | `analysis/real_check.py` | `analysis/out/real_check.json` |
 | Diary-note red-flag scan (English, Spanish, Haitian Creole): 35 written-first cases, then held-out evaluation | `analysis/notes_scan.py` | `analysis/out/notes_scan.json` |
 | Urgent tier vs the calendar-only ER model, and the note-scan gain: patient-bootstrap CIs, by language | `analysis/urgent_ci.py` | `analysis/out/urgent_ci.json` |
+| Model-free same-day escalation (note red flag, passive ideation, check-in rule picked on val): 32 written-first cases, workload per coach | `analysis/escalation.py` | `analysis/out/escalation.json` |
 | Notes as rough-patch model inputs (decision rule fixed beforehand) | `analysis/exp/notes_features.py` | `analysis/out/exp_notes_features.json` |
 | Caseload, explanations, actions, headline and fairness blocks served by the API; the precomputed roster | `analysis/export.py` | `src/data/survivors.json`, `src/data/metrics.json`, `public/api/c3/survivors` |
 | Wearable signals before an ER visit | `analysis/exp/er_presignal.py` | `analysis/out/er_presignal.json` |
@@ -44,9 +45,11 @@ The log goes to `runs/reproduce-<UTC stamp>.md`. It records where the run happen
 
 The README numbers were made on macOS arm64. On Linux x86_64 (the Cloudflare fresh clone, `runs/reproduce-2026-10-17T17-18-10Z.md`) every rough-patch number, fairness number and real-data number matches exactly. Two parts do not: the urgent ER head (and everything built on it: its CI, the note-scan gain, the by-language ER rows) and the historical proxy-label run. Same code, seed, data and package versions; the gradient-boosting fit differs slightly by CPU platform.
 
-Those 18 rows are listed under `platform_tolerance` in `analysis/expected.json`. `check_numbers.py` passes them as `match (platform tolerance, ...)` when:
+These rows are listed under `platform_tolerance` in `analysis/expected.json`. `check_numbers.py` passes them as `match (platform tolerance, ...)` when:
 - **percentages and CI points:** the printed value is within 2 points, or, for a language group, within 2 ER events of that group (Creole has 18 test ER events, so 1 event is 6 points);
-- **rates and AUCs:** within the stated amount (0.03 flags/patient/month, 0.005 AUC, 0.05 patches/patient).
+- **rates and AUCs:** within the stated amount (0.03 flags/patient/month, 1 call per coach per week, 0.005 AUC, 0.05 patches/patient).
+
+The model-free escalation numbers (`analysis/escalation.py`) get no tolerance: only the rows that combine it with the urgent tier do.
 
 Every other row must match exactly. What changes on Linux: urgent ER caught 49% (README 47%), CI +4 to +21 (README +2 to +19); urgent + notes 58% (57%); Creole urgent 50% (44%). The Creole rows rest on 18 test ER events, and one event moves them 6 points, so neither the macOS drop (50 → 44) nor the Linux parity (50 → 50) is a finding. On both platforms the notes add nothing for Creole speakers.
 
@@ -229,3 +232,22 @@ npm run contract   # rebuilds CONTRACT.md from that run
 | Cross-check: v2 model alerts/patient/month | `analysis/out/historical/label_crosscheck.json` | `v2_onsets.score_model.alerts_per_patient_month` | 0.78 | train.py @ d72545d |
 | Cross-check: v1 onsets, v1-trained week AUC | `analysis/out/historical/metrics_v2_noproxy.json` | `label_v2.cross_check.v1_onsets.week_auc.trained_on_v1` | 0.804 | train.py @ d72545d |
 | Cross-check: v1 onsets, v2-trained week AUC | `analysis/out/historical/metrics_v2_noproxy.json` | `label_v2.cross_check.v1_onsets.week_auc.trained_on_v2` | 0.799 | train.py @ d72545d |
+| Escalation: written-first cases | `analysis/out/escalation.json` | `self_test.cases` | 32 | current pipeline |
+| Escalation alone: ER caught | `analysis/out/escalation.json` | `test.escalation.er_caught_2to7d` | 32% | current pipeline |
+| Escalation alone: calls/coach/week | `analysis/out/escalation.json` | `test.escalation.calls_per_coach_week` | 4.4 | current pipeline |
+| Escalation alone: calls per ER | `analysis/out/escalation.json` | `test.escalation.calls_per_er_or_admission_followed` | 8 | current pipeline |
+| Escalation: urgent alone ER caught | `analysis/out/escalation.json` | `test.urgent.er_caught_2to7d` | 47% | current pipeline |
+| Escalation: urgent alone calls/coach/week | `analysis/out/escalation.json` | `test.urgent.calls_per_coach_week` | 11.9 | current pipeline |
+| Escalation: urgent alone calls per ER | `analysis/out/escalation.json` | `test.urgent.calls_per_er_or_admission_followed` | 13 | current pipeline |
+| Urgent + escalation: ER caught | `analysis/out/escalation.json` | `test.urgent_or_escalation.er_caught_2to7d` | 61% | current pipeline |
+| Urgent + escalation: calls/coach/week | `analysis/out/escalation.json` | `test.urgent_or_escalation.calls_per_coach_week` | 15.5 | current pipeline |
+| Urgent + escalation: calls per ER | `analysis/out/escalation.json` | `test.urgent_or_escalation.calls_per_er_or_admission_followed` | 12 | current pipeline |
+| Escalation gain, CI low | `analysis/out/escalation.json` | `test.escalation_gain_over_urgent_ci95.0` | +9 | current pipeline |
+| Escalation gain, CI high | `analysis/out/escalation.json` | `test.escalation_gain_over_urgent_ci95.1` | +19 | current pipeline |
+| Escalation rate: English | `analysis/out/escalation.json` | `test.by_language.English.escalation_flag_days_per_patient_month` | 0.31 | current pipeline |
+| Escalation rate: Creole | `analysis/out/escalation.json` | `test.by_language.Haitian Creole.escalation_flag_days_per_patient_month` | 0.33 | current pipeline |
+| Escalation rate: Spanish | `analysis/out/escalation.json` | `test.by_language.Spanish.escalation_flag_days_per_patient_month` | 0.33 | current pipeline |
+| Urgent + escalation: English | `analysis/out/escalation.json` | `test.by_language.English.urgent_or_escalation_er_caught_2to7d` | 64% | current pipeline |
+| Urgent + escalation: Creole | `analysis/out/escalation.json` | `test.by_language.Haitian Creole.urgent_or_escalation_er_caught_2to7d` | 50% | current pipeline |
+| Urgent + escalation: Spanish | `analysis/out/escalation.json` | `test.by_language.Spanish.urgent_or_escalation_er_caught_2to7d` | 60% | current pipeline |
+| Escalation: ideation notes in data | `analysis/out/escalation.json` | `test.ideation_notes_in_data` | 0 | current pipeline |

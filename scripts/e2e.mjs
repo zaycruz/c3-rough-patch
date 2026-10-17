@@ -59,8 +59,10 @@ for (const r of list) {
     Array.isArray(b.recommendations) && b.recommendations.length > 0 && b.charts && n > 0 &&
     ["risk", "urgentRisk", "steps", "restingHeartRate", "hrv", "sleepHours", "doseDays"].every((k) => Array.isArray(b.charts[k]) && b.charts[k].length === n) &&
     typeof b.urgent === "boolean" && b.urgent === r.urgent && typeof b.urgentRisk === "number" && !("demo" in b) &&
-    b.reviewToday === r.reviewToday && (b.noteFlag === null ? !r.reviewToday :
-      Array.isArray(b.noteFlag.categories) && b.noteFlag.categories.length > 0 && b.recommendations[0].kind === "note");
+    Array.isArray(b.escalation?.reasons) && b.reviewToday === r.reviewToday && r.reviewToday === b.escalation.reasons.length > 0 &&
+    (b.noteFlag === null ? !b.escalation.reasons.some((e) => e.rule === "note") :
+      Array.isArray(b.noteFlag.categories) && b.noteFlag.categories.length > 0 &&
+      ["note", "escalation"].includes(b.recommendations[0].kind));
   if (ok) detailOk++; else failures.push(r.survivorId);
   const needsSocial = r.status !== "ok" && (b.profile?.language !== "English" || b.profile?.livesAlone === "yes");
   if (needsSocial) { socialFlagged++; if (b.recommendations.some((x) => x.kind === "social")) socialOk++; }
@@ -111,6 +113,14 @@ if (M.model && M.schedule && M.steps_rule) {
     ["urgent", "noteScan", "roughPatch"].every((k) => typeof H[k].baseline === "string") &&
     H.roughPatch.liftCi95Points?.length === 2 && H.roughPatch.liftCi95Points[0] > 0 &&
     H.urgent.liftCi95Points?.length === 2 && H.noteScan.gainCi95Points?.length === 2, H && { urgent: H.urgent.liftCi95Points, roughPatch: H.roughPatch.liftCi95Points, noteScan: H.noteScan.gainCi95Points });
+  const E = H?.escalation;
+  check("metrics.headline.escalation: model-free, per-coach workload for escalation / urgent / both, gain CI, flag rate by language, ideation rule disclosed",
+    E && E.modelFree === true && H.order?.[1] === "escalation" && typeof E.text === "string" && /passive suicidal/.test(E.text) &&
+    ["escalation", "urgent", "urgent_or_escalation"].every((k) => E.workload?.[k]?.callsPerCoachWeek > 0 && E.workload[k].callsPerErOrAdmission > 1) &&
+    E.erCaughtWithUrgent > E.erCaughtUrgentOnly && E.gainCi95Points?.length === 2 && E.gainCi95Points[0] > 0 &&
+    ["English", "Spanish", "Haitian Creole"].every((l) => typeof E.byLanguage?.[l]?.escalation_flag_days_per_patient_month === "number") &&
+    E.ideationNotesInData === 0 && typeof E.workload.caseloadNote === "string",
+    E && { erCaught: E.erCaught, withUrgent: E.erCaughtWithUrgent, urgentOnly: E.erCaughtUrgentOnly, gain: E.gainCi95Points, workload: E.workload });
   check("one baseline per outcome: the rough-patch headline carries no ER numbers (ER is compared only in the urgent tier)",
     H && !("erCaught" in H.roughPatch) && !("erLiftCi95Points" in H.roughPatch) && !/ER visits/.test(H.roughPatch.text));
   check("real-data AUC sits next to the lead-time claim, and the real-data line says what data would be needed",

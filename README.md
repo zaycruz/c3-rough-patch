@@ -107,6 +107,31 @@ A separate model predicts an ER visit or hospital admission in the next 7 days. 
 - **By language** (ER caught 2–7 d, calendar → urgent → urgent + notes): English 36% → 51% → 60%, Spanish 32% → 40% → 54%, Haitian Creole 50% → 44% → 44% (18 ER events; one event moves these 6 points, so the urgent-tier dip is noise, not a finding). **Creole speakers gain nothing from the notes yet.** About a quarter of their notes are in Creole, and in this data those notes only ever mention tiredness, nausea, appetite or sleep. The Creole word list is in place and passes its cases, but no real Creole red-flag notes exist here to test it on.
 - **Why the notes are not model inputs:** `analysis/exp/notes_features.py` added them to the rough-patch model under the same 3-day lag as the check-ins. Validation week AUC moved by -0.004 and recall by 0, which fails the rule fixed beforehand (+0.005 AUC and no recall loss), so they stay out of the model.
 
+### Model-free red-flag escalation (no model; English, Spanish, Haitian Creole)
+
+`analysis/escalation.py` adds same-day "call today" rules that need no model, so the same input gives the same call on every platform. A rule that fires sets `reviewToday` and puts the reason first in the panel's actions (`escalation.reasons`, `kind: "escalation"`).
+- **Diary note names a red flag:** the word list from the note scan above.
+- **Diary note reads like passive suicidal thinking:** for example "wish I wouldn't wake up", "estarían mejor sin mí" or "m ta pito mouri". The coach calls today and follows the program's suicide-risk protocol.
+- **Check-in rule:** the person rates the day 1 of 5. This rule was picked on validation patients from four rules fixed beforehand, then scored once on test.
+- **Mood:** weekly sadness or worry at 4 of 4 means "call this week". It is counted but not validated, because an ER visit is the wrong outcome for it.
+
+Before the rules were written, 32 failure cases were set down. They include idioms that must not fire ("dying to see my grandkids", "me muero de ganas", "mwen mouri ri"), missing check-ins, and notes about an ER visit that already happened. All 32 must pass, or the script stops.
+
+| On held-out patients (182 ER/admissions), caseload 60 per coach | ER caught 2–7 d early | Calls per coach per week | Calls per ER visit or admission that follows |
+|---|---|---|---|
+| Escalation alone (model-free) | 32% | 4.4 | 8 |
+| Urgent tier alone (the baseline here) | 47% | 11.9 | 13 |
+| **Urgent tier + escalation** | **61%** | 15.5 | 12 |
+
+- **Gain:** urgent tier + escalation catches 61% vs 47% of ER visits 2–7 days early (95% CI +9 to +19 points over patients), for about 4 more calls per coach per week.
+- **Workload:** caseload 60 per coach is a stated parameter, because the sponsor brief gives no caseload.
+- **By language:** the escalation fires 0.31, 0.33 and 0.33 times per patient-month for English, Creole and Spanish speakers. With the urgent tier it catches 64%, 50% and 60% of ER visits (Creole: 18 events).
+- **Limits:**
+  - No passive-ideation phrase occurs in this synthetic data, so that rule is tested only on the written cases, with no outcome.
+  - Negations over-call ("I don't want to die" fires). This is accepted, because a call is cheap and a miss is not.
+  - Coach text is English only.
+- **Reproducibility:** the escalation-only numbers reproduce exactly on macOS and Linux. The rows combined with the urgent tier fall under the platform tolerance.
+
 ### Real-data check (fatigue study, 204 people with a Fitbit)
 
 - On real bad days, steps are lower than the person's own normal: -0.235 SD on bad days vs 0.073 SD on other days, a same-day AUC of about 0.59.
@@ -150,11 +175,19 @@ The numbers here were made on macOS arm64. On Linux x86_64 the rough-patch model
 6. **Urgent (15 s).** The two red "urgent" survivors at the top read "about 6x the usual ER or hospital risk this week. A prompt to check in, not a prediction". For P03000, treatment was paused 6 days later. Neither went to the ER in the next 7 days, though: about 1 urgent flag in 14 is followed by an ER visit. It is a reason to call, not a diagnosis.
 7. **Honesty (15 s).** The metrics table: model vs calendar vs steps rule, same alert budget. Then the real-data caveat.
 
+## Future work
+
+Asked for by the judges panel. Not built:
+- Spanish and Haitian Creole coach and patient text, at a 6th-grade level, marked machine-translated and reviewed by native speakers.
+- A mitigation for the weaker groups (Haitian Creole speakers, sarcoma): per-group alert lines, a pooled fallback or care-team review, with a monitoring rule.
+- A table comparing the cohort's make-up with Miami-Dade.
+
 ## Files
 
 - `analysis/train.py`: labels, features, models, held-out evaluation → `analysis/out/metrics.json`
 - `analysis/export.py`: caseload, explanations, actions → `src/data/survivors.json`, `src/data/metrics.json`
 - `analysis/real_check.py`: fatigue-study check
+- `analysis/notes_scan.py`, `analysis/escalation.py`: diary-note scan and model-free same-day escalation
 - `src/index.ts`: Worker · `public/index.html`: demo page · `scripts/e2e.mjs`: E2E check
 
 Data: made-up patients by the Crane Lab, Sylvester Comprehensive Cancer Center. Real data: Rao C, et al., Frontiers in Digital Health 2023 (zenodo 8018238); Yfantidou S, et al., Scientific Data 2022 (zenodo 7229547, CC BY 4.0).

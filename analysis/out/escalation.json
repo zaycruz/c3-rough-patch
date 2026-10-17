@@ -1,0 +1,185 @@
+{
+  "what": "Model-free same-day escalation: note red flag, passive ideation, check-in symptom rule. No model; identical on every platform.",
+  "self_test": {
+    "cases": 32,
+    "failed": 0
+  },
+  "caseload_per_coach": 60,
+  "caseload_note": "parameter; the sponsor brief gives no caseload",
+  "candidates": {
+    "C1": "daily feeling 1 of 5",
+    "C2": "nausea, pain, appetite loss or diarrhea at 4 of 4",
+    "C3": "C1 or C2",
+    "C4": "two or more weekly items at 3 or more"
+  },
+  "selection_rule": "val: max share of flag days followed by ER within 7 d, among rules with <= 0.5 flag days per patient-month; ties to the lower number",
+  "val": {
+    "C1": {
+      "flag_days": 671,
+      "flag_days_per_patient_month": 0.293,
+      "calls_per_coach_week": 4.0,
+      "er_within_7d_when_flagged": 0.086,
+      "times_base_rate": 7.9,
+      "calls_per_er_or_admission_followed": 11.6,
+      "er_events": 100,
+      "er_caught_2to7d": 0.18,
+      "er_caught_1to7d": 0.36
+    },
+    "C2": {
+      "flag_days": 38,
+      "flag_days_per_patient_month": 0.017,
+      "calls_per_coach_week": 0.2,
+      "er_within_7d_when_flagged": 0.036,
+      "times_base_rate": 3.3,
+      "calls_per_er_or_admission_followed": 28.0,
+      "er_events": 100,
+      "er_caught_2to7d": 0.0,
+      "er_caught_1to7d": 0.01
+    },
+    "C3": {
+      "flag_days": 703,
+      "flag_days_per_patient_month": 0.307,
+      "calls_per_coach_week": 4.2,
+      "er_within_7d_when_flagged": 0.084,
+      "times_base_rate": 7.7,
+      "calls_per_er_or_admission_followed": 11.9,
+      "er_events": 100,
+      "er_caught_2to7d": 0.18,
+      "er_caught_1to7d": 0.36
+    },
+    "C4": {
+      "flag_days": 221,
+      "flag_days_per_patient_month": 0.096,
+      "calls_per_coach_week": 1.3,
+      "er_within_7d_when_flagged": 0.038,
+      "times_base_rate": 3.5,
+      "calls_per_er_or_admission_followed": 26.1,
+      "er_events": 100,
+      "er_caught_2to7d": 0.01,
+      "er_caught_1to7d": 0.07
+    }
+  },
+  "test": {
+    "note": {
+      "flag_days": 215,
+      "flag_days_per_patient_month": 0.056,
+      "calls_per_coach_week": 0.8,
+      "er_within_7d_when_flagged": 0.273,
+      "times_base_rate": 23.0,
+      "calls_per_er_or_admission_followed": 3.7,
+      "er_events": 182,
+      "er_caught_2to7d": 0.176,
+      "er_caught_1to7d": 0.225
+    },
+    "ideation": {
+      "flag_days": 0,
+      "flag_days_per_patient_month": 0.0,
+      "calls_per_coach_week": 0.0,
+      "er_within_7d_when_flagged": 0.0,
+      "times_base_rate": 0.0,
+      "calls_per_er_or_admission_followed": null,
+      "er_events": 182,
+      "er_caught_2to7d": 0.0,
+      "er_caught_1to7d": 0.0
+    },
+    "checkin": {
+      "flag_days": 1155,
+      "flag_days_per_patient_month": 0.302,
+      "calls_per_coach_week": 4.2,
+      "er_within_7d_when_flagged": 0.109,
+      "times_base_rate": 9.2,
+      "calls_per_er_or_admission_followed": 9.1,
+      "er_events": 182,
+      "er_caught_2to7d": 0.225,
+      "er_caught_1to7d": 0.423
+    },
+    "mood": {
+      "flag_days": 36,
+      "flag_days_per_patient_month": 0.009,
+      "calls_per_coach_week": 0.1,
+      "er_within_7d_when_flagged": 0.0,
+      "times_base_rate": 0.0,
+      "calls_per_er_or_admission_followed": null,
+      "er_events": 182,
+      "er_caught_2to7d": 0.0,
+      "er_caught_1to7d": 0.0
+    },
+    "escalation": {
+      "flag_days": 1214,
+      "flag_days_per_patient_month": 0.318,
+      "calls_per_coach_week": 4.4,
+      "er_within_7d_when_flagged": 0.125,
+      "times_base_rate": 10.5,
+      "calls_per_er_or_admission_followed": 8.0,
+      "er_events": 182,
+      "er_caught_2to7d": 0.319,
+      "er_caught_1to7d": 0.489
+    },
+    "urgent": {
+      "flag_days": 3295,
+      "flag_days_per_patient_month": 0.863,
+      "calls_per_coach_week": 11.9,
+      "er_within_7d_when_flagged": 0.077,
+      "times_base_rate": 6.5,
+      "calls_per_er_or_admission_followed": 13.0,
+      "er_events": 182,
+      "er_caught_2to7d": 0.467,
+      "er_caught_1to7d": 0.599
+    },
+    "urgent_or_escalation": {
+      "flag_days": 4273,
+      "flag_days_per_patient_month": 1.119,
+      "calls_per_coach_week": 15.5,
+      "er_within_7d_when_flagged": 0.082,
+      "times_base_rate": 6.9,
+      "calls_per_er_or_admission_followed": 12.2,
+      "er_events": 182,
+      "er_caught_2to7d": 0.61,
+      "er_caught_1to7d": 0.78
+    },
+    "escalation_gain_over_urgent_ci95": [
+      0.09,
+      0.191
+    ],
+    "by_language": {
+      "English": {
+        "patients": 445,
+        "note_flag_days_per_patient_month": 0.061,
+        "ideation_flag_days_per_patient_month": 0.0,
+        "checkin_flag_days_per_patient_month": 0.293,
+        "mood_flag_days_per_patient_month": 0.011,
+        "escalation_flag_days_per_patient_month": 0.311,
+        "escalation_er_caught_2to7d": 0.346,
+        "urgent_er_caught_2to7d": 0.505,
+        "urgent_or_escalation_er_caught_2to7d": 0.636,
+        "er_events": 107
+      },
+      "Haitian Creole": {
+        "patients": 60,
+        "note_flag_days_per_patient_month": 0.066,
+        "ideation_flag_days_per_patient_month": 0.0,
+        "checkin_flag_days_per_patient_month": 0.317,
+        "mood_flag_days_per_patient_month": 0.007,
+        "escalation_flag_days_per_patient_month": 0.334,
+        "escalation_er_caught_2to7d": 0.278,
+        "urgent_er_caught_2to7d": 0.444,
+        "urgent_or_escalation_er_caught_2to7d": 0.5,
+        "er_events": 18
+      },
+      "Spanish": {
+        "patients": 245,
+        "note_flag_days_per_patient_month": 0.045,
+        "ideation_flag_days_per_patient_month": 0.0,
+        "checkin_flag_days_per_patient_month": 0.315,
+        "mood_flag_days_per_patient_month": 0.007,
+        "escalation_flag_days_per_patient_month": 0.326,
+        "escalation_er_caught_2to7d": 0.281,
+        "urgent_er_caught_2to7d": 0.404,
+        "urgent_or_escalation_er_caught_2to7d": 0.596,
+        "er_events": 57
+      }
+    },
+    "ideation_notes_in_data": 0
+  },
+  "picked_rule": "C1"
+}
