@@ -8,6 +8,7 @@ Self-reports (daily feeling, weekly symptoms, diary notes) and the events column
 are never used as inputs: the point is to warn before the person says anything.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -48,29 +49,108 @@ def load():
     return d.sort_values(["patient_id", "day_in_program"]).reset_index(drop=True), p
 
 
+SYMPTOMS = ["weekly_fatigue_0_to_4", "weekly_nausea_0_to_4", "weekly_pain_0_to_4", "weekly_appetite_loss_0_to_4",
+            "weekly_diarrhea_0_to_4", "weekly_trouble_sleeping_0_to_4", "weekly_anxiety_0_to_4", "weekly_sadness_0_to_4"]
+LABEL_VERSION = os.environ.get("C3_LABEL", "v2")
+
+
+def episodes(d, rough, sfx=""):
+    """From a 0/1 rough-day series: patch day = rough day with another rough day within 3 days, or any clinical event
+    (one bad day is not a patch). Onset = first patch day after 7 quiet days. in_episode = within 7 days of a patch day.
+    target at day t = an onset in t+1 .. t+HORIZON."""
+    g = rough.groupby(d.patient_id)
+    ahead = g.transform(lambda s: s[::-1].rolling(4, min_periods=1).sum()[::-1])
+    patch = ((rough == 1) & ((ahead >= 2) | (d.clinical == 1))).astype(int)
+    gp = patch.groupby(d.patient_id)
+    quiet = gp.transform(lambda s: s.rolling(7, min_periods=1).sum().shift(1).fillna(0))
+    onset = ((patch == 1) & (quiet == 0)).astype(int)
+    d[f"patch{sfx}"], d[f"onset{sfx}"] = patch, onset
+    d[f"in_episode{sfx}"] = (gp.transform(lambda s: s.rolling(7, min_periods=1).sum()) > 0).astype(int)
+    d[f"target{sfx}"] = onset.groupby(d.patient_id).transform(
+        lambda s: s[::-1].rolling(HORIZON, min_periods=1).sum()[::-1].shift(-1).fillna(0)).clip(0, 1).astype(int)
+
+
 def label(d):
-    """Rough day = feeling <= 2, weekly fatigue >= 3, or ER / admission / treatment paused.
-    Patch day = rough day with another rough day within 3 days, or any clinical event (one bad day is not a patch).
-    Onset = first patch day after 7 quiet days. Episode = onset .. last patch day, gaps under 7 days."""
+    """v1 label (kept for comparison): rough day = feeling <= 2, weekly fatigue >= 3, or ER / admission / pause."""
     ev = d.events.fillna("")
     d["clinical"] = ev.str.contains(CLINICAL).astype(int)
     d["er"] = ev.str.contains("ER visit|admitted to hospital").astype(int)
-    d["rough"] = ((d.daily_feeling_1_to_5 <= 2) | (d.weekly_fatigue_0_to_4 >= 3) | (d.clinical == 1)).astype(int)
+    d["rough_v1"] = ((d.daily_feeling_1_to_5 <= 2) | (d.weekly_fatigue_0_to_4 >= 3) | (d.clinical == 1)).astype(int)
+    episodes(d, d.rough_v1, "_v1")
     g = d.groupby("patient_id")
-    ahead = g.rough.transform(lambda s: s[::-1].rolling(4, min_periods=1).sum()[::-1])
-    d["patch"] = ((d.rough == 1) & ((ahead >= 2) | (d.clinical == 1))).astype(int)
-    quiet = g.patch.transform(lambda s: s.rolling(7, min_periods=1).sum().shift(1).fillna(0))
-    d["onset"] = ((d.patch == 1) & (quiet == 0)).astype(int)
-    # in_episode: from onset until 7 days after the last patch day of that run
-    recent = g.patch.transform(lambda s: s.rolling(7, min_periods=1).sum())
-    d["in_episode"] = (recent > 0).astype(int)
-    # target at day t: an onset in t+1 .. t+HORIZON
-    d["target"] = g.onset.transform(
-        lambda s: s[::-1].rolling(HORIZON, min_periods=1).sum()[::-1].shift(-1).fillna(0)).clip(0, 1).astype(int)
-    d["days_to_onset"] = g.onset.transform(_days_to_next)
     d["er_ahead"] = g.er.transform(
         lambda s: s[::-1].rolling(HORIZON, min_periods=1).sum()[::-1].shift(-1).fillna(0)).clip(0, 1)
     return d
+
+
+def _personal_base(d, col, min_obs, window=28):
+    """Median of this person's previous reports of col (past reports only, not past days)."""
+    def per(s):
+        r = s.dropna()
+        return r.shift(1).rolling(window, min_periods=min_obs).median().reindex(s.index).ffill()
+    return d.groupby("patient_id")[col].transform(per)
+
+
+def _skip_streak(miss):
+    out, c = [], 0
+    for v in miss:
+        out.append(c)
+        c = c + 1 if v else 0
+    return out
+
+
+NOWCAST = ["steps", "active_minutes", "resting_heart_rate", "hrv_rmssd_ms", "sleep_minutes", "sleep_efficiency_pct",
+           "times_woke_up", "skin_temp_change_c", "minutes_watch_worn"]
+
+
+def label_v2(d, train_mask):
+    """v2 label. Rough day =
+    - self-report, relative to the person: feeling 1, OR feeling >= 2 points below their own median of the previous
+      28 check-ins (needs 5; until then feeling <= 2), OR on the weekly check-in any of 8 symptoms >= 3 or >= 2 above
+      their own median of previous weekly check-ins;
+    - OR a clinical event (ER visit, admission, treatment paused);
+    - OR, on a day with no daily check-in, the quantitative stand-in: a same-day wearable nowcast of P(rough self-report),
+      trained on check-in days of train patients only, with the run of skipped check-ins as an input, so every extra
+      skipped day raises the weight. A missing check-in AND watch off (< 10 h worn) is unknown, not rough."""
+    feel = d.daily_feeling_1_to_5
+    fbase = _personal_base(d, "daily_feeling_1_to_5", 5)
+    feel_rough = (feel <= 1) | (fbase.notna() & (fbase - feel >= 2)) | (fbase.isna() & (feel <= 2))
+    sym_rough = pd.Series(False, index=d.index)
+    for c in SYMPTOMS:
+        sb = _personal_base(d, c, 2, window=8)
+        sym_rough |= (d[c] >= 3) | (sb.notna() & (d[c] - sb >= 2))
+    d["rough_self"] = (feel_rough | sym_rough).astype(int)
+    miss = feel.isna()
+    d["skips_before"] = np.concatenate([_skip_streak(m) for _, m in miss.groupby(d.patient_id)])
+    # same-day signals vs the person's own baseline (days t-35..t-8): independent of the forecaster's trend features
+    X = pd.DataFrame(index=d.index)
+    g = d.groupby("patient_id")
+    for s in NOWCAST:
+        b = g[s].transform(lambda v: v.shift(8).rolling(28, min_periods=7).median())
+        sd = g[s].transform(lambda v: v.shift(8).rolling(28, min_periods=7).std()).clip(lower=1e-3)
+        X[s] = ((d[s] - b) / sd).clip(-6, 6)
+    X["skip_run"] = np.where(miss, d.skips_before + 1, d.skips_before)  # a missed day counts itself
+    obs = (~miss & train_mask).values
+    nm = HistGradientBoostingClassifier(max_iter=200, learning_rate=0.05, random_state=SEED)
+    nm.fit(X[obs], feel_rough[obs].astype(int))
+    p = nm.predict_proba(X)[:, 1]
+    unknown = miss & (d.minutes_watch_worn < 600)
+    cand = (miss & ~unknown).values
+    # calibrated count: on missed days flag as many as the nowcast expects, i.e. the top mean(p) share (train patients)
+    ref = cand & train_mask.values
+    expect = float(p[ref].mean())
+    tau = float(np.quantile(p[ref], 1 - expect))
+    d["nowcast_p"] = np.where(miss, p, np.nan)
+    d["rough_proxy"] = (cand & (p >= tau)).astype(int)
+    if os.environ.get("C3_PROXY", "1") == "0":
+        d["rough_proxy"] = 0
+    d["rough"] = ((d.rough_self == 1) | (d.clinical == 1) | (d.rough_proxy == 1)).astype(int)
+    rate = lambda k: float(feel_rough[(~miss) & (d.skips_before == k)].mean())
+    info = {"nowcast_auc_train_checkin_days": round(float(roc_auc_score(feel_rough[obs], p[obs])), 3),
+            "missed_day_expected_rough_share": round(expect, 4), "proxy_threshold": round(tau, 4),
+            "rough_rate_after_skips": {str(k): round(rate(k), 3) for k in (0, 1, 2, 3, 5)},
+            "unknown_days_share": round(float(unknown.mean()), 3)}
+    return info
 
 
 def _days_to_next(s):
@@ -302,6 +382,16 @@ def main():
     split.update({p: "val" for p in pids[int(n * 0.6): int(n * 0.75)]})
     split.update({p: "test" for p in pids[int(n * 0.75):]})
     d["split"] = d.patient_id.map(split)
+    label_info = None
+    if LABEL_VERSION == "v2":
+        label_info = label_v2(d, (d.split == "train"))
+        episodes(d, d.rough)
+        src = np.where(d.clinical == 1, "clinical", np.where(d.rough_self == 1, "self_report", "wearable_proxy"))
+        d["onset_source"] = np.where(d.onset == 1, src, "")
+    else:
+        for c in ("patch", "onset", "in_episode", "target"):
+            d[c] = d[f"{c}_v1"]
+        d["onset_source"] = ""
     use = (d.in_episode == 0) & (d.day_in_program >= 14)
     tr, va, te = [(use & (d.split == k)).values for k in ("train", "val", "test")]
     y = d.target.values
@@ -325,8 +415,16 @@ def main():
         thr[k] = {"alert": float(np.quantile(s, 1 - ALERT_RATE)), "watch": float(np.quantile(s, 1 - WATCH_RATE))}
 
     test = d[(d.split == "test")]
+    rough_day = ("relative to the person: daily feeling 1, or 2+ points below their own median of the last 28 check-ins "
+                 "(until 5 check-ins: feeling <= 2); OR on the weekly check-in any of fatigue, nausea, pain, appetite loss, "
+                 "diarrhea, trouble sleeping, anxiety, sadness >= 3 or 2+ above their own usual; OR ER visit / admission / "
+                 "treatment paused; OR, on a day with no check-in, a same-day wearable nowcast says rough (the run of "
+                 "skipped check-ins is an input, so each extra skipped day weighs more); no check-in AND watch off = unknown"
+                 ) if LABEL_VERSION == "v2" else \
+        "daily feeling <= 2, OR weekly fatigue >= 3, OR ER visit / hospital admission / treatment paused"
     report = {"definition": {
-        "rough_day": "daily feeling <= 2, OR weekly fatigue >= 3, OR ER visit / hospital admission / treatment paused",
+        "label_version": LABEL_VERSION,
+        "rough_day": rough_day,
         "rough_patch": "a rough day followed by another within 3 days, or any clinical event; onset = first patch day after 7 quiet days",
         "forecast": f"each evening, P(rough patch onset in the next {HORIZON} days); days already inside a patch are not scored",
         "early_warning": f"an alert counts only if it fires {MIN_LEAD}+ days before onset",
@@ -336,12 +434,45 @@ def main():
     }, "counts": {"patients": int(n), "test_patients": int((pd.Series(split) == 'test').sum()),
                   "onsets_total": int(d.onset.sum()), "label_missing_feeling_share": round(float(d.daily_feeling_1_to_5.isna().mean()), 3)},
         "methods": {}}
+    if label_info:
+        report["label_v2"] = label_info
+        srcs = d.loc[d.onset == 1, "onset_source"].value_counts()
+        per = d.groupby("patient_id").onset.sum()
+        miss_share = d.groupby("patient_id").daily_feeling_1_to_5.apply(lambda s: s.isna().mean())
+        q = pd.qcut(miss_share, 4, labels=["most engaged", "q2", "q3", "least engaged"])
+        report["label_v2"].update({
+            "onsets_by_source": {k: int(v) for k, v in srcs.items()},
+            "onsets_v1_total": int(d.onset_v1.sum()),
+            "onsets_per_patient_mean": round(float(per.mean()), 2),
+            "onsets_per_patient_by_checkin_engagement": {str(k): round(float(v), 2) for k, v in per.groupby(q).mean().items()}})
     names = {"steps_rule": "Baseline: steps drop", "schedule": "Baseline: treatment schedule only (same learner)",
              "logistic": "Logistic, wearable + schedule (comparison)", "model": "Radar (gradient boosting, wearable + schedule)"}
     for k, nm in names.items():
         report["methods"][k] = {"name": nm, "weeks": week_metrics(test, f"score_{k}", thr[k]["alert"]),
                                 "episodes": episode_metrics(test, f"score_{k}", thr[k]["alert"])}
         print(nm, json.dumps(report["methods"][k]))
+
+    # label cross-check: does a model trained on this label catch the onsets everyone agrees on? Compare against a model
+    # trained on the v1 label, same learner, same alert budget, on (a) v1 onsets and (b) self-report + clinical onsets.
+    if LABEL_VERSION == "v2":
+        use1 = (d.in_episode_v1 == 0) & (d.day_in_program >= 14)
+        tr1, va1 = [(use1 & (d.split == k)).values for k in ("train", "val")]
+        g1 = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, random_state=SEED).fit(F[tr1], d.target_v1.values[tr1])
+        d["score_model_v1label"] = g1.predict_proba(F)[:, 1]
+        thr1 = float(np.quantile(d.loc[va1, "score_model_v1label"], 1 - ALERT_RATE))
+        test = d[d.split == "test"]
+        core = test.assign(onset=((test.onset == 1) & test.onset_source.isin(["self_report", "clinical"])).astype(int))
+        v1on = test.assign(onset=test.onset_v1, in_episode=test.in_episode_v1, target=test.target_v1)
+        cc = {}
+        for nm_, frame in (("v1_onsets", v1on), ("self_report_and_clinical_onsets", core)):
+            cc[nm_] = {k: {kk: vv for kk, vv in episode_metrics(frame, c, th).items()
+                           if kk in ("episodes", "episode_recall", "median_lead_days", "alert_precision", "er_recall")}
+                       for k, c, th in (("trained_on_v2", "score_model", thr["model"]["alert"]),
+                                        ("trained_on_v1", "score_model_v1label", thr1))}
+        cc["v1_onsets"]["week_auc"] = {"trained_on_v2": week_metrics(v1on, "score_model", thr["model"]["alert"])["auc"],
+                                        "trained_on_v1": week_metrics(v1on, "score_model_v1label", thr1)["auc"]}
+        report["label_v2"]["cross_check"] = cc
+        print("CROSS-CHECK", json.dumps(cc, indent=1))
 
     # urgent tier: a separate head for ER visit / hospital admission in the next 7 days, shown as its own flag
     d["er_recent"] = d.groupby("patient_id").er.transform(lambda s: s.rolling(7, min_periods=1).sum()).clip(0, 1)
