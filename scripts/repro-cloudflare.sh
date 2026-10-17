@@ -40,8 +40,8 @@ while :; do
   echo "$s" | grep -qE '^EXIT=[0-9]+$' && break   # only a real exit code ends the wait; a failed poll just retries
   sleep 60
 done
-LOGF="$(echo "$s" | grep -o 'runs/reproduce-[0-9TZ-]*\.md' | tail -1)"
 mkdir -p runs
-[ -n "$LOGF" ] && curl "${H[@]}" "$URL/file?path=$LOGF" > "$LOGF" && echo "saved $LOGF"
 echo "$s" > runs/repro-cloudflare-last-status.txt
+LOGF="$(echo "$s" | grep -o 'runs/reproduce-[0-9TZ-]*\.md' | tail -1 || true)"
+if [ -n "$LOGF" ]; then curl "${H[@]}" "$URL/file?path=$LOGF" > "$LOGF" && echo "saved $LOGF"; else echo "$s" | tail -25; fi
 exit "$(echo "$s" | grep -oE '^EXIT=[0-9]+$' | tail -1 | cut -d= -f2)"
