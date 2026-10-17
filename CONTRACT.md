@@ -1,29 +1,48 @@
 # C3 Bad Week Radar: API contract
 
 Base URL (deployed): `https://c3-rough-patch.zay-259.workers.dev`. All responses are JSON with `access-control-allow-origin: *`.
-The examples below are real responses, captured by `npm run e2e` on 2026-10-17T16:14:42.305Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
+The examples below are real responses, captured by `npm run e2e` on 2026-10-17T16:35:50.093Z and turned into this file by `node scripts/contract.mjs`. Chart arrays are cut to the last 5 points here; the API returns 42 days.
 
 ## `GET /api/c3/survivors`: roster tiles
 
-Sorted with `urgent` first, then by `status` (alert, then watch, then ok), then by risk. `urgent` (boolean): the separate ER/hospital model flags an ER visit or admission risk in the next 7 days; an urgent survivor is always `alert`. Show it as a stronger badge and a "call today" action. `status`: `alert` = rough patch predicted in the next 7 days; `watch` = raised risk; `ok` = near their usual. 60 survivors, showing 3:
+Returned in **priority order**. Use `priority` (1 = call first) or `tier` for ordering; do not re-sort.
+
+| Field | Meaning |
+|---|---|
+| `tier` | `urgent` > `alert` > `watch` > `ok`. **First-class ordering field.** `urgent` = the separate ER/hospital model flags an ER visit or admission risk in the next 7 days. Show it first, as a stronger badge with a "call today" action. |
+| `priority` | 1..n. Urgent survivors first (highest ER risk first), then alert, watch, ok, each by rough-patch risk. |
+| `status` | `alert` = rough patch predicted in the next 7 days (top 5% of days, about one new alert per coach per day); `watch` = raised risk (top 12%); `ok` = near their usual. An urgent survivor is always `alert`. |
+| `urgent` | Boolean, same as `tier === "urgent"`. |
+| `risk` | 0..1. P(rough patch starts in the next 7 days). |
+| `urgentRisk` | 0..1. P(ER visit or admission in the next 7 days). Typical day: 1.2%. |
+
+The original contract keys (`survivorId, displayName, status, headline, updatedAt`) are unchanged; the other fields were added. 60 survivors, showing 3:
 
 ```json
 [
-  {
-    "survivorId": "c3-P02185",
-    "displayName": "P02185 · 42M · lymphoma",
-    "status": "alert",
-    "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
-    "updatedAt": "2025-01-31T20:00:00Z",
-    "urgent": true
-  },
   {
     "survivorId": "c3-P03000",
     "displayName": "P03000 · 49M · kidney",
     "status": "alert",
     "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
     "updatedAt": "2025-01-31T20:00:00Z",
-    "urgent": true
+    "urgent": true,
+    "tier": "urgent",
+    "priority": 1,
+    "risk": 0.078,
+    "urgentRisk": 0.104
+  },
+  {
+    "survivorId": "c3-P02185",
+    "displayName": "P02185 · 42M · lymphoma",
+    "status": "alert",
+    "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
+    "updatedAt": "2025-01-31T20:00:00Z",
+    "urgent": true,
+    "tier": "urgent",
+    "priority": 2,
+    "risk": 0.221,
+    "urgentRisk": 0.06
   },
   {
     "survivorId": "c3-P02465",
@@ -31,82 +50,76 @@ Sorted with `urgent` first, then by `status` (alert, then watch, then ok), then 
     "status": "alert",
     "headline": "Rough patch risk 51% in the next 7 days, driven by sleep",
     "updatedAt": "2025-01-31T20:00:00Z",
-    "urgent": false
+    "urgent": false,
+    "tier": "alert",
+    "priority": 3,
+    "risk": 0.507,
+    "urgentRisk": 0.001
   }
 ]
 ```
 
 ## `GET /api/c3/survivors/:id`: survivor panel
 
-Contract fields: `survivorId, status, headline, summary, evidence, recommendations, charts`. Extra fields: `displayName`, `risk` and `scheduleRisk` (0..1, the risk from the treatment calendar alone), `thresholds`, `profile`.
+Contract fields: `survivorId, status, headline, summary, evidence, recommendations, charts`. Extra fields: `displayName`, `tier`, `priority`, `urgent`, `urgentRisk`, `risk` and `scheduleRisk` (0..1, the risk from the treatment calendar alone), `thresholds` (alert, watch and urgent lines), and `profile` (including `language` and `livesAlone`).
 
-- `evidence[]`: the signals that drove this forecast, biggest first. `riskShare` = how much the 7-day risk drops if that signal were back at the person's normal (counterfactual on the model). A wearable signal is listed only if it moved the risk by 1 point or more AND moved in a worrying direction. The last item is always the treatment calendar, and its `riskShare` is the calendar-only risk.
-- `recommendations[]`: `{action, why, urgency}`, where urgency is one of `today`, `within 2 days`, `this week` or `routine`. The coach does not diagnose: fever and infection signals route to the care team.
-- `charts`: plain arrays, index-aligned with `charts.dates`. `null` = watch not worn or no check-in. `doseDays` is 1 on a treatment day. `selfReportedFeeling` is for display only and is not a model input.
+- `evidence[]`: the signals that drove this forecast, biggest first. `signal` is one of `checkins` (the person's own ratings and symptoms vs their usual, skipped check-ins, missed calls), `steps`, `resting_heart_rate`, `hrv_rmssd_ms`, `sleep`, `skin_temp_change_c`, `wear` or `schedule`. `riskShare` = how much the 7-day risk drops if that signal were back at the person's normal (counterfactual on the model). A signal is listed only if it moved the risk by 1 point or more AND moved in a worrying direction. The last item is always the treatment calendar, and its `riskShare` is the calendar-only risk.
+- `recommendations[]`: `{action, why, urgency, kind?}`, where urgency is one of `today`, `within 2 days`, `this week` or `routine`. `kind: "social"` marks social-needs actions: preferred language not English, or lives alone. These are given only to flagged survivors. The coach does not diagnose: fever and infection signals route to the care team.
+- `charts`: plain arrays, index-aligned with `charts.dates`. `null` = watch not worn or no check-in. `doseDays` is 1 on a treatment day. `selfReportedFeeling` is the daily rating; the model uses ratings only up to 3 days back, plus skipped check-ins up to today.
 
 ```json
 {
-  "survivorId": "c3-P02185",
-  "displayName": "P02185 · 42M · lymphoma",
+  "survivorId": "c3-P03000",
+  "displayName": "P03000 · 49M · kidney",
   "status": "alert",
-  "headline": "Urgent: ER or hospital risk 6% in the next 7 days, about 5x usual",
-  "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 6% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 22% (alert line 16%). The treatment calendar alone gives 9%; their check-ins move it +5 points and wearable signals +8. Biggest driver: Sleep efficiency 87% vs usual 92%, waking 3.5x a night vs 2.0x, 6.8 h asleep vs 7.1 h.",
+  "headline": "Urgent: ER or hospital risk 10% in the next 7 days, about 9x usual",
+  "summary": "Urgent: risk of an ER visit or hospital admission in the next 7 days is 10% (urgent line 6%, typical day 1.2%). Risk of a rough patch in the next 7 days: 8% (alert line 16%). The treatment calendar alone gives 2%; their check-ins move it +0 points and wearable signals +6. Biggest driver: Sleep efficiency 82% vs usual 88%, waking 3.0x a night vs 2.0x, 6.4 h asleep vs 6.9 h.",
   "urgent": true,
-  "urgentRisk": 0.06,
-  "risk": 0.221,
-  "scheduleRisk": 0.091,
+  "urgentRisk": 0.104,
+  "risk": 0.078,
+  "scheduleRisk": 0.021,
   "thresholds": {
     "alert": 0.156,
     "watch": 0.105,
     "urgent": 0.058
   },
   "profile": {
-    "age": 42,
+    "age": 49,
     "sex": "male",
-    "cancerType": "lymphoma",
+    "cancerType": "kidney",
     "stage": "I",
-    "treatmentPlan": "IV chemo every 21 days",
-    "device": "Fitbit tracker",
-    "language": "Haitian Creole",
+    "treatmentPlan": "Immunotherapy every 21 days",
+    "device": "Fitbit smartwatch",
+    "language": "Spanish",
     "livesAlone": "no",
-    "context": "Day 5 of cycle 4 (IV chemo every 21 days)"
+    "context": "Day 16 of cycle 3 (Immunotherapy every 21 days)"
   },
   "evidence": [
     {
       "signal": "sleep",
       "label": "Sleep",
-      "riskShare": 0.125,
-      "value": 87,
-      "baseline": 92,
+      "riskShare": 0.063,
+      "value": 82.3,
+      "baseline": 88,
       "unit": "% efficiency",
-      "change": "-5 pts",
-      "text": "Sleep efficiency 87% vs usual 92%, waking 3.5x a night vs 2.0x, 6.8 h asleep vs 7.1 h"
+      "change": "-6 pts",
+      "text": "Sleep efficiency 82% vs usual 88%, waking 3.0x a night vs 2.0x, 6.4 h asleep vs 6.9 h"
     },
     {
-      "signal": "steps",
-      "label": "Steps",
-      "riskShare": 0.103,
-      "value": 7721,
-      "baseline": 12395,
-      "unit": "steps/day",
-      "change": "-38%",
-      "text": "Steps 38% below their usual (7,721 vs 12,395 a day, last 3 days)"
-    },
-    {
-      "signal": "checkins",
-      "label": "Check-ins",
-      "riskShare": 0.052,
-      "value": 3,
-      "baseline": 0,
-      "unit": "check-ins skipped in a row",
-      "change": "3 skipped",
-      "text": "Skipped the last 3 daily check-ins (people report a rough day 1.4x as often after 3+ skips); 1 coaching call(s) missed or moved in 4 weeks; their last rating was their usual 4/5 (ratings up to 3 days ago)"
+      "signal": "resting_heart_rate",
+      "label": "Resting heart rate",
+      "riskShare": 0.034,
+      "value": 88.4,
+      "baseline": 85.6,
+      "unit": "bpm",
+      "change": "+2.8 bpm",
+      "text": "Resting heart rate +2.8 bpm vs their usual (88 vs 86)"
     },
     {
       "signal": "schedule",
       "label": "Treatment calendar",
-      "riskShare": 0.091,
-      "text": "Day 5 of cycle 4 (IV chemo every 21 days). The calendar alone predicts 9% risk of a rough patch this week."
+      "riskShare": 0.021,
+      "text": "Day 16 of cycle 3 (Immunotherapy every 21 days). The calendar alone predicts 2% risk of a rough patch this week."
     }
   ],
   "recommendations": [
@@ -126,9 +139,10 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
       "urgency": "this week"
     },
     {
-      "action": "Send a short, no-pressure message asking how the week is going; offer a 2-minute call instead of the form.",
-      "why": "3 daily check-ins skipped in a row; rough days are more common after a run of skips.",
-      "urgency": "this week"
+      "action": "Reach out in Spanish, or book an interpreter for the call.",
+      "why": "Their preferred language is Spanish; a rough week is harder to describe in a second language.",
+      "urgency": "this week",
+      "kind": "social"
     }
   ],
   "charts": {
@@ -140,63 +154,63 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
       "2025-01-31"
     ],
     "risk": [
-      0.117,
-      0.112,
-      0.104,
-      0.087,
-      0.221
+      0.02,
+      0.019,
+      0.018,
+      0.02,
+      0.078
     ],
     "urgentRisk": [
-      0.007,
-      0.006,
-      0.016,
-      0.03,
-      0.06
+      0.003,
+      0.003,
+      0.005,
+      0.009,
+      0.104
     ],
     "steps": [
-      15018,
-      9421,
-      7779,
-      7663,
-      null
+      1379,
+      1545,
+      2242,
+      2390,
+      3173
     ],
     "restingHeartRate": [
-      76.4,
-      78.9,
-      77.4,
-      79.7,
-      null
+      86.4,
+      85.3,
+      88.4,
+      86.8,
+      90
     ],
     "hrv": [
-      107,
-      70.7,
-      59,
-      67.1,
-      null
+      30,
+      31.6,
+      23.9,
+      25.3,
+      23.6
     ],
     "sleepHours": [
-      6.23,
-      7.37,
-      6.37,
-      7.13,
-      null
+      7.1,
+      6.68,
+      5.85,
+      7.1,
+      6.22
     ],
     "skinTempChange": [
-      null,
-      null,
-      null,
-      null,
-      null
+      -0.38,
+      0.55,
+      -0.19,
+      0.55,
+      -0.45
     ],
     "watchWornHours": [
+      20.2,
       22,
-      24,
-      21.2,
-      19.6,
-      3.4
+      21.1,
+      13.4,
+      21
     ],
     "doseDays": [
-      1,
+      0,
       0,
       0,
       0,
@@ -204,12 +218,14 @@ Contract fields: `survivorId, status, headline, summary, evidence, recommendatio
     ],
     "selfReportedFeeling": [
       null,
-      4,
       null,
-      null,
-      null
+      2,
+      2,
+      2
     ]
-  }
+  },
+  "tier": "urgent",
+  "priority": 1
 }
 ```
 
@@ -221,7 +237,9 @@ Add `?demo=1` to also get the hidden outcome (what really happened in the 14 day
     "note": "Hidden from the coach view: what actually happened in the 14 days after the forecast.",
     "roughPatchStartsInDays": null,
     "erOrAdmissionInDays": null,
-    "events": []
+    "events": [
+      "2025-02-06: treatment paused"
+    ]
   }
 }
 ```
@@ -230,27 +248,132 @@ Unknown id: `404 {"error":"survivor not found"}`.
 
 ## `GET /api/c3/metrics`: held-out evaluation
 
-Model and baselines on held-out patients. Includes the definition of a rough patch, plus a real-data check on the fatigue study. Methods: `steps_rule`, `schedule`, `logistic`, `model`. Excerpt:
+All numbers are from held-out test patients (750 patients the model never saw).
+
+**Show these first: `headline`** (ready-made text plus the numbers behind it, in `headline.order`):
 
 ```json
 {
-  "asOf": "2025-01-31",
-  "definition": {
-    "label_version": "v2",
-    "rough_day": "relative to the person: daily feeling 1, or 2+ points below their own median of the last 28 check-ins (until 5 check-ins: feeling <= 2); OR on the weekly check-in any of fatigue, nausea, pain, appetite loss, diarrhea, trouble sleeping, anxiety, sadness >= 3 or 2+ above their own usual; OR ER visit / admission / treatment paused. Skipped check-ins are not counted as rough; they are shown to the coach as a warning sign (rough rate on return rises ~1.8x after 5 skips) with a same-day wearable estimate",
-    "rough_patch": "a rough day followed by another within 3 days, or any clinical event; onset = first patch day after 7 quiet days",
-    "forecast": "each evening, P(rough patch onset in the next 7 days); days already inside a patch are not scored",
-    "early_warning": "an alert counts only if it fires 2+ days before onset",
-    "inputs": "the person's own check-ins vs their usual (feeling, weekly symptoms; values up to 3 days ago), skipped check-ins and missed coaching calls, wearable signals vs personal baseline, wear time, known treatment schedule. No events, no diary text.",
-    "split": "by patient: 60% train, 15% validation (thresholds), 25% test (all numbers below)",
-    "alert_budget": "thresholds put 5% of quiet validation days on alert, same budget for every method"
+  "urgent": {
+    "text": "Urgent ER tier: catches 47% of ER visits and hospital admissions 2-7 days early vs 36% from the treatment calendar; when it flags, an ER visit follows 7.4% of the time vs a 1.2% base rate.",
+    "erCaught": 0.467,
+    "erCaughtCalendar": 0.363,
+    "flagPrecision": 0.074,
+    "baseRate": 0.0119,
+    "flagsPerPatientMonth": 0.38
   },
-  "counts": {
-    "patients": 3000,
-    "test_patients": 750,
-    "onsets_total": 3013,
-    "label_missing_feeling_share": 0.545
+  "roughPatch": {
+    "text": "Catches 48% of rough patches 2-7 days early vs 36% from the treatment calendar (95% CI +8 to +15 points), at the same alert budget of about one new alert per coach per day; ER visits and admissions 36% vs 22% (CI +8 to +20).",
+    "caught": 0.476,
+    "caughtCalendar": 0.359,
+    "liftCi95Points": [
+      7.8,
+      15.2
+    ],
+    "erCaught": 0.363,
+    "erCaughtCalendar": 0.22,
+    "erLiftCi95Points": [
+      8.5,
+      19.9
+    ],
+    "alertPrecision": 0.184,
+    "alertPrecisionCalendar": 0.106,
+    "alertsPerPatientMonth": 0.48,
+    "medianLeadDays": 6,
+    "alertBudget": "thresholds put 5% of quiet validation days on alert, same budget for every method"
   },
+  "realData": {
+    "text": "On real data (fatigue study, 204 people), wearables confirm a bad day but do not yet predict one (next-day AUC 0.482); the person's own rating does better (0.64). Lead times are shown on synthetic data.",
+    "nextDayAucWearable": 0.482,
+    "nextDayAucSelfRating": 0.64
+  },
+  "order": [
+    "urgent",
+    "roughPatch",
+    "realData"
+  ]
+}
+```
+
+**Fairness: `fairness`.** Recall at the alert line by language, race and ethnicity, cancer type, sex, age, living alone and device. Each row has a 95% CI from resampling patients. Groups with fewer than 30 rough weeks have `tooFewToJudge: true` and no numbers. `belowOverall` = the whole CI is below the overall recall. Language dimension:
+
+```json
+{
+  "metric": "week-level recall at the alert line (share of rough weeks that got an alert), held-out patients",
+  "overallRecall": 0.276,
+  "summary": "Recall is clearly below the overall 28% (whole CI below it) for: Cancer type sarcoma (13%, CI 0%-26%). Lower, but the CI still reaches the overall (too few patients to be sure): Language Haitian Creole (22%, CI 10%-36%); Cancer type breast (21%, CI 14%-28%). Groups with fewer than 30 rough weeks are marked too few to judge.",
+  "dimensions": [
+    {
+      "dimension": "preferred_language",
+      "label": "Language",
+      "rows": [
+        {
+          "group": "English",
+          "patients": 445,
+          "roughWeeks": 409,
+          "recall": 0.267,
+          "recallCi95": [
+            0.216,
+            0.312
+          ],
+          "precision": 0.218,
+          "auc": 0.818,
+          "tooFewToJudge": false,
+          "belowOverall": false
+        },
+        {
+          "group": "Haitian Creole",
+          "patients": 60,
+          "roughWeeks": 60,
+          "recall": 0.217,
+          "recallCi95": [
+            0.103,
+            0.358
+          ],
+          "precision": 0.22,
+          "auc": 0.828,
+          "tooFewToJudge": false,
+          "belowOverall": false,
+          "lowerButUncertain": true
+        },
+        {
+          "group": "Spanish",
+          "patients": 245,
+          "roughWeeks": 216,
+          "recall": 0.31,
+          "recallCi95": [
+            0.252,
+            0.374
+          ],
+          "precision": 0.261,
+          "auc": 0.845,
+          "tooFewToJudge": false,
+          "belowOverall": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Key map** (everything else in the response):
+
+| Key | What it holds |
+|---|---|
+| `methods.{model,schedule,logistic,steps_rule}` | One entry per method, each `{name, weeks:{weeks, rough_weeks, auc, precision, recall, alert_share}, episodes:{episodes, episode_recall, median_lead_days, lead_days_hist, er_admissions, er_recall, alert_runs, alert_precision, alerts_per_patient_month}}`. `model` is the Radar; `schedule` is the treatment-calendar-only baseline (same learner). Every method uses the same alert budget. |
+| `lift_vs_schedule_ci95` | 95% CI (patient bootstrap) for model minus calendar: `episode_recall_diff` and `er_recall_diff`, as fractions. |
+| `ablation_without_checkins` | The same learner without the check-in inputs, plus `lift_of_checkins_ci95`. |
+| `urgent` | The ER/admission tier: `definition`, `methods.{urgent,schedule,radar}` (`er_recall_2to7d, median_lead_days, flag_precision, flags_per_patient_month, auc, average_precision, base_rate`), `names`, `calibration`. |
+| `calibration.{model,schedule}` | `brier`, `brier_if_base_rate`, and `deciles[]` of `{predicted, observed, days}`. |
+| `subgroups` | Raw per-group numbers behind `fairness` (snake_case). |
+| `definition` | What a rough day, patch, onset and alert mean; `inputs`; `alert_budget`; `label_version`. |
+| `label_v2` | Label diagnostics: skip-run rough rates (`rough_rate_after_skips`), onsets by source and by engagement, and the cross-check against the v1 label. |
+| `counts`, `feature_importance_auc_drop`, `realDataCheck` | Dataset counts; global drivers (AUC drop when a feature is shuffled); real fatigue-study check. |
+
+Excerpt of `methods.model` and `methods.schedule`:
+
+```json
+{
   "model": {
     "name": "Radar (gradient boosting, check-ins + wearable + schedule)",
     "weeks": {
@@ -308,10 +431,6 @@ Model and baselines on held-out patients. Includes the definition of a rough pat
       "alert_precision": 0.106,
       "alerts_per_patient_month": 0.36
     }
-  },
-  "realDataCheck": {
-    "next_day_auc_wearable_only_prev2days": 0.482,
-    "next_day_auc_yesterdays_self_rating": 0.64
   }
 }
 ```
