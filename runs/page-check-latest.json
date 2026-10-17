@@ -1,0 +1,41 @@
+{
+  "base": "https://c3-rough-patch.zay-259.workers.dev",
+  "ranAt": "2026-10-17T14:21:44.121Z",
+  "passed": true,
+  "checks": [
+    {
+      "name": "roster renders 60 tiles",
+      "ok": true
+    },
+    {
+      "name": "panel shows evidence",
+      "ok": true
+    },
+    {
+      "name": "panel shows recommendations",
+      "ok": true
+    },
+    {
+      "name": "panel draws 7 charts",
+      "ok": true
+    },
+    {
+      "name": "reveal shows what happened next",
+      "ok": true,
+      "info": "Rough patch: started 7 day(s) later. ER / admission: 8 day(s) later. 2025-02-08: ER visit; admitted to hospital; 2025-02-10: discharged home"
+    },
+    {
+      "name": "metrics table has 4 methods",
+      "ok": true
+    },
+    {
+      "name": "no horizontal scroll at phone width",
+      "ok": true
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "info": []
+    }
+  ]
+}

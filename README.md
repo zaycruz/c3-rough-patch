@@ -25,7 +25,7 @@ Why this definition: it combines how the person feels (what a coach cares about)
 - **Week metrics**: the forecast made on the last day of each week; the target is a patch onset in the next 7 days.
 - **"Caught" and lead time**: an alert counts only if it fires 2 to 7 days before onset.
 
-| Method | Week AUC | Week precision | Week recall | Patches caught 2–7 d early | ER/admissions caught | Median lead | Alert precision | Alerts / patient / month |
+| Method | Week AUC | Week precision | Week recall | Patches caught 2–7 d early | ER/admissions caught | Median lead (capped at 7) | Alert precision | Alerts / patient / month |
 |---|---|---|---|---|---|---|---|---|
 | Baseline: steps drop | 0.556 | 9% | 20% | 39% | 52% | 5 d | 8% | 1.25 |
 | Baseline: treatment schedule only (same learner) | 0.79 | 18% | 40% | 59% | 42% | 6 d | 14% | 0.67 |
@@ -46,6 +46,18 @@ Signals around an ER visit in the synthetic data: resting heart rate climbs abou
 - But a next-day forecast from the previous 2 days of wearable data alone scores **AUC 0.482** (chance). Yesterday's own rating scores 0.64.
 - So the lead time is shown on the synthetic data only. On real people the wearable confirms a bad day but does not yet predict one. The deck should say so.
 
+## Self-check against a judging guide
+
+Challenge 3 ships without judging criteria, so we scored ourselves against the Challenge 1 guide's aspects, adapted to this task. The raw numbers are in `GET /api/c3/metrics` (`calibration`, `subgroups`, `lift_vs_schedule_ci95`).
+
+| Aspect | What we did | Where it is weak |
+|---|---|---|
+| Scientific soundness | The outcome combines how the person feels (feeling ≤2, fatigue ≥3) with clinical events (ER, admission, pause), and one bad day is not a patch. Inputs are only data known by the evening of the forecast: the wearable vs the person's own baseline (days t-35 to t-8), plus the treatment calendar. Labels and events are never inputs. | 55% of daily check-ins are missing, and skips cluster on bad days, so the label under-counts. |
+| Validation | Patients the model never saw (750). Thresholds set on separate validation patients. Every method gets the same alert budget. **Lift over the schedule-only model, 95% CI over patients:** patches caught +3 to +8 points; ER/admissions caught +6 to +19 points. **Calibrated:** predicted vs observed 7-day risk agrees in every decile (top decile 21% predicted vs 20% observed). Brier score 0.0476 vs 0.052 for always guessing the base rate. | The lift over the calendar is real but small. Lead time is capped at the 7-day window: the "7" bucket means 7 or more. The calendar baseline has the same median, so lead time is not the wearable's win; the extra patches and ER visits caught are. |
+| Clinical insight | Risk peaks in the days after a dose (the chemo low point), climbs with cycle number, and is higher for IV chemo and chemoradiation. Wearable signals add risk on top: broken sleep, rising resting heart rate, lower HRV, fewer steps, rising skin temperature, watch left off. Before an ER visit, resting heart rate rises about 3 bpm and steps fall about 850 a day from roughly 8 days out. These are associations, not causes. | All of this is from made-up data whose patterns were designed in. On the real fatigue study, the wearable confirms a bad day on the day itself but does not predict the next day (AUC 0.482). |
+| Fairness | Week-level AUC, recall and precision by age, sex, race and ethnicity, language, cancer type, device and living alone. AUC is 0.74 to 0.88 in every group with enough data. Groups with fewer than 30 rough weeks are marked "too few to judge" rather than reported. | Recall is lower for Haitian Creole speakers (34% vs 51% Spanish), Black patients (38% vs 45% Hispanic) and ovarian cancer (32%). Asian patients, 10 cancer types and "other" race are too small to judge. |
+| Reproducibility | A fixed seed, a split by patient, and one command (`npm run build:data`) from the raw download to the served JSON. `npm run e2e` re-checks the live API and saves `runs/e2e-*.json`; `npm run contract` rebuilds CONTRACT.md from that run. | Training takes about 25 s on a laptop. |
+
 ## Run it
 
 ```bash
@@ -63,7 +75,7 @@ Verified by deploying to workers.dev and running the E2E check against it. No de
 
 1. **The problem (15 s).** "Coaches hear about a bad week at the next call, days late. This watches the wearable and warns early."
 2. **Roster (20 s).** 60 survivors as of the evening of 31 Jan 2025. 8 alert, 8 watch, 44 ok, sorted by risk. None of the 44 "ok" survivors had a rough patch start in the next 7 days.
-3. **Open P02836** (52M, lung cancer, alert) (45 s). Their risk has climbed every day for a week, from 7% to 24%, and has been over the alert line for 3 days. The calendar alone says 24% (mid-chemoradiation), and the wearable confirms it: steps are 34% below their usual. They still rate their days 4 to 5 out of 5: they have *not said anything*. Suggested action: check in this week, lower the activity goal, and move the coaching call earlier.
+3. **Open P02836** (52M, lung cancer, alert) (45 s). Over 10 days their risk climbed from 6% to 24%, and it has been over the alert line for the last 4 days. The calendar alone says 24% (mid-chemoradiation), and the wearable confirms it: steps are 34% below their usual. They have *not said anything*: when they checked in they rated their days 4 to 5 out of 5, and they have skipped the last 3 check-ins. Suggested action: check in this week, lower the activity goal, and move the coaching call earlier.
 4. **Reveal (15 s).** Click "what happened next". The rough patch started 7 days later, with an ER visit and hospital admission on day 8. The coach had a week's head start.
 5. **Contrast (15 s).** Open P02465. The calendar alone says 2%, the wearable says 51%: sleep is broken up (8 wakings a night vs 1) and resting heart rate is up. This is a rough patch the schedule cannot see. It started the next day.
 6. **Honesty (15 s).** The metrics table: model vs calendar vs steps rule, same alert budget. Then the real-data caveat.

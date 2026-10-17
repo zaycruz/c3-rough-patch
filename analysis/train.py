@@ -43,7 +43,7 @@ def load():
     d = pd.read_csv(SRC / "synthetic_daily.csv", parse_dates=["date"])
     p = pd.read_csv(SRC / "synthetic_patients.csv")
     d = d.merge(p[["patient_id", "treatment_plan", "device", "cancer_type", "stage", "age", "sex",
-                   "preferred_language", "lives_alone"]], on="patient_id")
+                   "race_ethnicity", "preferred_language", "lives_alone"]], on="patient_id")
     return d.sort_values(["patient_id", "day_in_program"]).reset_index(drop=True), p
 
 
@@ -195,6 +195,68 @@ def week_metrics(df, score_col, thr):
     }
 
 
+def calibration(df, score_col, bins=10):
+    """Predicted vs observed 7-day onset rate on scored held-out days, by risk decile; plus Brier score."""
+    q = df[(df.in_episode == 0) & (df.day_in_program >= 14)]
+    s, y = q[score_col].values, q.target.values
+    edges = np.unique(np.quantile(s, np.linspace(0, 1, bins + 1)))
+    b = np.clip(np.searchsorted(edges, s, side="right") - 1, 0, len(edges) - 2)
+    rows = [{"predicted": round(float(s[b == i].mean()), 4), "observed": round(float(y[b == i].mean()), 4),
+             "days": int((b == i).sum())} for i in range(len(edges) - 1) if (b == i).any()]
+    return {"brier": round(float(np.mean((s - y) ** 2)), 4), "base_rate": round(float(y.mean()), 4),
+            "brier_if_base_rate": round(float(np.mean((y.mean() - y) ** 2)), 4), "deciles": rows}
+
+
+def subgroups(df, score_col, thr):
+    """Week-level AUC / recall / precision per subgroup; groups with < 30 rough weeks are marked too small."""
+    df = df.assign(age_group=pd.cut(df.age, [0, 49, 64, 120], labels=["under 50", "50-64", "65+"]).astype(str))
+    out = {}
+    for col in ("age_group", "sex", "race_ethnicity", "preferred_language", "cancer_type", "device", "lives_alone"):
+        rows = []
+        for v, g in df.groupby(col):
+            w = g[(g.day_in_program % 7 == 0) & (g.in_episode == 0) & (g.day_in_program >= 14)]
+            pos = int(w.target.sum())
+            row = {"group": str(v), "patients": int(g.patient_id.nunique()), "rough_weeks": pos}
+            if pos >= 30 and pos < len(w):
+                pred = w[score_col] >= thr
+                tp = int((pred & (w.target == 1)).sum())
+                row.update(auc=round(float(roc_auc_score(w.target, w[score_col])), 3),
+                           recall=round(tp / pos, 3), precision=round(tp / max(int(pred.sum()), 1), 3))
+            else:
+                row["note"] = "too few rough weeks to judge"
+            rows.append(row)
+        out[col] = rows
+    return out
+
+
+def _patient_hits(df, score_col, thr):
+    """Per patient: [onsets, caught early, ER/admissions, ER caught] with the episode_metrics rules."""
+    res = []
+    for _, p in df.groupby("patient_id"):
+        a = ((p[score_col].values >= thr) & (p.in_episode.values == 0)).astype(int)
+        on, er = p.onset.values, p.er.values
+        o = [i for i in np.where(on == 1)[0] if i >= 14]
+        e = [i for i in np.where(er == 1)[0] if i >= 14 and not er[max(0, i - 7):i].any()]
+        hit = lambda i: a[max(0, i - HORIZON): i - MIN_LEAD + 1].any()
+        res.append([len(o), sum(hit(i) for i in o), len(e), sum(hit(i) for i in e)])
+    return np.array(res, dtype=float)
+
+
+def bootstrap_lift(df, thr, reps=1000):
+    """95% CI (resampling held-out patients) for Radar minus schedule-only, episode recall and ER recall."""
+    m = _patient_hits(df, "score_model", thr["model"]["alert"])
+    s = _patient_hits(df, "score_schedule", thr["schedule"]["alert"])
+    rng = np.random.default_rng(SEED)
+    ep, er = [], []
+    for _ in range(reps):
+        i = rng.integers(0, len(m), len(m))
+        mm, ss = m[i].sum(0), s[i].sum(0)
+        ep.append(mm[1] / mm[0] - ss[1] / ss[0])
+        er.append(mm[3] / max(mm[2], 1) - ss[3] / max(ss[2], 1))
+    ci = lambda v: [round(float(np.percentile(v, 2.5)), 3), round(float(np.percentile(v, 97.5)), 3)]
+    return {"episode_recall_diff": ci(ep), "er_recall_diff": ci(er), "reps": reps, "unit": "patients"}
+
+
 def main():
     d, patients = load()
     d = label(d)
@@ -248,6 +310,11 @@ def main():
         report["methods"][k] = {"name": nm, "weeks": week_metrics(test, f"score_{k}", thr[k]["alert"]),
                                 "episodes": episode_metrics(test, f"score_{k}", thr[k]["alert"])}
         print(nm, json.dumps(report["methods"][k]))
+
+    report["calibration"] = {k: calibration(test, f"score_{k}") for k in ("model", "schedule")}
+    report["subgroups"] = subgroups(test, "score_model", thr["model"]["alert"])
+    report["lift_vs_schedule_ci95"] = bootstrap_lift(test, thr)
+    print(json.dumps({k: report[k] for k in ("calibration", "lift_vs_schedule_ci95")}))
 
     # global drivers: permutation importance on test patients (AUC drop)
     from sklearn.inspection import permutation_importance
