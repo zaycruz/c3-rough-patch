@@ -8,6 +8,7 @@
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "vars": { "SANDBOX_TRANSPORT": "rpc" },  // needed to stream an upload into the container (writeFile with a stream)
   "containers": [
     {
       "class_name": "Sandbox",

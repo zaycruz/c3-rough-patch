@@ -20,6 +20,9 @@ echo "runner: $URL"
 cleanup() {  # always: drop the container (and the sponsor data on its disk), then delete the Worker
   curl "${H[@]}" -X POST "$URL/destroy" || true; echo
   (cd runner && npx wrangler delete --name c3-repro-runner --force 2>&1 | tail -1) || true
+  # deleting the Worker leaves its container application behind (a redeploy then fails); delete only this runner's app
+  (cd runner && for id in $(npx wrangler containers list 2>/dev/null | awk -F'│' '$3 ~ /^ *c3-repro-runner-sandbox *$/ {gsub(/ /,"",$2); print $2}'); do
+    npx wrangler containers delete "$id" 2>&1 | tail -1; done) || true
 }
 trap cleanup EXIT
 for i in $(seq 1 40); do curl "${H[@]}" -o /dev/null "$URL/status" 2>/dev/null && break; sleep 15; done   # first container start (up to 10 min)
@@ -41,3 +44,4 @@ LOGF="$(echo "$s" | grep -o 'runs/reproduce-[0-9TZ-]*\.md' | tail -1)"
 mkdir -p runs
 [ -n "$LOGF" ] && curl "${H[@]}" "$URL/file?path=$LOGF" > "$LOGF" && echo "saved $LOGF"
 echo "$s" > runs/repro-cloudflare-last-status.txt
+exit "$(echo "$s" | grep -oE '^EXIT=[0-9]+$' | tail -1 | cut -d= -f2)"

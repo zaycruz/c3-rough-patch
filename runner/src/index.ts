@@ -31,9 +31,19 @@ function authorized(req: Request, env: Env): boolean {
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
+    try {
+      return await handle(req, env);
+    } catch (e) {
+      return new Response(`runner error: ${(e as Error).stack || e}`, { status: 500 });
+    }
+  },
+};
+
+async function handle(req: Request, env: Env): Promise<Response> {
+  {
     if (!authorized(req, env)) return new Response("unauthorized", { status: 401 });
     const url = new URL(req.url);
-    const box = getSandbox(env.Sandbox, "c3-repro", { keepAlive: true });
+    const box = getSandbox(env.Sandbox, "c3-repro", { keepAlive: true, transport: "rpc" });
 
     if (req.method === "PUT" && url.pathname.startsWith("/data/")) {
       const rel = decodeURIComponent(url.pathname.slice("/data/".length));
@@ -77,5 +87,5 @@ export default {
       return Response.json({ destroyed: true });
     }
     return new Response("not found", { status: 404 });
-  },
-};
+  }
+}
